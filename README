@@ -1,0 +1,22 @@
+libzathura-gtk - GTK+ widgets
+=============================
+
+Requirements
+------------
+libzathura (>= 0.0.1)
+gtk (>= 3.14)
+check (>= 0.9.8) (for tests)
+libfiu (>= 0.91) (for fault-injection)
+python-docutils (for man pages)
+
+Installation
+------------
+To build and install libzathura-gtk:
+
+  make install
+
+Uninstall:
+----------
+To delete libzathura-gtk from your system, just type:
+
+  make uninstall

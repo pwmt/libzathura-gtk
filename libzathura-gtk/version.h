@@ -1,0 +1,13 @@
+/* See LICENSE file for license and copyright information */
+
+#ifndef LIBZATHURA_VERSION_H
+#define LIBZATHURA_VERSION_H
+
+#define LIBZATHURA_VERSION_MAJOR 
+#define LIBZATHURA_VERSION_MINOR 
+#define LIBZATHURA_VERSION_REV 
+#define LIBZATHURA_VERSION ".."
+#define LIBZATHURA_API_VERSION 
+#define LIBZATHURA_ABI_VERSION 
+
+#endif
