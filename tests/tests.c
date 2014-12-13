@@ -4,6 +4,7 @@
 #include <check.h>
 #include <fiu.h>
 
+Suite* suite_page(void);
 Suite* suite_document(void);
 
 int
@@ -21,6 +22,7 @@ main(int argc, char* argv[])
   SRunner* suite_runner = srunner_create(NULL);
   srunner_set_fork_status(suite_runner, CK_NOFORK);
 
+  srunner_add_suite(suite_runner, suite_page());
   srunner_add_suite(suite_runner, suite_document());
 
   int number_failed = 0;
