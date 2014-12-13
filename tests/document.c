@@ -35,7 +35,12 @@ START_TEST(test_document_new) {
   fail_unless(zathura_gtk_document_new(NULL) == NULL);
 
   /* basic invalid arguments */
-  fail_unless(zathura_gtk_document_new(document) != NULL);
+  ZathuraDocument* widget = zathura_gtk_document_new(document);
+  fail_unless(widget != NULL);
+
+  zathura_document_t* document_tmp = NULL;
+  g_object_get(widget, "document", &document_tmp, NULL);
+  fail_unless(document == document_tmp);
 } END_TEST
 
 Suite*
