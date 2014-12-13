@@ -40,9 +40,10 @@ all: ${PROJECT}
 
 ${PROJECT}: options ${OBJECTS}
 	$(QUIET)${MAKE} WITH_LIBFIU=1 -C .. libzathura-gtk
+	$(QUIET)${MAKE} -C plugin
 	$(call colorecho,CC,$@)
 	$(QUIET)${CC} ${SFLAGS} ${LDFLAGS} -o $@ \
-		${OBJECTS} ${LIBS} ${libzathura-gtk_RELEASE}
+		${OBJECTS} ${LIBS} ${LIBZATHURA_GTK_RELEASE}
 
 ${OBJECTS}: config.mk ../config.mk ../libzathura-gtk/version.h
 
@@ -62,9 +63,10 @@ debug: options ${PROJECT}-debug
 
 ${PROJECT}-debug: ${OBJECTS_DEBUG}
 	$(QUIET)${MAKE} WITH_LIBFIU=1 -C .. libzathura-gtk-debug
+	$(QUIET)${MAKE} -C plugin
 	$(call colorecho,CC,$@)
 	$(QUIET)${CC} ${LDFLAGS} -o $@ \
-		${OBJECTS_DEBUG} ${LIBS} ${libzathura-gtk_DEBUG}
+		${OBJECTS_DEBUG} ${LIBS} ${LIBZATHURA_GTK_DEBUG}
 
 ${OBJECTS_DEBUG}: config.mk ../config.mk ../libzathura-gtk/version.h
 
@@ -84,9 +86,10 @@ gcov: options ${PROJECT}-gcov
 
 ${PROJECT}-gcov: options ${OBJECTS_GCOV}
 	$(QUIET)${MAKE} WITH_LIBFIU=1 -C .. libzathura-gtk-gcov
+	$(QUIET)${MAKE} -C plugin
 	$(call colorecho,CC,$@)
 	$(QUIET)${CC} ${LDFLAGS} ${GCOV_LDFLAGS} -o $@ \
-		${OBJECTS_GCOV} ${LIBS} ${libzathura-gtk_GCOV}
+		${OBJECTS_GCOV} ${LIBS} ${LIBZATHURA_GTK_GCOV}
 
 ${OBJECTS_GCOV}: config.mk ../config.mk ../libzathura-gtk/version.h
 

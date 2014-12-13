@@ -59,8 +59,8 @@ CAIRO_LIB ?= $(shell pkg-config --libs cairo)
 FIU_INC ?= $(shell pkg-config --cflags libfiu)
 FIU_LIB ?= $(shell pkg-config --libs libfiu)
 
-INCS = ${GTK_INC} ${GTHREAD_INC} ${GLIB_INC} ${GMODULE_INC} ${CAIRO_INC}
-LIBS = ${GTK_LIB} ${GTHREAD_LIB} ${GLIB_LIB} ${GMODULE_LIB} ${CAIRO_LIB} -lm
+INCS = ${LIBZATHURA_INC} ${GTK_INC} ${GTHREAD_INC} ${GLIB_INC} ${GMODULE_INC} ${CAIRO_INC}
+LIBS = ${LIBZATHURA_LIB} ${GTK_LIB} ${GTHREAD_LIB} ${GLIB_LIB} ${GMODULE_LIB} ${CAIRO_LIB} -lm
 
 # flags
 CFLAGS += -std=c99 -pedantic -Wall -Wextra -fPIC $(INCS)

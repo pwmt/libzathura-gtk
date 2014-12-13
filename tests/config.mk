@@ -3,13 +3,13 @@
 CHECK_INC ?= $(shell pkg-config --cflags check)
 CHECK_LIB ?= $(shell pkg-config --libs check)
 
-INCS += ${CHECK_INC} ${FIU_INC} -I ../libzathura-gtk
-LIBS += ${CHECK_LIB} ${FIU_LIB} -Wl,--whole-archive -Wl,--no-whole-archive
+INCS += ${CHECK_INC} -I ../libzathura-gtk
+LIBS += ${CHECK_LIB} -Wl,--whole-archive -Wl,--no-whole-archive
 LDFLAGS += -rdynamic -ldl
 
-LIBZATHURA_RELEASE=../${BUILDDIR_RELEASE}/libzathura-gtk.a
-LIBZATHURA_DEBUG=../${BUILDDIR_DEBUG}/libzathura-gtk.a
-LIBZATHURA_GCOV=../${BUILDDIR_GCOV}/libzathura-gtk.a
+LIBZATHURA_GTK_RELEASE=../${BUILDDIR_RELEASE}/libzathura-gtk.a
+LIBZATHURA_GTK_DEBUG=../${BUILDDIR_DEBUG}/libzathura-gtk.a
+LIBZATHURA_GTK_GCOV=../${BUILDDIR_GCOV}/libzathura-gtk.a
 #
 # valgrind
 VALGRIND = valgrind
