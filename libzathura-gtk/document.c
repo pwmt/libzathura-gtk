@@ -7,6 +7,7 @@ static void zathura_gtk_document_get_property(GObject* object, guint prop_id, GV
 
 struct _ZathuraDocumentPrivate {
   zathura_document_t* document;
+  GtkWidget* scrolled_window;
 };
 
 enum {
@@ -14,7 +15,7 @@ enum {
   PROP_DOCUMENT
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE(ZathuraDocument, zathura_gtk_document, GTK_TYPE_CONTAINER)
+G_DEFINE_TYPE_WITH_PRIVATE(ZathuraDocument, zathura_gtk_document, GTK_TYPE_BIN)
 
 #define ZATHURA_DOCUMENT_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_DOCUMENT, \
@@ -46,6 +47,7 @@ zathura_gtk_document_init(ZathuraDocument* widget)
 {
   ZathuraDocumentPrivate* priv = ZATHURA_DOCUMENT_GET_PRIVATE(widget);
   priv->document = NULL;
+  priv->scrolled_window = NULL;
 }
 
 GtkWidget*
@@ -55,12 +57,19 @@ zathura_gtk_document_new(zathura_document_t* document)
     return NULL;
   }
 
-  GObject* ret = g_object_new(ZATHURA_TYPE_DOCUMENT, "document", document, NULL);
-  if (ret == NULL) {
-    return NULL;
-  }
+  GObject* widget = g_object_new(ZATHURA_TYPE_DOCUMENT, "document", document, NULL);
 
-  return GTK_WIDGET(ret);
+  ZathuraDocumentPrivate* priv = ZATHURA_DOCUMENT_GET_PRIVATE(widget);
+
+  /* Setup scrolled window */
+  priv->scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (priv->scrolled_window),
+      GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+
+  /* Setup container */
+  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->scrolled_window));
+
+  return GTK_WIDGET(widget);
 }
 
 static void

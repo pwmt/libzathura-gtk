@@ -21,12 +21,12 @@ typedef struct _ZathuraDocumentClass ZathuraDocumentClass;
 typedef struct _ZathuraDocumentPrivate ZathuraDocumentPrivate;
 
 struct _ZathuraDocument {
-  GtkContainer parent;
+  GtkBin parent;
   ZathuraDocumentPrivate* priv;
 };
 
 struct _ZathuraDocumentClass {
-  GtkContainerClass parent_class;
+  GtkBinClass parent_class;
 };
 
 
