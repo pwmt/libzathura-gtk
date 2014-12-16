@@ -1,13 +1,16 @@
  /* See LICENSE file for license and copyright information */
 
 #include "document.h"
+#include "page.h"
 
 static void zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
 
 struct _ZathuraDocumentPrivate {
   zathura_document_t* document;
+  GList* pages;
   GtkWidget* scrolled_window;
+  GtkWidget* grid;
 };
 
 enum {
@@ -46,8 +49,10 @@ static void
 zathura_gtk_document_init(ZathuraDocument* widget)
 {
   ZathuraDocumentPrivate* priv = ZATHURA_DOCUMENT_GET_PRIVATE(widget);
-  priv->document = NULL;
+  priv->document        = NULL;
+  priv->pages           = NULL;
   priv->scrolled_window = NULL;
+  priv->grid            = NULL;
 }
 
 GtkWidget*
@@ -66,7 +71,39 @@ zathura_gtk_document_new(zathura_document_t* document)
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (priv->scrolled_window),
       GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
 
+  /* Setup grid */
+  priv->grid = gtk_grid_new();
+
+  /* Create page widgets */
+  unsigned int number_of_pages = 0;
+  if (zathura_document_get_number_of_pages(document, &number_of_pages) !=
+      ZATHURA_ERROR_OK) {
+    return NULL; // FIXME: Leaks
+  }
+
+  for (unsigned int i = 0; i < number_of_pages; i++) {
+    zathura_page_t* page;
+    if (zathura_document_get_page(document, i, &page) != ZATHURA_ERROR_OK) {
+      return NULL; // FIXME: Leaks
+    }
+
+    /* Create page widget */
+    GtkWidget* page_widget = zathura_gtk_page_new(page);
+
+    /* Attach to grid */
+    if (priv->pages == NULL) {
+      gtk_grid_attach (GTK_GRID (priv->grid), page_widget, 0, 0, 1, 1);
+    } else {
+      GList* last_page = g_list_last(priv->pages);
+      gtk_grid_attach_next_to (GTK_GRID (priv->grid), page_widget, last_page->data, GTK_POS_BOTTOM, 1, 1);
+    }
+
+    /* Append to list */
+    priv->pages = g_list_append(priv->pages, page_widget);
+  }
+
   /* Setup container */
+  gtk_container_add(GTK_CONTAINER(priv->scrolled_window), GTK_WIDGET(priv->grid));
   gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->scrolled_window));
 
   return GTK_WIDGET(widget);
