@@ -218,7 +218,7 @@ page_render(zathura_page_t* UNUSED(page), zathura_image_buffer_t** UNUSED(buffer
 
 #ifdef HAVE_CAIRO
 zathura_error_t
-page_render_cairo(zathura_page_t* UNUSED(page), cairo_t* UNUSED(cairo), double
+page_render_cairo(zathura_page_t* page, cairo_t* cairo, double
     UNUSED(scale), int UNUSED(rotation), int UNUSED(flags))
 {
   return ZATHURA_ERROR_OK;

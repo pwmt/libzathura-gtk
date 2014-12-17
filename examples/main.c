@@ -5,6 +5,11 @@
 
 int main(int argc, char* argv[])
 {
+  if (argc != 2) {
+    fprintf(stderr, "usage: %s <file>\n", argv[0]);
+    return 0;
+  }
+
   /* Initialize GTK */
   gtk_init(&argc, &argv);
 
@@ -15,7 +20,7 @@ int main(int argc, char* argv[])
   }
 
   /* Load plugin from file */
-  if (zathura_plugin_manager_load(plugin_manager, "../tests/plugin/plugin.so") != ZATHURA_ERROR_OK) {
+  if (zathura_plugin_manager_load_dir(plugin_manager, "/usr/lib/zathura/") != ZATHURA_ERROR_OK) {
     zathura_plugin_manager_free(plugin_manager);
     return -1;
   }
@@ -23,14 +28,14 @@ int main(int argc, char* argv[])
   /* Get plugin with corresponding mime type */
   zathura_plugin_t* plugin = NULL;
   if (zathura_plugin_manager_get_plugin(plugin_manager, &plugin,
-        "libzathura-gtk/test-plugin") != ZATHURA_ERROR_OK) {
+        "application/pdf") != ZATHURA_ERROR_OK) {
     zathura_plugin_manager_free(plugin_manager);
     return -1;
   }
 
   /* Open document  */
   zathura_document_t* document;
-  if (zathura_plugin_open_document(plugin, &document, "Makefile", NULL) != ZATHURA_ERROR_OK) {
+  if (zathura_plugin_open_document(plugin, &document, argv[1], NULL) != ZATHURA_ERROR_OK) {
     zathura_plugin_manager_free(plugin_manager);
     return -1;
   }

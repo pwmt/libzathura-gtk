@@ -7,6 +7,7 @@ static void zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue
 
 struct _ZathuraPagePrivate {
   zathura_page_t* page;
+  GtkWidget* drawing_area;
 };
 
 enum {
@@ -14,7 +15,7 @@ enum {
   PROP_PAGE
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE(ZathuraPage, zathura_gtk_page, GTK_TYPE_DRAWING_AREA)
+G_DEFINE_TYPE_WITH_PRIVATE(ZathuraPage, zathura_gtk_page, GTK_TYPE_BIN)
 
 #define ZATHURA_PAGE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_PAGE, \
@@ -46,6 +47,32 @@ zathura_gtk_page_init(ZathuraPage* widget)
 {
   ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(widget);
   priv->page = NULL;
+  priv->drawing_area = NULL;
+}
+
+gboolean
+cb_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
+{
+  ZathuraPagePrivate* priv = (ZathuraPagePrivate*) data;
+
+  const unsigned int page_height = gtk_widget_get_allocated_height(widget);
+  const unsigned int page_width  = gtk_widget_get_allocated_width(widget);
+
+  cairo_save(cairo);
+
+  cairo_set_source_rgb(cairo, 255, 255, 255);
+  cairo_rectangle(cairo, 0, 0, page_width, page_height);
+  cairo_fill(cairo);
+
+  if (zathura_page_render_cairo(priv->page, cairo, 1.0, 0, 0) != ZATHURA_ERROR_OK) {
+    return FALSE;
+  }
+
+  cairo_set_operator(cairo, CAIRO_OPERATOR_DEST_OVER);
+  cairo_paint(cairo);
+  cairo_restore(cairo);
+
+  return FALSE;
 }
 
 GtkWidget*
@@ -55,12 +82,30 @@ zathura_gtk_page_new(zathura_page_t* page)
     return NULL;
   }
 
-  GObject* ret = g_object_new(ZATHURA_TYPE_PAGE, "page", page, NULL);
-  if (ret == NULL) {
+  GObject* widget = g_object_new(ZATHURA_TYPE_PAGE, "page", page, NULL);
+  ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(widget);
+
+  unsigned int page_width = 0;
+  if (zathura_page_get_width(page, &page_width) != ZATHURA_ERROR_OK) {
     return NULL;
   }
 
-  return GTK_WIDGET(ret);
+  unsigned int page_height = 0;
+  if (zathura_page_get_height(page, &page_height) != ZATHURA_ERROR_OK) {
+    return NULL;
+  }
+
+  /* Setup drawing area */
+  priv->drawing_area = gtk_drawing_area_new();
+  gtk_widget_set_size_request(priv->drawing_area, page_width, page_height);
+  g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_draw), priv);
+
+  /* Setup container */
+  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->drawing_area));
+
+  gtk_widget_show_all(widget);
+
+  return GTK_WIDGET(widget);
 }
 
 static void

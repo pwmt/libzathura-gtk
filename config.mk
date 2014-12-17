@@ -63,6 +63,7 @@ INCS = ${LIBZATHURA_INC} ${GTK_INC} ${GTHREAD_INC} ${GLIB_INC} ${GMODULE_INC} ${
 LIBS = ${LIBZATHURA_LIB} ${GTK_LIB} ${GTHREAD_LIB} ${GLIB_LIB} ${GMODULE_LIB} ${CAIRO_LIB} -lm
 
 # flags
+CPPFLAGS += -DHAVE_CAIRO
 CFLAGS += -std=c99 -pedantic -Wall -Wextra -fPIC $(INCS)
 
 # linker flags

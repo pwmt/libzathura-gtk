@@ -21,12 +21,12 @@ typedef struct _ZathuraPageClass ZathuraPageClass;
 typedef struct _ZathuraPagePrivate ZathuraPagePrivate;
 
 struct _ZathuraPage {
-  GtkDrawingArea parent;
+  GtkBin parent;
   ZathuraPagePrivate* priv;
 };
 
 struct _ZathuraPageClass {
-  GtkDrawingAreaClass parent_class;
+  GtkBinClass parent_class;
 };
 
 

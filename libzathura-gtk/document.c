@@ -73,6 +73,9 @@ zathura_gtk_document_new(zathura_document_t* document)
 
   /* Setup grid */
   priv->grid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(priv->grid), 10);
+  gtk_widget_set_halign(priv->grid, GTK_ALIGN_CENTER);
+  gtk_widget_set_valign(priv->grid, GTK_ALIGN_CENTER);
 
   /* Create page widgets */
   unsigned int number_of_pages = 0;
