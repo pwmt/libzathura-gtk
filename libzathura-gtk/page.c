@@ -7,6 +7,7 @@ static void zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue
 
 struct _ZathuraPagePrivate {
   zathura_page_t* page;
+  GtkWidget* overlay;
   GtkWidget* drawing_area;
 };
 
@@ -46,8 +47,9 @@ static void
 zathura_gtk_page_init(ZathuraPage* widget)
 {
   ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(widget);
-  priv->page = NULL;
+  priv->page         = NULL;
   priv->drawing_area = NULL;
+  priv->overlay      = NULL;
 }
 
 gboolean
@@ -95,13 +97,19 @@ zathura_gtk_page_new(zathura_page_t* page)
     return NULL;
   }
 
+  /* Setup over lay */
+  priv->overlay = gtk_overlay_new();
+
   /* Setup drawing area */
   priv->drawing_area = gtk_drawing_area_new();
+  gtk_widget_set_halign(priv->drawing_area, GTK_ALIGN_START);
+  gtk_widget_set_valign(priv->drawing_area, GTK_ALIGN_START);
   gtk_widget_set_size_request(priv->drawing_area, page_width, page_height);
   g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_draw), priv);
 
   /* Setup container */
-  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->drawing_area));
+  gtk_container_add(GTK_CONTAINER(priv->overlay), GTK_WIDGET(priv->drawing_area));
+  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->overlay));
 
   gtk_widget_show_all(GTK_WIDGET(widget));
 
