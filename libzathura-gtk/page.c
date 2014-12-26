@@ -103,7 +103,7 @@ zathura_gtk_page_new(zathura_page_t* page)
   /* Setup container */
   gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->drawing_area));
 
-  gtk_widget_show_all(widget);
+  gtk_widget_show_all(GTK_WIDGET(widget));
 
   return GTK_WIDGET(widget);
 }
