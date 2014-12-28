@@ -11,10 +11,16 @@ static void set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable);
 struct _ZathuraDocumentPrivate {
   zathura_document_t* document;
   GList* pages;
-  GtkWidget* scrolled_window;
-  GtkWidget* viewport;
-  GtkWidget* grid;
-  gboolean continuous_pages;
+
+  struct {
+    GtkWidget* scrolled_window;
+    GtkWidget* viewport;
+    GtkWidget* grid;
+  } gtk;
+
+  struct {
+    gboolean continuous_pages;
+  } settings;
 };
 
 enum {
@@ -66,12 +72,12 @@ static void
 zathura_gtk_document_init(ZathuraDocument* widget)
 {
   ZathuraDocumentPrivate* priv = ZATHURA_DOCUMENT_GET_PRIVATE(widget);
-  priv->document               = NULL;
-  priv->pages                  = NULL;
-  priv->scrolled_window        = NULL;
-  priv->viewport               = NULL;
-  priv->grid                   = NULL;
-  priv->continuous_pages       = TRUE;
+  priv->document                  = NULL;
+  priv->pages                     = NULL;
+  priv->gtk.scrolled_window       = NULL;
+  priv->gtk.viewport              = NULL;
+  priv->gtk.grid                  = NULL;
+  priv->settings.continuous_pages = TRUE;
 }
 
 GtkWidget*
@@ -86,12 +92,12 @@ zathura_gtk_document_new(zathura_document_t* document)
   ZathuraDocumentPrivate* priv = ZATHURA_DOCUMENT_GET_PRIVATE(widget);
 
   /* Setup scrolled window */
-  priv->scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (priv->scrolled_window),
+  priv->gtk.scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (priv->gtk.scrolled_window),
       GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
 
   /* Setup viewport */
-  priv->viewport = gtk_viewport_new(NULL, NULL);
+  priv->gtk.viewport = gtk_viewport_new(NULL, NULL);
 
   /* Create page widgets */
   unsigned int number_of_pages = 0;
@@ -119,9 +125,9 @@ zathura_gtk_document_new(zathura_document_t* document)
   zathura_gtk_setup_grid(priv);
 
   /* Setup container */
-  gtk_container_add(GTK_CONTAINER(priv->scrolled_window), GTK_WIDGET(priv->viewport));
-  gtk_container_add(GTK_CONTAINER(priv->viewport), GTK_WIDGET(priv->grid));
-  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->scrolled_window));
+  gtk_container_add(GTK_CONTAINER(priv->gtk.scrolled_window), GTK_WIDGET(priv->gtk.viewport));
+  gtk_container_add(GTK_CONTAINER(priv->gtk.viewport), GTK_WIDGET(priv->gtk.grid));
+  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->gtk.scrolled_window));
 
   return GTK_WIDGET(widget);
 }
@@ -130,10 +136,10 @@ static void
 zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv)
 {
   /* Setup grid */
-  priv->grid = gtk_grid_new();
-  gtk_grid_set_row_spacing(GTK_GRID(priv->grid), 10);
-  gtk_widget_set_halign(priv->grid, GTK_ALIGN_CENTER);
-  gtk_widget_set_valign(priv->grid, GTK_ALIGN_CENTER);
+  priv->gtk.grid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(priv->gtk.grid), 10);
+  gtk_widget_set_halign(priv->gtk.grid, GTK_ALIGN_CENTER);
+  gtk_widget_set_valign(priv->gtk.grid, GTK_ALIGN_CENTER);
 
   /* Fill grid */
   unsigned int number_of_pages = g_list_length(priv->pages);
@@ -144,15 +150,15 @@ zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv)
 
     /* Attach to grid */
     if (i == 0) {
-      gtk_grid_attach(GTK_GRID (priv->grid), page_widget, 0, 0, 1, 1);
+      gtk_grid_attach(GTK_GRID (priv->gtk.grid), page_widget, 0, 0, 1, 1);
     } else {
-      gtk_grid_attach_next_to(GTK_GRID(priv->grid), page_widget, last_page, GTK_POS_BOTTOM, 1, 1);
+      gtk_grid_attach_next_to(GTK_GRID(priv->gtk.grid), page_widget, last_page, GTK_POS_BOTTOM, 1, 1);
     }
 
     last_page = page_widget;
   }
 
-  gtk_widget_show_all(priv->grid);
+  gtk_widget_show_all(priv->gtk.grid);
 }
 
 static void cb_zathura_gtk_grid_clear(GtkWidget* widget, gpointer data)
@@ -163,9 +169,9 @@ static void cb_zathura_gtk_grid_clear(GtkWidget* widget, gpointer data)
 
 static void zathura_gtk_free_grid(ZathuraDocumentPrivate* priv)
 {
-  gtk_container_foreach(GTK_CONTAINER(priv->grid), cb_zathura_gtk_grid_clear, priv->grid);
-  g_object_unref(priv->grid);
-  priv->grid = NULL;
+  gtk_container_foreach(GTK_CONTAINER(priv->gtk.grid), cb_zathura_gtk_grid_clear, priv->gtk.grid);
+  g_object_unref(priv->gtk.grid);
+  priv->gtk.grid = NULL;
 }
 
 static void
@@ -197,7 +203,7 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
       g_value_set_pointer(value, priv->document);
       break;
     case PROP_CONTINUOUS_PAGES:
-      g_value_set_boolean(value, priv->continuous_pages);
+      g_value_set_boolean(value, priv->settings.continuous_pages);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
@@ -208,23 +214,23 @@ static void
 set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable)
 {
   /* Remove child from viewport */
-  GtkWidget* child = gtk_bin_get_child(GTK_BIN(priv->viewport));
+  GtkWidget* child = gtk_bin_get_child(GTK_BIN(priv->gtk.viewport));
   if (child != NULL) {
     g_object_ref(child);
-    gtk_container_remove(GTK_CONTAINER(priv->viewport), child);
+    gtk_container_remove(GTK_CONTAINER(priv->gtk.viewport), child);
   }
 
   /* Setup grid */
-  if (enable == TRUE && priv->continuous_pages == FALSE) {
+  if (enable == TRUE && priv->settings.continuous_pages == FALSE) {
     zathura_gtk_setup_grid(priv);
-    gtk_container_add(GTK_CONTAINER(priv->viewport), GTK_WIDGET(priv->grid));
+    gtk_container_add(GTK_CONTAINER(priv->gtk.viewport), GTK_WIDGET(priv->gtk.grid));
   /* Setup single page */
-  } else if (enable == FALSE && priv->continuous_pages == TRUE) {
+  } else if (enable == FALSE && priv->settings.continuous_pages == TRUE) {
     zathura_gtk_free_grid(priv);
 
     GtkWidget* current_page = (GtkWidget*) g_list_nth_data(priv->pages, 0); // FIXME: Current page
-    gtk_container_add(GTK_CONTAINER(priv->viewport), GTK_WIDGET(current_page));
+    gtk_container_add(GTK_CONTAINER(priv->gtk.viewport), GTK_WIDGET(current_page));
   }
 
-  priv->continuous_pages = enable;
+  priv->settings.continuous_pages = enable;
 }
