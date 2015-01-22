@@ -9,8 +9,11 @@ static void zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv);
 static void set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable);
 
 struct _ZathuraDocumentPrivate {
-  zathura_document_t* document;
-  GList* pages;
+  struct {
+    zathura_document_t* document;
+    GList* pages;
+    GtkWidget* current_page;
+  } document;
 
   struct {
     GtkWidget* scrolled_window;
@@ -72,8 +75,8 @@ static void
 zathura_gtk_document_init(ZathuraDocument* widget)
 {
   ZathuraDocumentPrivate* priv = ZATHURA_DOCUMENT_GET_PRIVATE(widget);
-  priv->document                  = NULL;
-  priv->pages                     = NULL;
+  priv->document.document         = NULL;
+  priv->document.pages            = NULL;
   priv->gtk.scrolled_window       = NULL;
   priv->gtk.viewport              = NULL;
   priv->gtk.grid                  = NULL;
@@ -118,7 +121,7 @@ zathura_gtk_document_new(zathura_document_t* document)
     gtk_widget_set_valign(page_widget, GTK_ALIGN_CENTER);
 
     /* Append to list */
-    priv->pages = g_list_append(priv->pages, page_widget);
+    priv->document.pages = g_list_append(priv->document.pages, page_widget);
   }
 
   /* Setup grid */
@@ -142,11 +145,11 @@ zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv)
   gtk_widget_set_valign(priv->gtk.grid, GTK_ALIGN_CENTER);
 
   /* Fill grid */
-  unsigned int number_of_pages = g_list_length(priv->pages);
+  unsigned int number_of_pages = g_list_length(priv->document.pages);
   GtkWidget* last_page = NULL;
   for (unsigned int i = 0; i < number_of_pages; i++) {
     /* Get page widget */
-    GtkWidget* page_widget = g_list_nth_data(priv->pages, i);
+    GtkWidget* page_widget = g_list_nth_data(priv->document.pages, i);
 
     /* Attach to grid */
     if (i == 0) {
@@ -182,7 +185,7 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
 
   switch (prop_id) {
     case PROP_DOCUMENT:
-      priv->document = g_value_get_pointer(value);
+      priv->document.document = g_value_get_pointer(value);
       break;
     case PROP_CONTINUOUS_PAGES:
       set_continuous_pages(priv, g_value_get_boolean(value));
@@ -200,7 +203,7 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
 
   switch (prop_id) {
     case PROP_DOCUMENT:
-      g_value_set_pointer(value, priv->document);
+      g_value_set_pointer(value, priv->document.document);
       break;
     case PROP_CONTINUOUS_PAGES:
       g_value_set_boolean(value, priv->settings.continuous_pages);
@@ -228,7 +231,7 @@ set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable)
   } else if (enable == FALSE && priv->settings.continuous_pages == TRUE) {
     zathura_gtk_free_grid(priv);
 
-    GtkWidget* current_page = (GtkWidget*) g_list_nth_data(priv->pages, 0); // FIXME: Current page
+    GtkWidget* current_page = (GtkWidget*) g_list_nth_data(priv->document.pages, 0); // FIXME: Current page
     gtk_container_add(GTK_CONTAINER(priv->gtk.viewport), GTK_WIDGET(current_page));
   }
 
