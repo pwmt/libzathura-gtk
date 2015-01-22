@@ -162,6 +162,7 @@ zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv)
   /* Setup grid */
   priv->gtk.grid = gtk_grid_new();
   gtk_grid_set_row_spacing(GTK_GRID(priv->gtk.grid), 10);
+  gtk_grid_set_column_spacing(GTK_GRID(priv->gtk.grid), 2);
   gtk_grid_set_row_homogeneous(GTK_GRID(priv->gtk.grid), FALSE);
   gtk_grid_set_column_homogeneous(GTK_GRID(priv->gtk.grid), FALSE);
   gtk_widget_set_halign(priv->gtk.grid, GTK_ALIGN_CENTER);
