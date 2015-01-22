@@ -30,6 +30,20 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
         g_object_set(G_OBJECT(document), "continuous-pages", !continuous_pages, NULL);
       }
       break;
+    case GDK_KEY_d:
+      {
+        guint pages_per_row;;
+        g_object_get(G_OBJECT(document), "pages-per-row", &pages_per_row, NULL);
+
+        if (pages_per_row == 1) {
+          pages_per_row = 2;
+        } else {
+          pages_per_row = 1;
+        }
+
+        g_object_set(G_OBJECT(document), "pages-per-row", pages_per_row, NULL);
+      }
+      break;
   }
 
   return TRUE;

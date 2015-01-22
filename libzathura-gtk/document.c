@@ -6,7 +6,11 @@
 static void zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv);
+static void zathura_gtk_fill_grid(ZathuraDocumentPrivate* priv);
+static void zathura_gtk_clear_grid(ZathuraDocumentPrivate* priv);
+static void zathura_gtk_free_grid(ZathuraDocumentPrivate* priv);
 static void set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable);
+static void set_pages_per_row(ZathuraDocumentPrivate* priv, guint pages_per_row);
 
 struct _ZathuraDocumentPrivate {
   struct {
@@ -23,13 +27,15 @@ struct _ZathuraDocumentPrivate {
 
   struct {
     gboolean continuous_pages;
+    guint pages_per_row;
   } settings;
 };
 
 enum {
   PROP_0,
   PROP_DOCUMENT,
-  PROP_CONTINUOUS_PAGES
+  PROP_CONTINUOUS_PAGES,
+  PROP_PAGES_PER_ROW
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraDocument, zathura_gtk_document, GTK_TYPE_BIN)
@@ -69,6 +75,20 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_PAGES_PER_ROW,
+    g_param_spec_uint(
+      "pages-per-row",
+      "pages-per-row",
+      "Defines the number of pages per row",
+      1,
+      G_MAXUINT,
+      1,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
 }
 
 static void
@@ -81,6 +101,7 @@ zathura_gtk_document_init(ZathuraDocument* widget)
   priv->gtk.viewport              = NULL;
   priv->gtk.grid                  = NULL;
   priv->settings.continuous_pages = TRUE;
+  priv->settings.pages_per_row    = 1;
 }
 
 GtkWidget*
@@ -145,34 +166,47 @@ zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv)
   gtk_widget_set_valign(priv->gtk.grid, GTK_ALIGN_CENTER);
 
   /* Fill grid */
+  zathura_gtk_fill_grid(priv);
+}
+
+static void
+zathura_gtk_fill_grid(ZathuraDocumentPrivate* priv)
+{
+  /* Fill grid */
   unsigned int number_of_pages = g_list_length(priv->document.pages);
-  GtkWidget* last_page = NULL;
+
   for (unsigned int i = 0; i < number_of_pages; i++) {
     /* Get page widget */
     GtkWidget* page_widget = g_list_nth_data(priv->document.pages, i);
 
-    /* Attach to grid */
-    if (i == 0) {
-      gtk_grid_attach(GTK_GRID (priv->gtk.grid), page_widget, 0, 0, 1, 1);
-    } else {
-      gtk_grid_attach_next_to(GTK_GRID(priv->gtk.grid), page_widget, last_page, GTK_POS_BOTTOM, 1, 1);
-    }
+    /* Get coordinates */
+    unsigned int x = i % priv->settings.pages_per_row;
+    unsigned int y = i / priv->settings.pages_per_row;
 
-    last_page = page_widget;
+    /* Attach to grid */
+    gtk_grid_attach(GTK_GRID (priv->gtk.grid), page_widget, x, y, 1, 1);
   }
 
   gtk_widget_show_all(priv->gtk.grid);
 }
 
-static void cb_zathura_gtk_grid_clear(GtkWidget* widget, gpointer data)
+static void
+cb_zathura_gtk_grid_clear(GtkWidget* widget, gpointer data)
 {
   g_object_ref(widget);
   gtk_container_remove(GTK_CONTAINER(data), widget);
 }
 
-static void zathura_gtk_free_grid(ZathuraDocumentPrivate* priv)
+static void
+zathura_gtk_clear_grid(ZathuraDocumentPrivate* priv)
 {
   gtk_container_foreach(GTK_CONTAINER(priv->gtk.grid), cb_zathura_gtk_grid_clear, priv->gtk.grid);
+}
+
+static void
+zathura_gtk_free_grid(ZathuraDocumentPrivate* priv)
+{
+  zathura_gtk_clear_grid(priv);
   g_object_unref(priv->gtk.grid);
   priv->gtk.grid = NULL;
 }
@@ -189,6 +223,9 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
       break;
     case PROP_CONTINUOUS_PAGES:
       set_continuous_pages(priv, g_value_get_boolean(value));
+      break;
+    case PROP_PAGES_PER_ROW:
+      set_pages_per_row(priv, g_value_get_uint(value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
@@ -207,6 +244,9 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
       break;
     case PROP_CONTINUOUS_PAGES:
       g_value_set_boolean(value, priv->settings.continuous_pages);
+      break;
+    case PROP_PAGES_PER_ROW:
+      g_value_set_uint(value, priv->settings.pages_per_row);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
@@ -236,4 +276,15 @@ set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable)
   }
 
   priv->settings.continuous_pages = enable;
+}
+
+static void
+set_pages_per_row(ZathuraDocumentPrivate* priv, guint pages_per_row)
+{
+  /* Update pages per row */
+  priv->settings.pages_per_row = pages_per_row;
+
+  /* Empty and refill grid */
+  zathura_gtk_clear_grid(priv);
+  zathura_gtk_fill_grid(priv);
 }
