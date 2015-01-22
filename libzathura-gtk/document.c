@@ -162,6 +162,8 @@ zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv)
   /* Setup grid */
   priv->gtk.grid = gtk_grid_new();
   gtk_grid_set_row_spacing(GTK_GRID(priv->gtk.grid), 10);
+  gtk_grid_set_row_homogeneous(GTK_GRID(priv->gtk.grid), FALSE);
+  gtk_grid_set_column_homogeneous(GTK_GRID(priv->gtk.grid), FALSE);
   gtk_widget_set_halign(priv->gtk.grid, GTK_ALIGN_CENTER);
   gtk_widget_set_valign(priv->gtk.grid, GTK_ALIGN_CENTER);
 
@@ -182,6 +184,12 @@ zathura_gtk_fill_grid(ZathuraDocumentPrivate* priv)
     /* Get coordinates */
     unsigned int x = i % priv->settings.pages_per_row;
     unsigned int y = i / priv->settings.pages_per_row;
+
+    if (x == 0) {
+      gtk_widget_set_halign(page_widget, GTK_ALIGN_END);
+    } else {
+      gtk_widget_set_halign(page_widget, GTK_ALIGN_START);
+    }
 
     /* Attach to grid */
     gtk_grid_attach(GTK_GRID (priv->gtk.grid), page_widget, x, y, 1, 1);
