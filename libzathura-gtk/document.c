@@ -2,34 +2,14 @@
 
 #include "document.h"
 #include "page.h"
+#include "document/internal.h"
+#include "document/callbacks.h"
+#include "document/grid.h"
 
 static void zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
-static void zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv);
-static void zathura_gtk_fill_grid(ZathuraDocumentPrivate* priv);
-static void zathura_gtk_clear_grid(ZathuraDocumentPrivate* priv);
-static void zathura_gtk_free_grid(ZathuraDocumentPrivate* priv);
 static void set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable);
 static void set_pages_per_row(ZathuraDocumentPrivate* priv, guint pages_per_row);
-
-struct _ZathuraDocumentPrivate {
-  struct {
-    zathura_document_t* document;
-    GList* pages;
-    GtkWidget* current_page;
-  } document;
-
-  struct {
-    GtkWidget* scrolled_window;
-    GtkWidget* viewport;
-    GtkWidget* grid;
-  } gtk;
-
-  struct {
-    gboolean continuous_pages;
-    guint pages_per_row;
-  } settings;
-};
 
 enum {
   PROP_0,
@@ -120,6 +100,38 @@ zathura_gtk_document_new(zathura_document_t* document)
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (priv->gtk.scrolled_window),
       GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
 
+  GtkAdjustment* horizontal_adjustment = gtk_scrolled_window_get_hadjustment(
+      GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window)
+      );
+
+  g_signal_connect(
+      G_OBJECT(horizontal_adjustment), 
+      "value-changed",
+      G_CALLBACK(cb_scrolled_window_horizontal_adjustment_value_changed),
+      priv);
+
+  g_signal_connect(
+      G_OBJECT(horizontal_adjustment), 
+      "changed",
+      G_CALLBACK(cb_scrolled_window_horizontal_adjustment_changed),
+      priv);
+
+  GtkAdjustment* vertical_adjustment = gtk_scrolled_window_get_vadjustment(
+      GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window)
+      );
+
+  g_signal_connect(
+      G_OBJECT(vertical_adjustment), 
+      "value-changed",
+      G_CALLBACK(cb_scrolled_window_vertical_adjustment_value_changed),
+      priv);
+
+  g_signal_connect(
+      G_OBJECT(vertical_adjustment), 
+      "changed",
+      G_CALLBACK(cb_scrolled_window_vertical_adjustment_changed),
+      priv);
+
   /* Setup viewport */
   priv->gtk.viewport = gtk_viewport_new(NULL, NULL);
 
@@ -154,70 +166,6 @@ zathura_gtk_document_new(zathura_document_t* document)
   gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->gtk.scrolled_window));
 
   return GTK_WIDGET(widget);
-}
-
-static void
-zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv)
-{
-  /* Setup grid */
-  priv->gtk.grid = gtk_grid_new();
-  gtk_grid_set_row_spacing(GTK_GRID(priv->gtk.grid), 10);
-  gtk_grid_set_column_spacing(GTK_GRID(priv->gtk.grid), 2);
-  gtk_grid_set_row_homogeneous(GTK_GRID(priv->gtk.grid), FALSE);
-  gtk_grid_set_column_homogeneous(GTK_GRID(priv->gtk.grid), FALSE);
-  gtk_widget_set_halign(priv->gtk.grid, GTK_ALIGN_CENTER);
-  gtk_widget_set_valign(priv->gtk.grid, GTK_ALIGN_CENTER);
-
-  /* Fill grid */
-  zathura_gtk_fill_grid(priv);
-}
-
-static void
-zathura_gtk_fill_grid(ZathuraDocumentPrivate* priv)
-{
-  /* Fill grid */
-  unsigned int number_of_pages = g_list_length(priv->document.pages);
-
-  for (unsigned int i = 0; i < number_of_pages; i++) {
-    /* Get page widget */
-    GtkWidget* page_widget = g_list_nth_data(priv->document.pages, i);
-
-    /* Get coordinates */
-    unsigned int x = i % priv->settings.pages_per_row;
-    unsigned int y = i / priv->settings.pages_per_row;
-
-    if (x == 0) {
-      gtk_widget_set_halign(page_widget, GTK_ALIGN_END);
-    } else {
-      gtk_widget_set_halign(page_widget, GTK_ALIGN_START);
-    }
-
-    /* Attach to grid */
-    gtk_grid_attach(GTK_GRID (priv->gtk.grid), page_widget, x, y, 1, 1);
-  }
-
-  gtk_widget_show_all(priv->gtk.grid);
-}
-
-static void
-cb_zathura_gtk_grid_clear(GtkWidget* widget, gpointer data)
-{
-  g_object_ref(widget);
-  gtk_container_remove(GTK_CONTAINER(data), widget);
-}
-
-static void
-zathura_gtk_clear_grid(ZathuraDocumentPrivate* priv)
-{
-  gtk_container_foreach(GTK_CONTAINER(priv->gtk.grid), cb_zathura_gtk_grid_clear, priv->gtk.grid);
-}
-
-static void
-zathura_gtk_free_grid(ZathuraDocumentPrivate* priv)
-{
-  zathura_gtk_clear_grid(priv);
-  g_object_unref(priv->gtk.grid);
-  priv->gtk.grid = NULL;
 }
 
 static void
