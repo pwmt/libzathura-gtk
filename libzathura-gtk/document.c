@@ -281,6 +281,7 @@ set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable)
     zathura_gtk_free_grid(priv);
 
     GtkWidget* current_page = (GtkWidget*) g_list_nth_data(priv->document.pages, 0); // FIXME: Current page
+    gtk_widget_set_halign(current_page, GTK_ALIGN_CENTER);
     gtk_container_add(GTK_CONTAINER(priv->gtk.viewport), GTK_WIDGET(current_page));
   }
 
@@ -294,6 +295,8 @@ set_pages_per_row(ZathuraDocumentPrivate* priv, guint pages_per_row)
   priv->settings.pages_per_row = pages_per_row;
 
   /* Empty and refill grid */
-  zathura_gtk_clear_grid(priv);
-  zathura_gtk_fill_grid(priv);
+  if (priv->settings.continuous_pages == true) {
+    zathura_gtk_clear_grid(priv);
+    zathura_gtk_fill_grid(priv);
+  }
 }
