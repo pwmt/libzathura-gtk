@@ -52,6 +52,22 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
         g_object_set(G_OBJECT(document), "rotation", rotation, NULL);
       }
       break;
+    case GDK_KEY_plus:
+      {
+        double scale;
+        g_object_get(G_OBJECT(document), "scale", &scale, NULL);
+        scale *= 1.2;
+        g_object_set(G_OBJECT(document), "scale", scale, NULL);
+      }
+      break;
+    case GDK_KEY_minus:
+      {
+        double scale;
+        g_object_get(G_OBJECT(document), "scale", &scale, NULL);
+        scale *= 0.9;
+        g_object_set(G_OBJECT(document), "scale", scale, NULL);
+      }
+      break;
   }
 
   return TRUE;

@@ -18,7 +18,8 @@ enum {
   PROP_DOCUMENT,
   PROP_CONTINUOUS_PAGES,
   PROP_PAGES_PER_ROW,
-  PROP_ROTATION
+  PROP_ROTATION,
+  PROP_SCALE
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraDocument, zathura_gtk_document, GTK_TYPE_BIN)
@@ -86,6 +87,20 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_SCALE,
+    g_param_spec_double(
+      "scale",
+      "Scale",
+      "The scale level",
+      0.01,
+      100.0,
+      1.0,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
 }
 
 static void
@@ -103,6 +118,8 @@ zathura_gtk_document_init(ZathuraDocument* widget)
 
   priv->settings.continuous_pages = TRUE;
   priv->settings.pages_per_row    = 1;
+  priv->settings.rotation         = 0;
+  priv->settings.scale            = 1.0;
 
   priv->position.x = 0.0;
   priv->position.y = 0.0;
@@ -129,13 +146,13 @@ zathura_gtk_document_new(zathura_document_t* document)
       );
 
   g_signal_connect(
-      G_OBJECT(horizontal_adjustment), 
+      G_OBJECT(horizontal_adjustment),
       "value-changed",
       G_CALLBACK(cb_scrolled_window_horizontal_adjustment_value_changed),
       priv);
 
   g_signal_connect(
-      G_OBJECT(horizontal_adjustment), 
+      G_OBJECT(horizontal_adjustment),
       "changed",
       G_CALLBACK(cb_scrolled_window_horizontal_adjustment_changed),
       priv);
@@ -145,13 +162,13 @@ zathura_gtk_document_new(zathura_document_t* document)
       );
 
   g_signal_connect(
-      G_OBJECT(vertical_adjustment), 
+      G_OBJECT(vertical_adjustment),
       "value-changed",
       G_CALLBACK(cb_scrolled_window_vertical_adjustment_value_changed),
       priv);
 
   g_signal_connect(
-      G_OBJECT(vertical_adjustment), 
+      G_OBJECT(vertical_adjustment),
       "changed",
       G_CALLBACK(cb_scrolled_window_vertical_adjustment_changed),
       priv);
@@ -217,12 +234,21 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
           case 270:
             if (priv->settings.rotation != rotation) {
               priv->settings.rotation = rotation;
-              g_list_foreach(priv->document.pages, cb_document_pages_set_rotation, priv);
+              g_list_foreach(priv->document.pages, (GFunc) cb_document_pages_set_rotation, priv);
             }
             break;
           default:
             // TODO: Pring warning message
             break;
+        }
+      }
+      break;
+    case PROP_SCALE:
+      {
+        double scale = g_value_get_double(value);
+        if (priv->settings.scale != scale) {
+          priv->settings.scale = scale;
+          g_list_foreach(priv->document.pages, (GFunc) cb_document_pages_set_scale, priv);
         }
       }
       break;
@@ -249,6 +275,9 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
       break;
     case PROP_ROTATION:
       g_value_set_uint(value, priv->settings.rotation);
+      break;
+    case PROP_SCALE:
+      g_value_set_double(value, priv->settings.scale);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);

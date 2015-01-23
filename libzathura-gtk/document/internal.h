@@ -30,6 +30,7 @@ struct _ZathuraDocumentPrivate {
     guint pages_per_row;
     guint first_page_column;
     guint rotation;
+    double scale;
   } settings;
 };
 

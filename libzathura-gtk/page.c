@@ -20,13 +20,15 @@ struct _ZathuraPagePrivate {
 
   struct {
     guint rotation;
+    double scale;
   } settings;
 };
 
 enum {
   PROP_0,
   PROP_PAGE,
-  PROP_ROTATION
+  PROP_ROTATION,
+  PROP_SCALE,
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraPage, zathura_gtk_page, GTK_TYPE_BIN)
@@ -68,6 +70,20 @@ zathura_gtk_page_class_init(ZathuraPageClass* class)
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_SCALE,
+    g_param_spec_double(
+      "scale",
+      "Scale",
+      "The scale level",
+      0.01,
+      100.0,
+      1.0,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
 }
 
 static void
@@ -83,6 +99,7 @@ zathura_gtk_page_init(ZathuraPage* widget)
   priv->dimensions.height = 0;
 
   priv->settings.rotation = 0;
+  priv->settings.scale    = 1.0;
 }
 
 gboolean
@@ -90,8 +107,8 @@ cb_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
 {
   ZathuraPagePrivate* priv = (ZathuraPagePrivate*) data;
 
-  const unsigned int page_height = gtk_widget_get_allocated_height(widget);
   const unsigned int page_width  = gtk_widget_get_allocated_width(widget);
+  const unsigned int page_height = gtk_widget_get_allocated_height(widget);
 
   cairo_save(cairo);
 
@@ -112,11 +129,14 @@ cb_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
     cairo_rotate(cairo, priv->settings.rotation * G_PI / 180.0);
   }
 
+  /* Scale */
+  cairo_scale(cairo, priv->settings.scale, priv->settings.scale);
+
   cairo_set_source_rgb(cairo, 255, 255, 255);
   cairo_rectangle(cairo, 0, 0, page_width, page_height);
   cairo_fill(cairo);
 
-  if (zathura_page_render_cairo(priv->page, cairo, 1.0, 0, 0) != ZATHURA_ERROR_OK) {
+  if (zathura_page_render_cairo(priv->page, cairo, priv->settings.scale, 0, 0) != ZATHURA_ERROR_OK) {
     return FALSE;
   }
 
@@ -193,6 +213,15 @@ zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* valu
         }
       }
       break;
+    case PROP_SCALE:
+      {
+        double scale = g_value_get_double(value);
+        if (priv->settings.scale != scale) {
+          priv->settings.scale = scale;
+          render_page(priv);
+        }
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
@@ -211,6 +240,9 @@ zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GPa
     case PROP_ROTATION:
       g_value_set_uint(value, priv->settings.rotation);
       break;
+    case PROP_SCALE:
+      g_value_set_double(value, priv->settings.scale);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
@@ -221,11 +253,11 @@ calculate_widget_size(ZathuraPagePrivate* priv, unsigned int* widget_width,
     unsigned int* widget_height)
 {
   if (priv->settings.rotation % 180) {
-    *widget_width  = round(priv->dimensions.height);
-    *widget_height = round(priv->dimensions.width);
+    *widget_width  = round(priv->dimensions.height * priv->settings.scale);
+    *widget_height = round(priv->dimensions.width  * priv->settings.scale);
   } else {
-    *widget_width  = round(priv->dimensions.width);
-    *widget_height = round(priv->dimensions.height);
+    *widget_width  = round(priv->dimensions.width  * priv->settings.scale);
+    *widget_height = round(priv->dimensions.height * priv->settings.scale);
   }
 }
 
@@ -234,6 +266,7 @@ render_page(ZathuraPagePrivate* priv)
 {
   unsigned int page_widget_width;
   unsigned int page_widget_height;
+
   calculate_widget_size(priv, &page_widget_width, &page_widget_height);
 
   gtk_widget_set_size_request(priv->drawing_area, page_widget_width, page_widget_height);
