@@ -44,6 +44,14 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
         g_object_set(G_OBJECT(document), "pages-per-row", pages_per_row, NULL);
       }
       break;
+    case GDK_KEY_r:
+      {
+        guint rotation;
+        g_object_get(G_OBJECT(document), "rotation", &rotation, NULL);
+        rotation = (rotation + 90) % 360;
+        g_object_set(G_OBJECT(document), "rotation", rotation, NULL);
+      }
+      break;
   }
 
   return TRUE;

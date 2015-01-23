@@ -89,3 +89,9 @@ update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, do
 
   return 0;
 }
+
+void
+cb_document_pages_set_rotation(GtkWidget* page, ZathuraDocumentPrivate* priv)
+{
+  g_object_set(G_OBJECT(page), "rotation", priv->settings.rotation, NULL);
+}

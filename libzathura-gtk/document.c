@@ -1,5 +1,7 @@
  /* See LICENSE file for license and copyright information */
 
+#include <math.h>
+
 #include "document.h"
 #include "page.h"
 #include "document/internal.h"
@@ -15,7 +17,8 @@ enum {
   PROP_0,
   PROP_DOCUMENT,
   PROP_CONTINUOUS_PAGES,
-  PROP_PAGES_PER_ROW
+  PROP_PAGES_PER_ROW,
+  PROP_ROTATION
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraDocument, zathura_gtk_document, GTK_TYPE_BIN)
@@ -66,6 +69,20 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
       1,
       G_MAXUINT,
       1,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_ROTATION,
+    g_param_spec_uint(
+      "rotation",
+      "Rotation",
+      "Defines the degree of rotation (0, 90, 180, 270)",
+      0,
+      270,
+      0,
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
@@ -190,6 +207,25 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
     case PROP_PAGES_PER_ROW:
       set_pages_per_row(priv, g_value_get_uint(value));
       break;
+    case PROP_ROTATION:
+      {
+        unsigned int rotation = g_value_get_uint(value);
+        switch (rotation) {
+          case 0:
+          case 90:
+          case 180:
+          case 270:
+            if (priv->settings.rotation != rotation) {
+              priv->settings.rotation = rotation;
+              g_list_foreach(priv->document.pages, cb_document_pages_set_rotation, priv);
+            }
+            break;
+          default:
+            // TODO: Pring warning message
+            break;
+        }
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
@@ -210,6 +246,9 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
       break;
     case PROP_PAGES_PER_ROW:
       g_value_set_uint(value, priv->settings.pages_per_row);
+      break;
+    case PROP_ROTATION:
+      g_value_set_uint(value, priv->settings.rotation);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);

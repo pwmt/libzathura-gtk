@@ -1,19 +1,32 @@
  /* See LICENSE file for license and copyright information */
 
+#include <math.h>
+
 #include "page.h"
 
 static void zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
+static void render_page(ZathuraPagePrivate* priv);
 
 struct _ZathuraPagePrivate {
   zathura_page_t* page;
   GtkWidget* overlay;
   GtkWidget* drawing_area;
+
+  struct {
+    unsigned int width;
+    unsigned int height;
+  } dimensions;
+
+  struct {
+    guint rotation;
+  } settings;
 };
 
 enum {
   PROP_0,
-  PROP_PAGE
+  PROP_PAGE,
+  PROP_ROTATION
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraPage, zathura_gtk_page, GTK_TYPE_BIN)
@@ -41,15 +54,35 @@ zathura_gtk_page_class_init(ZathuraPageClass* class)
       G_PARAM_WRITABLE | G_PARAM_READABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS
     )
   );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_ROTATION,
+    g_param_spec_uint(
+      "rotation",
+      "Rotation",
+      "Defines the degree of rotation (0, 90, 180, 270)",
+      0,
+      270,
+      0,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
 }
 
 static void
 zathura_gtk_page_init(ZathuraPage* widget)
 {
   ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(widget);
+
   priv->page         = NULL;
   priv->drawing_area = NULL;
   priv->overlay      = NULL;
+
+  priv->dimensions.width  = 0;
+  priv->dimensions.height = 0;
+
+  priv->settings.rotation = 0;
 }
 
 gboolean
@@ -61,6 +94,23 @@ cb_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
   const unsigned int page_width  = gtk_widget_get_allocated_width(widget);
 
   cairo_save(cairo);
+
+  /* Rotate */
+  switch (priv->settings.rotation) {
+    case 90:
+      cairo_translate(cairo, page_width, 0);
+      break;
+    case 180:
+      cairo_translate(cairo, page_width, page_height);
+      break;
+    case 270:
+      cairo_translate(cairo, 0, page_height);
+      break;
+  }
+
+  if (priv->settings.rotation != 0) {
+    cairo_rotate(cairo, priv->settings.rotation * G_PI / 180.0);
+  }
 
   cairo_set_source_rgb(cairo, 255, 255, 255);
   cairo_rectangle(cairo, 0, 0, page_width, page_height);
@@ -87,13 +137,11 @@ zathura_gtk_page_new(zathura_page_t* page)
   GObject* widget = g_object_new(ZATHURA_TYPE_PAGE, "page", page, NULL);
   ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(widget);
 
-  unsigned int page_width = 0;
-  if (zathura_page_get_width(page, &page_width) != ZATHURA_ERROR_OK) {
+  if (zathura_page_get_width(page, &(priv->dimensions.width)) != ZATHURA_ERROR_OK) {
     return NULL;
   }
 
-  unsigned int page_height = 0;
-  if (zathura_page_get_height(page, &page_height) != ZATHURA_ERROR_OK) {
+  if (zathura_page_get_height(page, &(priv->dimensions.height)) != ZATHURA_ERROR_OK) {
     return NULL;
   }
 
@@ -104,7 +152,7 @@ zathura_gtk_page_new(zathura_page_t* page)
   priv->drawing_area = gtk_drawing_area_new();
   gtk_widget_set_halign(priv->drawing_area, GTK_ALIGN_START);
   gtk_widget_set_valign(priv->drawing_area, GTK_ALIGN_START);
-  gtk_widget_set_size_request(priv->drawing_area, page_width, page_height);
+  gtk_widget_set_size_request(priv->drawing_area, priv->dimensions.width, priv->dimensions.height);
   g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_draw), priv);
 
   /* Setup container */
@@ -126,6 +174,25 @@ zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* valu
     case PROP_PAGE:
       priv->page = g_value_get_pointer(value);
       break;
+    case PROP_ROTATION:
+      {
+        unsigned int rotation = g_value_get_uint(value);
+        switch (rotation) {
+          case 0:
+          case 90:
+          case 180:
+          case 270:
+            if (priv->settings.rotation != rotation) {
+              priv->settings.rotation = rotation;
+              render_page(priv);
+            }
+            break;
+          default:
+            // TODO: Pring warning message
+            break;
+        }
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
@@ -141,7 +208,34 @@ zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GPa
     case PROP_PAGE:
       g_value_set_pointer(value, priv->page);
       break;
+    case PROP_ROTATION:
+      g_value_set_uint(value, priv->settings.rotation);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
+}
+
+static void
+calculate_widget_size(ZathuraPagePrivate* priv, unsigned int* widget_width,
+    unsigned int* widget_height)
+{
+  if (priv->settings.rotation % 180) {
+    *widget_width  = round(priv->dimensions.height);
+    *widget_height = round(priv->dimensions.width);
+  } else {
+    *widget_width  = round(priv->dimensions.width);
+    *widget_height = round(priv->dimensions.height);
+  }
+}
+
+static void
+render_page(ZathuraPagePrivate* priv)
+{
+  unsigned int page_widget_width;
+  unsigned int page_widget_height;
+  calculate_widget_size(priv, &page_widget_width, &page_widget_height);
+
+  gtk_widget_set_size_request(priv->drawing_area, page_widget_width, page_widget_height);
+  gtk_widget_queue_resize(priv->drawing_area);
 }
