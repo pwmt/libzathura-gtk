@@ -23,9 +23,7 @@ void
 zathura_gtk_fill_grid(ZathuraDocumentPrivate* priv)
 {
   /* Fill grid */
-  unsigned int number_of_pages = g_list_length(priv->document.pages);
-
-  for (unsigned int i = 0; i < number_of_pages; i++) {
+  for (unsigned int i = 0; i < priv->document.number_of_pages; i++) {
     /* Get page widget */
     GtkWidget* page_widget = g_list_nth_data(priv->document.pages, i);
 

@@ -10,6 +10,7 @@ struct _ZathuraDocumentPrivate {
   struct {
     zathura_document_t* document;
     GList* pages;
+    unsigned int number_of_pages;
     GtkWidget* current_page;
   } document;
 
@@ -20,8 +21,14 @@ struct _ZathuraDocumentPrivate {
   } gtk;
 
   struct {
+    double x;
+    double y;
+  } position;
+
+  struct {
     gboolean continuous_pages;
     guint pages_per_row;
+    guint first_page_column;
   } settings;
 };
 

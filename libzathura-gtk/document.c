@@ -75,13 +75,20 @@ static void
 zathura_gtk_document_init(ZathuraDocument* widget)
 {
   ZathuraDocumentPrivate* priv = ZATHURA_DOCUMENT_GET_PRIVATE(widget);
-  priv->document.document         = NULL;
-  priv->document.pages            = NULL;
-  priv->gtk.scrolled_window       = NULL;
-  priv->gtk.viewport              = NULL;
-  priv->gtk.grid                  = NULL;
+
+  priv->document.document        = NULL;
+  priv->document.pages           = NULL;
+  priv->document.number_of_pages = 0;
+
+  priv->gtk.scrolled_window = NULL;
+  priv->gtk.viewport        = NULL;
+  priv->gtk.grid            = NULL;
+
   priv->settings.continuous_pages = TRUE;
   priv->settings.pages_per_row    = 1;
+
+  priv->position.x = 0.0;
+  priv->position.y = 0.0;
 }
 
 GtkWidget*
@@ -136,13 +143,12 @@ zathura_gtk_document_new(zathura_document_t* document)
   priv->gtk.viewport = gtk_viewport_new(NULL, NULL);
 
   /* Create page widgets */
-  unsigned int number_of_pages = 0;
-  if (zathura_document_get_number_of_pages(document, &number_of_pages) !=
+  if (zathura_document_get_number_of_pages(document, &(priv->document.number_of_pages)) !=
       ZATHURA_ERROR_OK) {
     return NULL; // FIXME: Leaks
   }
 
-  for (unsigned int i = 0; i < number_of_pages; i++) {
+  for (unsigned int i = 0; i < priv->document.number_of_pages; i++) {
     zathura_page_t* page;
     if (zathura_document_get_page(document, i, &page) != ZATHURA_ERROR_OK) {
       return NULL; // FIXME: Leaks
@@ -228,7 +234,7 @@ set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable)
   } else if (enable == FALSE && priv->settings.continuous_pages == TRUE) {
     zathura_gtk_free_grid(priv);
 
-    GtkWidget* current_page = (GtkWidget*) g_list_nth_data(priv->document.pages, 0); // FIXME: Current page
+    GtkWidget* current_page = priv->document.current_page;
     gtk_widget_set_halign(current_page, GTK_ALIGN_CENTER);
     gtk_container_add(GTK_CONTAINER(priv->gtk.viewport), GTK_WIDGET(current_page));
   }
