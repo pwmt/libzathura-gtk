@@ -126,6 +126,8 @@ int main(int argc, char* argv[])
   gtk_main();
 
   /* clean-up */
+  gtk_widget_destroy(document_widget);
+
   zathura_document_free(document);
   zathura_plugin_manager_free(plugin_manager);
 

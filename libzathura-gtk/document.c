@@ -179,13 +179,20 @@ zathura_gtk_document_new(zathura_document_t* document)
   /* Create page widgets */
   if (zathura_document_get_number_of_pages(document, &(priv->document.number_of_pages)) !=
       ZATHURA_ERROR_OK) {
-    return NULL; // FIXME: Leaks
+    g_object_unref(priv->gtk.scrolled_window);
+    g_object_unref(priv->gtk.viewport);
+    g_object_unref(widget);
+    return NULL;
   }
 
   for (unsigned int i = 0; i < priv->document.number_of_pages; i++) {
     zathura_page_t* page;
     if (zathura_document_get_page(document, i, &page) != ZATHURA_ERROR_OK) {
-      return NULL; // FIXME: Leaks
+      g_object_unref(priv->gtk.scrolled_window);
+      g_object_unref(priv->gtk.viewport);
+      g_object_unref(widget);
+      g_list_foreach(priv->document.pages, (GFunc) g_object_unref, NULL);
+      return NULL;
     }
 
     /* Create page widget */
