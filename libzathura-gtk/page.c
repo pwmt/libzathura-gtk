@@ -3,26 +3,12 @@
 #include <math.h>
 
 #include "page.h"
+#include "page/internal.h"
+#include "page/callbacks.h"
 
 static void zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
 static void render_page(ZathuraPagePrivate* priv);
-
-struct _ZathuraPagePrivate {
-  zathura_page_t* page;
-  GtkWidget* overlay;
-  GtkWidget* drawing_area;
-
-  struct {
-    unsigned int width;
-    unsigned int height;
-  } dimensions;
-
-  struct {
-    guint rotation;
-    double scale;
-  } settings;
-};
 
 enum {
   PROP_0,
@@ -102,51 +88,6 @@ zathura_gtk_page_init(ZathuraPage* widget)
   priv->settings.scale    = 1.0;
 }
 
-gboolean
-cb_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
-{
-  ZathuraPagePrivate* priv = (ZathuraPagePrivate*) data;
-
-  const unsigned int page_width  = gtk_widget_get_allocated_width(widget);
-  const unsigned int page_height = gtk_widget_get_allocated_height(widget);
-
-  cairo_save(cairo);
-
-  /* Rotate */
-  switch (priv->settings.rotation) {
-    case 90:
-      cairo_translate(cairo, page_width, 0);
-      break;
-    case 180:
-      cairo_translate(cairo, page_width, page_height);
-      break;
-    case 270:
-      cairo_translate(cairo, 0, page_height);
-      break;
-  }
-
-  if (priv->settings.rotation != 0) {
-    cairo_rotate(cairo, priv->settings.rotation * G_PI / 180.0);
-  }
-
-  /* Scale */
-  cairo_scale(cairo, priv->settings.scale, priv->settings.scale);
-
-  cairo_set_source_rgb(cairo, 255, 255, 255);
-  cairo_rectangle(cairo, 0, 0, page_width, page_height);
-  cairo_fill(cairo);
-
-  if (zathura_page_render_cairo(priv->page, cairo, priv->settings.scale, 0, 0) != ZATHURA_ERROR_OK) {
-    return FALSE;
-  }
-
-  cairo_set_operator(cairo, CAIRO_OPERATOR_DEST_OVER);
-  cairo_paint(cairo);
-  cairo_restore(cairo);
-
-  return FALSE;
-}
-
 GtkWidget*
 zathura_gtk_page_new(zathura_page_t* page)
 {
@@ -173,7 +114,7 @@ zathura_gtk_page_new(zathura_page_t* page)
   gtk_widget_set_halign(priv->drawing_area, GTK_ALIGN_START);
   gtk_widget_set_valign(priv->drawing_area, GTK_ALIGN_START);
   gtk_widget_set_size_request(priv->drawing_area, priv->dimensions.width, priv->dimensions.height);
-  g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_draw), priv);
+  g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_page_draw), priv);
 
   /* Setup container */
   gtk_container_add(GTK_CONTAINER(priv->overlay), GTK_WIDGET(priv->drawing_area));
