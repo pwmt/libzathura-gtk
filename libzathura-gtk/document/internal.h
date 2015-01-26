@@ -11,7 +11,7 @@ struct _ZathuraDocumentPrivate {
     zathura_document_t* document;
     GList* pages;
     unsigned int number_of_pages;
-    GtkWidget* current_page;
+    unsigned int current_page_number;
   } document;
 
   struct {

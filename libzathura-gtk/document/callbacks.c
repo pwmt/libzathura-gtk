@@ -54,7 +54,7 @@ update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, do
   int viewport_height = gtk_widget_get_allocated_height(priv->gtk.viewport);
   int viewport_area   = viewport_width * viewport_height;
 
-  GtkWidget* new_current_page_widget = priv->document.current_page;
+  unsigned int new_current_page_number = priv->document.current_page_number;
   float intersecting_area_perc_max = 0;
 
   for (unsigned int i = 0; i < priv->document.number_of_pages; i++) {
@@ -80,14 +80,14 @@ update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, do
       float intersecting_area_perc = (float) intersecting_area_size / viewport_area;
 
       if (intersecting_area_perc >= intersecting_area_perc_max) {
-        new_current_page_widget = page_widget;
+        new_current_page_number = i;
         intersecting_area_perc_max = intersecting_area_perc;
       }
     }
   }
 
   /* Update current page */
-  priv->document.current_page = new_current_page_widget;
+  priv->document.current_page_number = new_current_page_number;
 
   return 0;
 }

@@ -309,7 +309,7 @@ set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable)
   } else if (enable == FALSE && priv->settings.continuous_pages == TRUE) {
     zathura_gtk_free_grid(priv);
 
-    GtkWidget* current_page = priv->document.current_page;
+    GtkWidget* current_page = g_list_nth_data(priv->document.pages, priv->document.current_page_number);
     gtk_widget_set_halign(current_page, GTK_ALIGN_CENTER);
     gtk_container_add(GTK_CONTAINER(priv->gtk.viewport), GTK_WIDGET(current_page));
   }
