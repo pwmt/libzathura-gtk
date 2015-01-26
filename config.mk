@@ -36,6 +36,7 @@ BUILDDIR ?= build
 BUILDDIR_RELEASE ?= ${BUILDDIR}/release
 BUILDDIR_DEBUG ?= ${BUILDDIR}/debug
 BUILDDIR_GCOV ?= ${BUILDDIR}/gcov
+BINDIR ?= bin
 
 # libs
 LIBZATHURA_INC ?= $(shell pkg-config --cflags libzathura)
@@ -91,6 +92,9 @@ GENHTML_FLAGS=--rc lcov_branch_coverage=1 --output-directory ${LCOV_OUTPUT} ${BU
 # libfiu
 WITH_LIBFIU ?= 1
 FIU_RUN ?= fiu-run -x
+
+# debugging
+GDB ?= cgdb
 
 # set to something != 0 if you want verbose build output
 VERBOSE ?= 0

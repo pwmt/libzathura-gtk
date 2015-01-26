@@ -18,6 +18,7 @@ void
 cb_scrolled_window_horizontal_adjustment_changed(GtkAdjustment*
     horizontal_adjustment, ZathuraDocumentPrivate* priv)
 {
+  update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
 }
 
 void
@@ -32,6 +33,7 @@ void
 cb_scrolled_window_vertical_adjustment_changed(GtkAdjustment*
     vertical_adjustment, ZathuraDocumentPrivate* priv)
 {
+  update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
 }
 
 static double
