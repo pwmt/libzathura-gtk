@@ -13,6 +13,11 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
 
   cairo_save(cairo);
 
+  /* Fill white */
+  cairo_set_source_rgb(cairo, 255, 255, 255);
+  cairo_rectangle(cairo, 0, 0, page_width, page_height);
+  cairo_fill(cairo);
+
   /* Rotate */
   switch (priv->settings.rotation) {
     case 90:
@@ -32,10 +37,6 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
 
   /* Scale */
   cairo_scale(cairo, priv->settings.scale, priv->settings.scale);
-
-  cairo_set_source_rgb(cairo, 255, 255, 255);
-  cairo_rectangle(cairo, 0, 0, page_width, page_height);
-  cairo_fill(cairo);
 
   if (zathura_page_render_cairo(priv->page, cairo, priv->settings.scale, 0, 0) != ZATHURA_ERROR_OK) {
     return FALSE;
