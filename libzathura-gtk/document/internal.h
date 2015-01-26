@@ -6,10 +6,20 @@
 #include <gtk/gtk.h>
 #include "../document.h"
 
+typedef struct zathura_gtk_page_widget_status_s {
+  struct {
+    int x;
+    int y;
+  } position;
+
+  bool visible;
+} zathura_gtk_page_widget_status_t;
+
 struct _ZathuraDocumentPrivate {
   struct {
     zathura_document_t* document;
     GList* pages;
+    GList* pages_status;
     unsigned int number_of_pages;
     unsigned int current_page_number;
   } document;

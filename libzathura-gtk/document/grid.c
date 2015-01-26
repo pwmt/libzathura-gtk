@@ -1,13 +1,15 @@
  /* See LICENSE file for license and copyright information */
 
-#include "grid.h"
 #include "internal.h"
+#include "grid.h"
+#include "callbacks.h"
 
 void
 zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv)
 {
   /* Setup grid */
   priv->gtk.grid = gtk_grid_new();
+
   gtk_grid_set_row_spacing(GTK_GRID(priv->gtk.grid), 10);
   gtk_grid_set_column_spacing(GTK_GRID(priv->gtk.grid), 2);
   gtk_grid_set_row_homogeneous(GTK_GRID(priv->gtk.grid), FALSE);
@@ -76,3 +78,41 @@ zathura_gtk_free_grid(ZathuraDocumentPrivate* priv)
   priv->gtk.grid = NULL;
 }
 
+#define SET_ADJUSTMENT_TO_VALUE(adjustment, value) \
+  gtk_adjustment_set_value((adjustment), MAX(gtk_adjustment_get_lower((adjustment)), \
+        MIN( gtk_adjustment_get_upper((adjustment)) - \
+          gtk_adjustment_get_page_size((adjustment)), (value))));
+
+static void
+zathura_gtk_grid_set_position_x(ZathuraDocumentPrivate* priv, int x)
+{
+  GtkAdjustment* horizontal_adjustment = gtk_scrolled_window_get_hadjustment(
+      GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window));
+
+  SET_ADJUSTMENT_TO_VALUE(horizontal_adjustment, x);
+}
+
+static void
+zathura_gtk_grid_set_position_y(ZathuraDocumentPrivate* priv, int y)
+{
+  GtkAdjustment* vertical_adjustment = gtk_scrolled_window_get_vadjustment(
+      GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window));
+
+  SET_ADJUSTMENT_TO_VALUE(vertical_adjustment, y);
+}
+
+void
+zathura_gtk_grid_set_position(ZathuraDocumentPrivate* priv, int x, int y)
+{
+  zathura_gtk_grid_set_position_x(priv, x);
+  zathura_gtk_grid_set_position_y(priv, y);
+}
+
+void
+zathura_gtk_grid_set_page(ZathuraDocumentPrivate* priv, int page_number)
+{
+  zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, page_number);
+
+  zathura_gtk_grid_set_position_x(priv, widget_status->position.x);
+  zathura_gtk_grid_set_position_y(priv, widget_status->position.y);
+}

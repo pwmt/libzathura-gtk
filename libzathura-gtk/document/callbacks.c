@@ -69,13 +69,19 @@ update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, do
     gtk_widget_translate_coordinates(page_widget, priv->gtk.scrolled_window, x,
         y, &page_widget_x, &page_widget_y);
 
+    /* Save page coordinates and visibility status */
+    zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, i);
+    widget_status->position.x = page_widget_x;
+    widget_status->position.y = page_widget_y;
+
     /* Check if widget is visible */
     GdkRectangle viewport_rectangle = { 0, 0, viewport_width, viewport_height };
     GdkRectangle page_widget_rectangle = { page_widget_x, page_widget_y, page_widget_width, page_widget_height };
     GdkRectangle intersecting_area;
 
-    bool is_visible = gdk_rectangle_intersect(&viewport_rectangle, &page_widget_rectangle, &intersecting_area);
-    if (is_visible == true) {
+    widget_status->visible = gdk_rectangle_intersect(&viewport_rectangle, &page_widget_rectangle, &intersecting_area);
+
+    if (widget_status->visible == true) {
       int intersecting_area_size = intersecting_area.width * intersecting_area.height;
       float intersecting_area_perc = (float) intersecting_area_size / viewport_area;
 

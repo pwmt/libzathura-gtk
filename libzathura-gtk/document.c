@@ -110,6 +110,7 @@ zathura_gtk_document_init(ZathuraDocument* widget)
 
   priv->document.document        = NULL;
   priv->document.pages           = NULL;
+  priv->document.pages_status    = NULL;
   priv->document.number_of_pages = 0;
 
   priv->gtk.scrolled_window = NULL;
@@ -192,6 +193,7 @@ zathura_gtk_document_new(zathura_document_t* document)
       g_object_unref(priv->gtk.viewport);
       g_object_unref(widget);
       g_list_foreach(priv->document.pages, (GFunc) g_object_unref, NULL);
+      g_list_foreach(priv->document.pages, (GFunc) g_free, NULL);
       return NULL;
     }
 
@@ -200,8 +202,14 @@ zathura_gtk_document_new(zathura_document_t* document)
     gtk_widget_set_halign(page_widget, GTK_ALIGN_CENTER);
     gtk_widget_set_valign(page_widget, GTK_ALIGN_CENTER);
 
+    /* Create new page status */
+    zathura_gtk_page_widget_status_t* page_widget_status =
+      g_malloc0(sizeof(zathura_gtk_page_widget_status_t));
+    page_widget_status->visible = false;
+
     /* Append to list */
-    priv->document.pages = g_list_append(priv->document.pages, page_widget);
+    priv->document.pages        = g_list_append(priv->document.pages, page_widget);
+    priv->document.pages_status = g_list_append(priv->document.pages_status, page_widget_status);
   }
 
   /* Setup grid */
@@ -291,6 +299,35 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
   }
 }
 
+typedef struct zathura_page_info_s {
+  ZathuraDocumentPrivate* priv;
+  int page;
+} zathura_page_info_t;
+
+static gboolean
+page_open_idle(zathura_page_info_t* page_info)
+{
+  ZathuraDocumentPrivate* priv = page_info->priv;
+  zathura_gtk_grid_set_page(priv, page_info->page);
+}
+
+static void
+set_page(ZathuraDocumentPrivate* priv, unsigned int page_number)
+{
+  zathura_page_info_t* page_info = g_malloc0(sizeof(zathura_page_info_t));
+  page_info->priv = priv;
+  page_info->page = page_number;
+
+  zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, page_number);
+
+  fprintf(stderr, "Position first: %d: %d %d\n",
+      page_number,
+      widget_status->position.x,
+      widget_status->position.y);
+
+  gdk_threads_add_idle(page_open_idle, page_info);
+}
+
 static void
 set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable)
 {
@@ -298,6 +335,10 @@ set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable)
 
   zathura_gtk_clear_grid(priv);
   zathura_gtk_fill_grid(priv);
+
+  if (priv->settings.continuous_pages == true) {
+    set_page(priv, priv->document.current_page_number);
+  }
 }
 
 static void
