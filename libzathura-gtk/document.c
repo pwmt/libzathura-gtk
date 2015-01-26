@@ -301,29 +301,41 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
 
 typedef struct zathura_page_info_s {
   ZathuraDocumentPrivate* priv;
-  int page;
+  int page_number;
+  struct {
+    unsigned int x;
+    unsigned int y;
+  } position;
 } zathura_page_info_t;
 
 static gboolean
 page_open_idle(zathura_page_info_t* page_info)
 {
   ZathuraDocumentPrivate* priv = page_info->priv;
-  zathura_gtk_grid_set_page(priv, page_info->page);
+
+  /* Get current position */
+  zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, page_info->page_number);
+
+  /* Calculate new position */
+  unsigned int x = widget_status->position.x - page_info->position.x;
+  unsigned int y = widget_status->position.y - page_info->position.y;
+
+  zathura_gtk_grid_set_position(priv, x, y);
+
+  return FALSE;
 }
 
 static void
 set_page(ZathuraDocumentPrivate* priv, unsigned int page_number)
 {
-  zathura_page_info_t* page_info = g_malloc0(sizeof(zathura_page_info_t));
-  page_info->priv = priv;
-  page_info->page = page_number;
-
   zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, page_number);
 
-  fprintf(stderr, "Position first: %d: %d %d\n",
-      page_number,
-      widget_status->position.x,
-      widget_status->position.y);
+  zathura_page_info_t* page_info = g_malloc0(sizeof(zathura_page_info_t));
+
+  page_info->priv = priv;
+  page_info->page_number = page_number;
+  page_info->position.x = widget_status->position.x,
+  page_info->position.y = widget_status->position.y;
 
   gdk_threads_add_idle(page_open_idle, page_info);
 }
