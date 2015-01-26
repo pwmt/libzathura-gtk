@@ -22,8 +22,19 @@ zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv)
 void
 zathura_gtk_fill_grid(ZathuraDocumentPrivate* priv)
 {
+  unsigned int i = 0;
+  unsigned int n = priv->document.number_of_pages;
+
+  /* If we have continuous pages disable we calculate the pages
+   * which are in the same row as the current page */
+  if (priv->settings.continuous_pages == false) {
+    unsigned int nrow = priv->document.current_page_number / priv->settings.pages_per_row;
+    i = nrow * priv->settings.pages_per_row;
+    n = i + priv->settings.pages_per_row;
+  }
+
   /* Fill grid */
-  for (unsigned int i = 0; i < priv->document.number_of_pages; i++) {
+  for (; i < n && i < priv->document.number_of_pages; i++) {
     /* Get page widget */
     GtkWidget* page_widget = g_list_nth_data(priv->document.pages, i);
 

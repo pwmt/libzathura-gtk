@@ -294,27 +294,10 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
 static void
 set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable)
 {
-  /* Remove child from viewport */
-  GtkWidget* child = gtk_bin_get_child(GTK_BIN(priv->gtk.viewport));
-  if (child != NULL) {
-    g_object_ref(child);
-    gtk_container_remove(GTK_CONTAINER(priv->gtk.viewport), child);
-  }
-
-  /* Setup grid */
-  if (enable == TRUE && priv->settings.continuous_pages == FALSE) {
-    zathura_gtk_setup_grid(priv);
-    gtk_container_add(GTK_CONTAINER(priv->gtk.viewport), GTK_WIDGET(priv->gtk.grid));
-  /* Setup single page */
-  } else if (enable == FALSE && priv->settings.continuous_pages == TRUE) {
-    zathura_gtk_free_grid(priv);
-
-    GtkWidget* current_page = g_list_nth_data(priv->document.pages, priv->document.current_page_number);
-    gtk_widget_set_halign(current_page, GTK_ALIGN_CENTER);
-    gtk_container_add(GTK_CONTAINER(priv->gtk.viewport), GTK_WIDGET(current_page));
-  }
-
   priv->settings.continuous_pages = enable;
+
+  zathura_gtk_clear_grid(priv);
+  zathura_gtk_fill_grid(priv);
 }
 
 static void
@@ -324,8 +307,6 @@ set_pages_per_row(ZathuraDocumentPrivate* priv, guint pages_per_row)
   priv->settings.pages_per_row = pages_per_row;
 
   /* Empty and refill grid */
-  if (priv->settings.continuous_pages == true) {
-    zathura_gtk_clear_grid(priv);
-    zathura_gtk_fill_grid(priv);
-  }
+  zathura_gtk_clear_grid(priv);
+  zathura_gtk_fill_grid(priv);
 }
