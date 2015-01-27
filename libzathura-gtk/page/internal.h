@@ -4,7 +4,7 @@
 #define ZATHURA_GTK_PAGE_INTERNAL
 
 #include <gtk/gtk.h>
-#include "../page.h"
+#include "page.h"
 
 struct _ZathuraPagePrivate {
   zathura_page_t* page;

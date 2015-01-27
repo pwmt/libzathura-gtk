@@ -3,7 +3,8 @@
 #ifndef LIBZATHURA_GTK_H
 #define LIBZATHURA_GTK_H
 
-#include "document.h"
+#include "document/document.h"
+#include "page/page.h"
 #include "version.h"
 
 #endif /* LIBZATHURA_GTK_H */

@@ -4,7 +4,7 @@
 #define ZATHURA_GTK_DOCUMENT_INTERNAL
 
 #include <gtk/gtk.h>
-#include "../document.h"
+#include "document.h"
 
 typedef struct zathura_gtk_page_widget_status_s {
   struct {

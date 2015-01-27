@@ -3,8 +3,8 @@
 #include <math.h>
 
 #include "page.h"
-#include "page/internal.h"
-#include "page/callbacks.h"
+#include "internal.h"
+#include "callbacks.h"
 
 static void zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);

@@ -5,7 +5,7 @@
 
 #include <gtk/gtk.h>
 
-#include "../page.h"
+#include "page.h"
 
 gboolean cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data);
 

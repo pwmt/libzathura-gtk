@@ -4,7 +4,7 @@
 #include <fiu.h>
 #include <fiu-control.h>
 
-#include "page.h"
+#include "libzathura-gtk.h"
 
 zathura_page_t* page;
 zathura_document_t* document;

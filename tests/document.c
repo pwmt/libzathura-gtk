@@ -4,7 +4,7 @@
 #include <fiu.h>
 #include <fiu-control.h>
 
-#include "document.h"
+#include "libzathura-gtk.h"
 
 zathura_document_t* document;
 zathura_plugin_manager_t* plugin_manager;

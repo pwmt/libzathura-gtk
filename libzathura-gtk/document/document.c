@@ -3,10 +3,11 @@
 #include <math.h>
 
 #include "document.h"
-#include "page.h"
-#include "document/internal.h"
-#include "document/callbacks.h"
-#include "document/grid.h"
+#include "internal.h"
+#include "callbacks.h"
+#include "grid.h"
+
+#include "../page/page.h"
 
 static void zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);

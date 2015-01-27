@@ -3,7 +3,7 @@
 #ifndef ZATHURA_GTK_DOCUMENT_GRID
 #define ZATHURA_GTK_DOCUMENT_GRID
 
-#include "../document.h"
+#include "document.h"
 
 void zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv);
 void zathura_gtk_fill_grid(ZathuraDocumentPrivate* priv);

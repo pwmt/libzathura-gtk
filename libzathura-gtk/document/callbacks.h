@@ -5,7 +5,7 @@
 
 #include <gtk/gtk.h>
 
-#include "../document.h"
+#include "document.h"
 
 void cb_scrolled_window_horizontal_adjustment_value_changed(GtkAdjustment* horizontal_adjustment, ZathuraDocumentPrivate* priv);
 
