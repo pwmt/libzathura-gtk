@@ -3,6 +3,7 @@
 #include "callbacks.h"
 #include "internal.h"
 #include "grid.h"
+#include "../macros.h"
 
 static double adjustment_get_ratio(GtkAdjustment* adjustment);
 static void update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, double y);
@@ -17,7 +18,7 @@ cb_scrolled_window_horizontal_adjustment_value_changed(GtkAdjustment*
 
 void
 cb_scrolled_window_horizontal_adjustment_changed(GtkAdjustment*
-    horizontal_adjustment, ZathuraDocumentPrivate* priv)
+    UNUSED(horizontal_adjustment), ZathuraDocumentPrivate* priv)
 {
   update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
 }
@@ -32,7 +33,7 @@ cb_scrolled_window_vertical_adjustment_value_changed(GtkAdjustment*
 
 void
 cb_scrolled_window_vertical_adjustment_changed(GtkAdjustment*
-    vertical_adjustment, ZathuraDocumentPrivate* priv)
+    UNUSED(vertical_adjustment), ZathuraDocumentPrivate* priv)
 {
   update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
 }
@@ -116,7 +117,8 @@ cb_document_pages_set_scale(GtkWidget* page, ZathuraDocumentPrivate* priv)
   g_object_set(G_OBJECT(page), "scale", priv->settings.scale, NULL);
 }
 
-gboolean cb_grid_draw(GtkWidget* scrolled_window, cairo_t* cr, ZathuraDocumentPrivate* priv)
+gboolean cb_grid_draw(GtkWidget* UNUSED(scrolled_window), cairo_t* UNUSED(cr),
+    ZathuraDocumentPrivate* priv)
 {
   if (priv->status.restore_position != NULL) {
     zathura_page_info_t* page_info = priv->status.restore_position;
