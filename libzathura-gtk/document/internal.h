@@ -15,6 +15,8 @@ typedef struct zathura_gtk_page_widget_status_s {
   bool visible;
 } zathura_gtk_page_widget_status_t;
 
+typedef struct zathura_page_info_s zathura_page_info_t;
+
 struct _ZathuraDocumentPrivate {
   struct {
     zathura_document_t* document;
@@ -28,6 +30,10 @@ struct _ZathuraDocumentPrivate {
     GtkWidget* scrolled_window;
     GtkWidget* viewport;
     GtkWidget* grid;
+
+    struct {
+      guint refresh_view;
+    } signals;
   } gtk;
 
   struct {
@@ -42,6 +48,19 @@ struct _ZathuraDocumentPrivate {
     guint rotation;
     double scale;
   } settings;
+
+  struct {
+    zathura_page_info_t* restore_position;
+  } status;
+};
+
+struct zathura_page_info_s {
+  ZathuraDocumentPrivate* priv;
+  int page_number;
+  struct {
+    unsigned int x;
+    unsigned int y;
+  } position;
 };
 
 #endif /* ZATHURA_GTK_DOCUMENT_INTERNAL */

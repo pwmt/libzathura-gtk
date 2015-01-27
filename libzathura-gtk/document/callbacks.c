@@ -2,6 +2,7 @@
 
 #include "callbacks.h"
 #include "internal.h"
+#include "grid.h"
 
 static double adjustment_get_ratio(GtkAdjustment* adjustment);
 static void update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, double y);
@@ -14,7 +15,7 @@ cb_scrolled_window_horizontal_adjustment_value_changed(GtkAdjustment*
   update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
 }
 
-void 
+void
 cb_scrolled_window_horizontal_adjustment_changed(GtkAdjustment*
     horizontal_adjustment, ZathuraDocumentPrivate* priv)
 {
@@ -64,13 +65,18 @@ update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, do
     int page_widget_width  = gtk_widget_get_allocated_width(page_widget);
     int page_widget_height = gtk_widget_get_allocated_height(page_widget);
 
+    /* Get status */
+    zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, i);
+
     /* Get widget coordinates relative to the scrolled window */
     int page_widget_x, page_widget_y;
-    gtk_widget_translate_coordinates(page_widget, priv->gtk.scrolled_window, x,
-        y, &page_widget_x, &page_widget_y);
+    if (gtk_widget_translate_coordinates(page_widget, priv->gtk.scrolled_window, x,
+        y, &page_widget_x, &page_widget_y) == FALSE) {
+      widget_status->visible = false;
+      continue;
+    };
 
     /* Save page coordinates and visibility status */
-    zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, i);
     widget_status->position.x = page_widget_x;
     widget_status->position.y = page_widget_y;
 
@@ -95,7 +101,7 @@ update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, do
   /* Update current page */
   priv->document.current_page_number = new_current_page_number;
 
-  return 0;
+  return;
 }
 
 void
@@ -108,4 +114,29 @@ void
 cb_document_pages_set_scale(GtkWidget* page, ZathuraDocumentPrivate* priv)
 {
   g_object_set(G_OBJECT(page), "scale", priv->settings.scale, NULL);
+}
+
+gboolean cb_grid_draw(GtkWidget* scrolled_window, cairo_t* cr, ZathuraDocumentPrivate* priv)
+{
+  if (priv->status.restore_position != NULL) {
+    zathura_page_info_t* page_info = priv->status.restore_position;
+
+
+    /* Get current position */
+    zathura_gtk_page_widget_status_t* widget_status =
+      g_list_nth_data(priv->document.pages_status, page_info->page_number);
+
+    /* Calculate new position */
+    unsigned int x = widget_status->position.x - page_info->position.x;
+    unsigned int y = widget_status->position.y - page_info->position.y;
+
+    zathura_gtk_grid_set_position(priv, x, y);
+
+    priv->document.current_page_number = page_info->page_number;
+
+    g_free(priv->status.restore_position);
+    priv->status.restore_position = NULL;
+  }
+
+  return FALSE;
 }

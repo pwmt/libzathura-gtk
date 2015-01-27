@@ -19,4 +19,6 @@ void cb_document_pages_set_rotation(GtkWidget* page, ZathuraDocumentPrivate* pri
 
 void cb_document_pages_set_scale(GtkWidget* page, ZathuraDocumentPrivate* priv);
 
+gboolean cb_grid_draw(GtkWidget* scrolled_window, cairo_t* cr, ZathuraDocumentPrivate* priv);
+
 #endif /* ZATHURA_GTK_DOCUMENT_CALLBACKS */

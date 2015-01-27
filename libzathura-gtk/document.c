@@ -124,6 +124,8 @@ zathura_gtk_document_init(ZathuraDocument* widget)
 
   priv->position.x = 0.0;
   priv->position.y = 0.0;
+
+  priv->status.restore_position = FALSE;
 }
 
 GtkWidget*
@@ -141,6 +143,12 @@ zathura_gtk_document_new(zathura_document_t* document)
   priv->gtk.scrolled_window = gtk_scrolled_window_new(NULL, NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (priv->gtk.scrolled_window),
       GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+
+  g_signal_connect(
+      G_OBJECT(priv->gtk.scrolled_window),
+      "draw",
+      G_CALLBACK(cb_grid_draw),
+      priv);
 
   GtkAdjustment* horizontal_adjustment = gtk_scrolled_window_get_hadjustment(
       GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window)
@@ -299,47 +307,6 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
   }
 }
 
-typedef struct zathura_page_info_s {
-  ZathuraDocumentPrivate* priv;
-  int page_number;
-  struct {
-    unsigned int x;
-    unsigned int y;
-  } position;
-} zathura_page_info_t;
-
-static gboolean
-page_open_idle(zathura_page_info_t* page_info)
-{
-  ZathuraDocumentPrivate* priv = page_info->priv;
-
-  /* Get current position */
-  zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, page_info->page_number);
-
-  /* Calculate new position */
-  unsigned int x = widget_status->position.x - page_info->position.x;
-  unsigned int y = widget_status->position.y - page_info->position.y;
-
-  zathura_gtk_grid_set_position(priv, x, y);
-
-  return FALSE;
-}
-
-static void
-set_page(ZathuraDocumentPrivate* priv, unsigned int page_number)
-{
-  zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, page_number);
-
-  zathura_page_info_t* page_info = g_malloc0(sizeof(zathura_page_info_t));
-
-  page_info->priv = priv;
-  page_info->page_number = page_number;
-  page_info->position.x = widget_status->position.x,
-  page_info->position.y = widget_status->position.y;
-
-  gdk_threads_add_idle(page_open_idle, page_info);
-}
-
 static void
 set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable)
 {
@@ -349,7 +316,17 @@ set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable)
   zathura_gtk_fill_grid(priv);
 
   if (priv->settings.continuous_pages == true) {
-    set_page(priv, priv->document.current_page_number);
+    zathura_gtk_page_widget_status_t* widget_status =
+      g_list_nth_data(priv->document.pages_status, priv->document.current_page_number);
+
+    zathura_page_info_t* page_info = g_malloc0(sizeof(zathura_page_info_t));
+
+    page_info->priv = priv;
+    page_info->page_number = priv->document.current_page_number;
+    page_info->position.x = widget_status->position.x,
+    page_info->position.y = widget_status->position.y;
+
+    priv->status.restore_position = page_info;
   }
 }
 
