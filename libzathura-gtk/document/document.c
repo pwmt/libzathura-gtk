@@ -13,10 +13,13 @@ static void zathura_gtk_document_set_property(GObject* object, guint prop_id, co
 static void zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
 static void set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable);
 static void set_pages_per_row(ZathuraDocumentPrivate* priv, guint pages_per_row);
+static void set_current_page_number(ZathuraDocumentPrivate* priv, guint page_number);
+static void restore_current_page(ZathuraDocumentPrivate* priv);
 
 enum {
   PROP_0,
   PROP_DOCUMENT,
+  PROP_CURRENT_PAGE_NUMBER,
   PROP_CONTINUOUS_PAGES,
   PROP_PAGES_PER_ROW,
   PROP_ROTATION,
@@ -46,6 +49,20 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
       "Document",
       "The zathura_document_t instance",
       G_PARAM_WRITABLE | G_PARAM_READABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS
+    )
+  );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_CURRENT_PAGE_NUMBER,
+    g_param_spec_uint(
+      "current-page-number",
+      "current-page-number",
+      "Defines the current page number",
+      0,
+      G_MAXUINT,
+      0,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
 
@@ -242,6 +259,9 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
     case PROP_DOCUMENT:
       priv->document.document = g_value_get_pointer(value);
       break;
+    case PROP_CURRENT_PAGE_NUMBER:
+      set_current_page_number(priv, g_value_get_uint(value));
+      break;
     case PROP_CONTINUOUS_PAGES:
       set_continuous_pages(priv, g_value_get_boolean(value));
       break;
@@ -291,6 +311,9 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
     case PROP_DOCUMENT:
       g_value_set_pointer(value, priv->document.document);
       break;
+    case PROP_CURRENT_PAGE_NUMBER:
+      g_value_set_uint(value, priv->document.current_page_number);
+      break;
     case PROP_CONTINUOUS_PAGES:
       g_value_set_boolean(value, priv->settings.continuous_pages);
       break;
@@ -317,17 +340,7 @@ set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable)
   zathura_gtk_fill_grid(priv);
 
   if (priv->settings.continuous_pages == true) {
-    zathura_gtk_page_widget_status_t* widget_status =
-      g_list_nth_data(priv->document.pages_status, priv->document.current_page_number);
-
-    zathura_page_info_t* page_info = g_malloc0(sizeof(zathura_page_info_t));
-
-    page_info->priv = priv;
-    page_info->page_number = priv->document.current_page_number;
-    page_info->position.x = widget_status->position.x,
-    page_info->position.y = widget_status->position.y;
-
-    priv->status.restore_position = page_info;
+    restore_current_page(priv);
   }
 }
 
@@ -340,4 +353,37 @@ set_pages_per_row(ZathuraDocumentPrivate* priv, guint pages_per_row)
   /* Empty and refill grid */
   zathura_gtk_clear_grid(priv);
   zathura_gtk_fill_grid(priv);
+}
+
+static void
+set_current_page_number(ZathuraDocumentPrivate* priv, guint page_number)
+{
+  if (page_number >= priv->document.number_of_pages) {
+    return;
+  }
+
+  priv->document.current_page_number = page_number;
+  zathura_gtk_grid_set_page(priv, page_number);
+}
+
+static void
+restore_current_page(ZathuraDocumentPrivate* priv)
+{
+  GtkWidget* page_widget = g_list_nth_data(priv->document.pages, priv->document.current_page_number);
+
+  zathura_page_info_t* page_info = g_malloc0(sizeof(zathura_page_info_t));
+
+  /* Calculate offset */
+  int page_widget_offset_x, page_widget_offset_y;
+  if (gtk_widget_translate_coordinates(page_widget, priv->gtk.viewport, 0,
+      0, &page_widget_offset_x, &page_widget_offset_y) == FALSE) {
+    return; // Should not happen!
+  };
+
+  page_info->priv = priv;
+  page_info->page_number = priv->document.current_page_number;
+  page_info->offset.x = page_widget_offset_x,
+  page_info->offset.y = page_widget_offset_y;
+
+  priv->status.restore_position = page_info;
 }

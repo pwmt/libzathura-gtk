@@ -68,6 +68,24 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
         g_object_set(G_OBJECT(document), "scale", scale, NULL);
       }
       break;
+    case GDK_KEY_j:
+      {
+        guint current_page_number;
+        g_object_get(G_OBJECT(document), "current-page-number", &current_page_number, NULL);
+        current_page_number += 1;
+        g_object_set(G_OBJECT(document), "current-page-number", current_page_number, NULL);
+      }
+      break;
+    case GDK_KEY_k:
+      {
+        guint current_page_number;
+        g_object_get(G_OBJECT(document), "current-page-number", &current_page_number, NULL);
+        if (current_page_number != 0) {
+          current_page_number -= 1;
+          g_object_set(G_OBJECT(document), "current-page-number", current_page_number, NULL);
+        }
+      }
+      break;
   }
 
   return TRUE;

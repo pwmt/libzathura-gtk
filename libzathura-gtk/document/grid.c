@@ -3,6 +3,10 @@
 #include "internal.h"
 #include "grid.h"
 #include "callbacks.h"
+#include "../macros.h"
+
+static double adjustment_get_position(GtkAdjustment* adjustment);
+static void update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, double y);
 
 void
 zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv)
@@ -109,10 +113,123 @@ zathura_gtk_grid_set_position(ZathuraDocumentPrivate* priv, int x, int y)
 }
 
 void
-zathura_gtk_grid_set_page(ZathuraDocumentPrivate* priv, int page_number)
+zathura_gtk_grid_set_page(ZathuraDocumentPrivate* priv, guint page_number)
 {
   zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, page_number);
 
-  zathura_gtk_grid_set_position_x(priv, widget_status->position.x);
-  zathura_gtk_grid_set_position_y(priv, widget_status->position.y);
+  zathura_gtk_grid_set_position(priv, widget_status->position.x, widget_status->position.y);
+
+  priv->document.current_page_number = page_number;
 }
+
+void
+cb_scrolled_window_horizontal_adjustment_value_changed(GtkAdjustment*
+    horizontal_adjustment, ZathuraDocumentPrivate* priv)
+{
+  priv->position.x = adjustment_get_position(horizontal_adjustment);
+  update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
+}
+
+void
+cb_scrolled_window_horizontal_adjustment_changed(GtkAdjustment*
+    UNUSED(horizontal_adjustment), ZathuraDocumentPrivate* priv)
+{
+  update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
+}
+
+void
+cb_scrolled_window_vertical_adjustment_value_changed(GtkAdjustment*
+    vertical_adjustment, ZathuraDocumentPrivate* priv)
+{
+  priv->position.y = adjustment_get_position(vertical_adjustment);
+  update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
+}
+
+void
+cb_scrolled_window_vertical_adjustment_changed(GtkAdjustment*
+    UNUSED(vertical_adjustment), ZathuraDocumentPrivate* priv)
+{
+  update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
+}
+
+static double
+adjustment_get_position(GtkAdjustment* adjustment)
+{
+  gdouble lower = gtk_adjustment_get_lower(adjustment);
+  gdouble upper = gtk_adjustment_get_upper(adjustment);
+  gdouble value = gtk_adjustment_get_value(adjustment);
+
+  return (value - lower) / (upper - lower);
+}
+
+static void
+update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, double y)
+{
+  /* Calculate current position */
+  GtkAdjustment* horizontal_adjustment = gtk_scrolled_window_get_hadjustment(
+      GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window)
+      );
+
+  double position_x = gtk_adjustment_get_upper(horizontal_adjustment) * x;
+
+  GtkAdjustment* vertical_adjustment = gtk_scrolled_window_get_vadjustment(
+      GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window)
+      );
+
+  double position_y = gtk_adjustment_get_upper(vertical_adjustment) * y;
+
+  /* Calculate visible area */
+  int viewport_width  = gtk_widget_get_allocated_width(priv->gtk.viewport);
+  int viewport_height = gtk_widget_get_allocated_height(priv->gtk.viewport);
+  int viewport_area   = viewport_width * viewport_height;
+
+  /* Update pages */
+  unsigned int new_current_page_number = priv->document.current_page_number;
+  float intersecting_area_perc_max = 0;
+
+  for (unsigned int i = 0; i < priv->document.number_of_pages; i++) {
+    GtkWidget* page_widget = g_list_nth_data(priv->document.pages, i);
+
+    /* Get current size of widget */
+    int page_widget_width  = gtk_widget_get_allocated_width(page_widget);
+    int page_widget_height = gtk_widget_get_allocated_height(page_widget);
+
+    /* Get status */
+    zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, i);
+
+    /* Get widget coordinates relative to the scrolled window */
+    int page_widget_x, page_widget_y;
+    if (gtk_widget_translate_coordinates(page_widget, priv->gtk.grid, 0,
+        0, &page_widget_x, &page_widget_y) == FALSE) {
+      widget_status->visible = false;
+      continue;
+    };
+
+    /* Save page coordinates and visibility status */
+    widget_status->position.x = page_widget_x;
+    widget_status->position.y = page_widget_y;
+
+    /* Check if widget is visible */
+    GdkRectangle viewport_rectangle = { position_x, position_y, viewport_width, viewport_height };
+    GdkRectangle page_widget_rectangle = { page_widget_x, page_widget_y, page_widget_width, page_widget_height };
+    GdkRectangle intersecting_area;
+
+    widget_status->visible = gdk_rectangle_intersect(&viewport_rectangle, &page_widget_rectangle, &intersecting_area);
+
+    if (widget_status->visible == true) {
+      int intersecting_area_size = intersecting_area.width * intersecting_area.height;
+      float intersecting_area_perc = (float) intersecting_area_size / viewport_area;
+
+      if (intersecting_area_perc >= intersecting_area_perc_max) {
+        new_current_page_number = i;
+        intersecting_area_perc_max = intersecting_area_perc;
+      }
+    }
+  }
+
+  /* Update current page */
+  priv->document.current_page_number = new_current_page_number;
+
+  return;
+}
+

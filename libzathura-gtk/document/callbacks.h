@@ -7,14 +7,6 @@
 
 #include "document.h"
 
-void cb_scrolled_window_horizontal_adjustment_value_changed(GtkAdjustment* horizontal_adjustment, ZathuraDocumentPrivate* priv);
-
-void cb_scrolled_window_horizontal_adjustment_changed(GtkAdjustment* horizontal_adjustment, ZathuraDocumentPrivate* priv);
-
-void cb_scrolled_window_vertical_adjustment_value_changed(GtkAdjustment* vertical_adjustment, ZathuraDocumentPrivate* priv);
-
-void cb_scrolled_window_vertical_adjustment_changed(GtkAdjustment* vertical_adjustment, ZathuraDocumentPrivate* priv);
-
 void cb_document_pages_set_rotation(GtkWidget* page, ZathuraDocumentPrivate* priv);
 
 void cb_document_pages_set_scale(GtkWidget* page, ZathuraDocumentPrivate* priv);

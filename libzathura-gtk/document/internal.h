@@ -60,7 +60,7 @@ struct zathura_page_info_s {
   struct {
     unsigned int x;
     unsigned int y;
-  } position;
+  } offset;
 };
 
 #endif /* ZATHURA_GTK_DOCUMENT_INTERNAL */
