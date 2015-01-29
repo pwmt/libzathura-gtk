@@ -21,5 +21,7 @@ void cb_scrolled_window_vertical_adjustment_value_changed(GtkAdjustment* vertica
 
 void cb_scrolled_window_vertical_adjustment_changed(GtkAdjustment* vertical_adjustment, ZathuraDocumentPrivate* priv);
 
+gboolean cb_grid_draw(GtkWidget* scrolled_window, cairo_t* cr, ZathuraDocumentPrivate* priv);
+
 
 #endif /* ZATHURA_GTK_DOCUMENT_GRID */
