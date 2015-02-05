@@ -112,14 +112,33 @@ zathura_gtk_grid_set_position(ZathuraDocumentPrivate* priv, int x, int y)
   zathura_gtk_grid_set_position_y(priv, y);
 }
 
+static bool
+zathura_gtk_grid_is_page_in_grid(ZathuraDocumentPrivate* priv, guint page_number)
+{
+  GtkWidget* page = g_list_nth_data(priv->document.pages, page_number);
+  GtkWidget* parent = gtk_widget_get_parent(page);
+
+  if (parent == NULL || parent != priv->gtk.grid) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
 void
 zathura_gtk_grid_set_page(ZathuraDocumentPrivate* priv, guint page_number)
 {
+  priv->document.current_page_number = page_number;
+
   zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, page_number);
 
-  zathura_gtk_grid_set_position(priv, widget_status->position.x, widget_status->position.y);
-
-  priv->document.current_page_number = page_number;
+  if (zathura_gtk_grid_is_page_in_grid(priv, page_number) == false) {
+    zathura_gtk_clear_grid(priv);
+    zathura_gtk_fill_grid(priv);
+  } else {
+    zathura_gtk_grid_set_position(priv, widget_status->position.x, widget_status->position.y);
+    return;
+  }
 }
 
 void
