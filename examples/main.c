@@ -68,7 +68,7 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
         g_object_set(G_OBJECT(document), "scale", scale, NULL);
       }
       break;
-    case GDK_KEY_j:
+    case GDK_KEY_J:
       {
         guint current_page_number;
         g_object_get(G_OBJECT(document), "current-page-number", &current_page_number, NULL);
@@ -76,7 +76,7 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
         g_object_set(G_OBJECT(document), "current-page-number", current_page_number, NULL);
       }
       break;
-    case GDK_KEY_k:
+    case GDK_KEY_K:
       {
         guint current_page_number;
         g_object_get(G_OBJECT(document), "current-page-number", &current_page_number, NULL);
@@ -85,6 +85,18 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
           g_object_set(G_OBJECT(document), "current-page-number", current_page_number, NULL);
         }
       }
+      break;
+    case GDK_KEY_h:
+      zathura_gtk_document_scroll(document, LEFT);
+      break;
+    case GDK_KEY_j:
+      zathura_gtk_document_scroll(document, DOWN);
+      break;
+    case GDK_KEY_k:
+      zathura_gtk_document_scroll(document, UP);
+      break;
+    case GDK_KEY_l:
+      zathura_gtk_document_scroll(document, RIGHT);
       break;
   }
 

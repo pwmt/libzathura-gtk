@@ -88,7 +88,7 @@ zathura_gtk_free_grid(ZathuraDocumentPrivate* priv)
           gtk_adjustment_get_page_size((adjustment)), (value))));
 
 static void
-zathura_gtk_grid_set_position_x(ZathuraDocumentPrivate* priv, int x)
+zathura_gtk_grid_set_position_x(ZathuraDocumentPrivate* priv, gdouble x)
 {
   GtkAdjustment* horizontal_adjustment = gtk_scrolled_window_get_hadjustment(
       GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window));
@@ -97,7 +97,7 @@ zathura_gtk_grid_set_position_x(ZathuraDocumentPrivate* priv, int x)
 }
 
 static void
-zathura_gtk_grid_set_position_y(ZathuraDocumentPrivate* priv, int y)
+zathura_gtk_grid_set_position_y(ZathuraDocumentPrivate* priv, gdouble y)
 {
   GtkAdjustment* vertical_adjustment = gtk_scrolled_window_get_vadjustment(
       GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window));
@@ -106,7 +106,7 @@ zathura_gtk_grid_set_position_y(ZathuraDocumentPrivate* priv, int y)
 }
 
 void
-zathura_gtk_grid_set_position(ZathuraDocumentPrivate* priv, int x, int y)
+zathura_gtk_grid_set_position(ZathuraDocumentPrivate* priv, gdouble x, gdouble y)
 {
   zathura_gtk_grid_set_position_x(priv, x);
   zathura_gtk_grid_set_position_y(priv, y);
@@ -145,7 +145,7 @@ void
 cb_scrolled_window_horizontal_adjustment_value_changed(GtkAdjustment*
     horizontal_adjustment, ZathuraDocumentPrivate* priv)
 {
-  priv->position.x = adjustment_get_position(horizontal_adjustment);
+  priv->position.x = adjustment_get_position(horizontal_adjustment) * gtk_adjustment_get_upper(horizontal_adjustment);
   update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
 }
 
@@ -160,7 +160,7 @@ void
 cb_scrolled_window_vertical_adjustment_value_changed(GtkAdjustment*
     vertical_adjustment, ZathuraDocumentPrivate* priv)
 {
-  priv->position.y = adjustment_get_position(vertical_adjustment);
+  priv->position.y = adjustment_get_position(vertical_adjustment) * gtk_adjustment_get_upper(vertical_adjustment);
   update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
 }
 
@@ -184,18 +184,8 @@ adjustment_get_position(GtkAdjustment* adjustment)
 static void
 update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, double y)
 {
-  /* Calculate current position */
-  GtkAdjustment* horizontal_adjustment = gtk_scrolled_window_get_hadjustment(
-      GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window)
-      );
-
-  double position_x = gtk_adjustment_get_upper(horizontal_adjustment) * x;
-
-  GtkAdjustment* vertical_adjustment = gtk_scrolled_window_get_vadjustment(
-      GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window)
-      );
-
-  double position_y = gtk_adjustment_get_upper(vertical_adjustment) * y;
+  double position_x = x;
+  double position_y = y;
 
   /* Calculate visible area */
   int viewport_width  = gtk_widget_get_allocated_width(priv->gtk.viewport);

@@ -8,8 +8,8 @@
 
 typedef struct zathura_gtk_page_widget_status_s {
   struct {
-    int x;
-    int y;
+    gdouble x;
+    gdouble y;
   } position;
 
   bool visible;
@@ -22,8 +22,8 @@ struct _ZathuraDocumentPrivate {
     zathura_document_t* document;
     GList* pages;
     GList* pages_status;
-    unsigned int number_of_pages;
-    unsigned int current_page_number;
+    guint number_of_pages;
+    guint current_page_number;
   } document;
 
   struct {
@@ -37,8 +37,8 @@ struct _ZathuraDocumentPrivate {
   } gtk;
 
   struct {
-    double x;
-    double y;
+    gdouble x;
+    gdouble y;
   } position;
 
   struct {
@@ -46,7 +46,7 @@ struct _ZathuraDocumentPrivate {
     guint pages_per_row;
     guint first_page_column;
     guint rotation;
-    double scale;
+    gdouble scale;
   } settings;
 
   struct {
@@ -56,10 +56,10 @@ struct _ZathuraDocumentPrivate {
 
 struct zathura_page_info_s {
   ZathuraDocumentPrivate* priv;
-  int page_number;
+  gint page_number;
   struct {
-    unsigned int x;
-    unsigned int y;
+    guint x;
+    guint y;
   } offset;
 };
 

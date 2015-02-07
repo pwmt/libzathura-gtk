@@ -10,7 +10,7 @@ void zathura_gtk_fill_grid(ZathuraDocumentPrivate* priv);
 void zathura_gtk_clear_grid(ZathuraDocumentPrivate* priv);
 void zathura_gtk_free_grid(ZathuraDocumentPrivate* priv);
 
-void zathura_gtk_grid_set_position(ZathuraDocumentPrivate* priv, int x, int y);
+void zathura_gtk_grid_set_position(ZathuraDocumentPrivate* priv, gdouble x, gdouble y);
 void zathura_gtk_grid_set_page(ZathuraDocumentPrivate* priv, guint page_number);
 
 void cb_scrolled_window_horizontal_adjustment_value_changed(GtkAdjustment* horizontal_adjustment, ZathuraDocumentPrivate* priv);

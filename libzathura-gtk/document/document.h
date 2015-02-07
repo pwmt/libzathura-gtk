@@ -6,6 +6,8 @@
 #include <gtk/gtk.h>
 #include <libzathura/libzathura.h>
 
+#include "types.h"
+
 G_BEGIN_DECLS
 
 typedef struct _ZathuraDocument ZathuraDocument;
@@ -33,6 +35,8 @@ struct _ZathuraDocumentClass {
 GType zathura_gtk_document_get_type(void);
 
 GtkWidget* zathura_gtk_document_new(zathura_document_t* document);
+
+void zathura_gtk_document_scroll(GtkWidget* document, zathura_gtk_document_scroll_direction_t direction);
 
 G_END_DECLS
 

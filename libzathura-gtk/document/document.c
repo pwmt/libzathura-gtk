@@ -249,6 +249,42 @@ zathura_gtk_document_new(zathura_document_t* document)
   return GTK_WIDGET(widget);
 }
 
+void
+zathura_gtk_document_scroll(GtkWidget* document, zathura_gtk_document_scroll_direction_t direction)
+{
+  ZathuraDocumentPrivate* priv = ZATHURA_DOCUMENT_GET_PRIVATE(document);
+
+  gdouble position_x = priv->position.x;
+  gdouble position_y = priv->position.y;
+
+  gdouble scroll_step = 40;
+  gdouble scroll_direction = 1.0;
+
+  switch (direction) {
+    case LEFT:
+    case UP:
+      scroll_direction = -1.0;
+      break;
+    default:
+      break;
+  }
+
+  switch (direction) {
+    case UP:
+    case DOWN:
+      position_y += scroll_direction * scroll_step;
+      break;
+    case RIGHT:
+    case LEFT:
+      position_x += scroll_direction * scroll_step;
+      break;
+    default:
+      break;
+  }
+
+  zathura_gtk_grid_set_position(priv, position_x, position_y);
+}
+
 static void
 zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec)
 {
