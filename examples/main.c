@@ -100,6 +100,13 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
       case GDK_KEY_g:
         zathura_gtk_document_scroll(document, TOP);
         break;
+      case GDK_KEY_p:
+        {
+          gboolean scroll_page_aware;
+          g_object_get(G_OBJECT(document), "scroll-page-aware", &scroll_page_aware, NULL);
+          g_object_set(G_OBJECT(document), "scroll-page-aware", !scroll_page_aware, NULL);
+        }
+        break;
     }
   } else if (event->state == GDK_CONTROL_MASK) {
     switch(event->keyval) {

@@ -56,6 +56,7 @@ struct _ZathuraDocumentPrivate {
     struct {
       gdouble step;
       gdouble full_overlap;
+      bool page_aware;
     } scroll;
   } settings;
 

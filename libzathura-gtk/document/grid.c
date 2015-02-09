@@ -6,7 +6,7 @@
 #include "../macros.h"
 
 static double adjustment_get_position(GtkAdjustment* adjustment);
-static void update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, double y);
+static unsigned int update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, double y, bool update);
 
 void
 zathura_gtk_setup_grid(ZathuraDocumentPrivate* priv)
@@ -146,14 +146,14 @@ cb_scrolled_window_horizontal_adjustment_value_changed(GtkAdjustment*
     horizontal_adjustment, ZathuraDocumentPrivate* priv)
 {
   priv->position.x = adjustment_get_position(horizontal_adjustment) * gtk_adjustment_get_upper(horizontal_adjustment);
-  update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
+  update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y, true);
 }
 
 void
 cb_scrolled_window_horizontal_adjustment_changed(GtkAdjustment*
     UNUSED(horizontal_adjustment), ZathuraDocumentPrivate* priv)
 {
-  update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
+  update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y, true);
 }
 
 void
@@ -161,14 +161,14 @@ cb_scrolled_window_vertical_adjustment_value_changed(GtkAdjustment*
     vertical_adjustment, ZathuraDocumentPrivate* priv)
 {
   priv->position.y = adjustment_get_position(vertical_adjustment) * gtk_adjustment_get_upper(vertical_adjustment);
-  update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
+  update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y, true);
 }
 
 void
 cb_scrolled_window_vertical_adjustment_changed(GtkAdjustment*
     UNUSED(vertical_adjustment), ZathuraDocumentPrivate* priv)
 {
-  update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y);
+  update_visible_pages_and_current_page(priv, priv->position.x, priv->position.y, true);
 }
 
 static double
@@ -179,69 +179,6 @@ adjustment_get_position(GtkAdjustment* adjustment)
   gdouble value = gtk_adjustment_get_value(adjustment);
 
   return (value - lower) / (upper - lower);
-}
-
-static void
-update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, double y)
-{
-  double position_x = x;
-  double position_y = y;
-
-  /* Calculate visible area */
-  int viewport_width  = gtk_widget_get_allocated_width(priv->gtk.viewport);
-  int viewport_height = gtk_widget_get_allocated_height(priv->gtk.viewport);
-  int viewport_area   = viewport_width * viewport_height;
-
-  /* Update pages */
-  unsigned int new_current_page_number = priv->document.current_page_number;
-  float intersecting_area_perc_max = 0;
-
-  for (unsigned int i = 0; i < priv->document.number_of_pages; i++) {
-    GtkWidget* page_widget = g_list_nth_data(priv->document.pages, i);
-
-    /* Get current size of widget */
-    int page_widget_width  = gtk_widget_get_allocated_width(page_widget);
-    int page_widget_height = gtk_widget_get_allocated_height(page_widget);
-
-    /* Get status */
-    zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, i);
-
-    /* Get widget coordinates relative to the scrolled window */
-    int page_widget_x, page_widget_y;
-    if (gtk_widget_translate_coordinates(page_widget, priv->gtk.grid, 0,
-        0, &page_widget_x, &page_widget_y) == FALSE) {
-      widget_status->visible = false;
-      continue;
-    };
-
-    /* Save page coordinates and visibility status */
-    widget_status->position.x  = page_widget_x;
-    widget_status->position.y  = page_widget_y;
-    widget_status->size.width  = page_widget_width;
-    widget_status->size.height = page_widget_height;
-
-    /* Check if widget is visible */
-    GdkRectangle viewport_rectangle = { position_x, position_y, viewport_width, viewport_height };
-    GdkRectangle page_widget_rectangle = { page_widget_x, page_widget_y, page_widget_width, page_widget_height };
-    GdkRectangle intersecting_area;
-
-    widget_status->visible = gdk_rectangle_intersect(&viewport_rectangle, &page_widget_rectangle, &intersecting_area);
-
-    if (widget_status->visible == true) {
-      int intersecting_area_size = intersecting_area.width * intersecting_area.height;
-      float intersecting_area_perc = (float) intersecting_area_size / viewport_area;
-
-      if (intersecting_area_perc >= intersecting_area_perc_max) {
-        new_current_page_number = i;
-        intersecting_area_perc_max = intersecting_area_perc;
-      }
-    }
-  }
-
-  /* Update current page */
-  priv->document.current_page_number = new_current_page_number;
-
-  return;
 }
 
 gboolean cb_grid_draw(GtkWidget* UNUSED(scrolled_window), cairo_t* UNUSED(cr),
@@ -267,4 +204,102 @@ gboolean cb_grid_draw(GtkWidget* UNUSED(scrolled_window), cairo_t* UNUSED(cr),
   }
 
   return FALSE;
+}
+
+guint
+zathura_gtk_grid_position_to_page_number(ZathuraDocumentPrivate* priv, gdouble x, gdouble y)
+{
+  return update_visible_pages_and_current_page(priv, x, y, false);
+}
+
+void
+zathura_gtk_grid_page_number_to_position(ZathuraDocumentPrivate* priv, unsigned int page_number,
+    double x_align, double y_align, double* position_x, double* position_y)
+{
+  zathura_gtk_page_widget_status_t* widget_status =
+    g_list_nth_data(priv->document.pages_status, page_number);
+
+  if (position_x != NULL) {
+    *position_x = widget_status->position.x + x_align * widget_status->size.width;
+  }
+
+  if (position_y != NULL) {
+    *position_y = widget_status->position.y + y_align * widget_status->size.height;
+  }
+}
+
+static unsigned int
+update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, double y, bool update)
+{
+  double position_x = x;
+  double position_y = y;
+
+  /* Calculate visible area */
+  int viewport_width  = gtk_widget_get_allocated_width(priv->gtk.viewport);
+  int viewport_height = gtk_widget_get_allocated_height(priv->gtk.viewport);
+  int viewport_area   = viewport_width * viewport_height;
+
+  /* Update pages */
+  unsigned int new_current_page_number = priv->document.current_page_number;
+  float intersecting_area_perc_max = 0;
+
+  for (unsigned int i = 0; i < priv->document.number_of_pages; i++) {
+    GtkWidget* page_widget = g_list_nth_data(priv->document.pages, i);
+    bool is_visible = false;
+
+    /* Get current size of widget */
+    int page_widget_width  = gtk_widget_get_allocated_width(page_widget);
+    int page_widget_height = gtk_widget_get_allocated_height(page_widget);
+
+    /* Get status */
+    zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, i);
+
+    /* Get widget coordinates relative to the scrolled window */
+    int page_widget_x, page_widget_y;
+    if (gtk_widget_translate_coordinates(page_widget, priv->gtk.grid, 0,
+        0, &page_widget_x, &page_widget_y) == FALSE) {
+      is_visible = false;
+
+      if (update == true) {
+        widget_status->visible = is_visible;
+      }
+
+      continue;
+    };
+
+    /* Save page coordinates and visibility status */
+    if (update == true) {
+      widget_status->position.x  = page_widget_x;
+      widget_status->position.y  = page_widget_y;
+      widget_status->size.width  = page_widget_width;
+      widget_status->size.height = page_widget_height;
+    }
+
+    /* Check if widget is visible */
+    GdkRectangle viewport_rectangle = { position_x, position_y, viewport_width, viewport_height };
+    GdkRectangle page_widget_rectangle = { page_widget_x, page_widget_y, page_widget_width, page_widget_height };
+    GdkRectangle intersecting_area;
+
+    is_visible = gdk_rectangle_intersect(&viewport_rectangle, &page_widget_rectangle, &intersecting_area);
+    if (update == true) {
+      widget_status->visible = is_visible;
+    }
+
+    if (is_visible == true) {
+      int intersecting_area_size = intersecting_area.width * intersecting_area.height;
+      float intersecting_area_perc = (float) intersecting_area_size / viewport_area;
+
+      if (intersecting_area_perc >= intersecting_area_perc_max) {
+        new_current_page_number = i;
+        intersecting_area_perc_max = intersecting_area_perc;
+      }
+    }
+  }
+
+  /* Update current page */
+  if (update == true) {
+    priv->document.current_page_number = new_current_page_number;
+  }
+
+  return new_current_page_number;
 }

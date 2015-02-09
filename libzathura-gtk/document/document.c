@@ -25,7 +25,8 @@ enum {
   PROP_ROTATION,
   PROP_SCALE,
   PROP_SCROLL_STEP,
-  PROP_SCROLL_OVERLAP
+  PROP_SCROLL_OVERLAP,
+  PROP_SCROLL_PAGE_AWARE
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraDocument, zathura_gtk_document, GTK_TYPE_BIN)
@@ -141,11 +142,23 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
     PROP_SCROLL_OVERLAP,
     g_param_spec_double(
       "scroll-full-overlap",
-      "Scroll full overlap",
+      "Scroll-full-overlap",
       "Optional overlap if full scroll actions are performed",
       0,
       0.99,
       0.0,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_SCROLL_PAGE_AWARE,
+    g_param_spec_boolean(
+      "scroll-page-aware",
+      "Scroll-page-aware",
+      "Enables page aware scrolling",
+      FALSE,
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
@@ -171,6 +184,7 @@ zathura_gtk_document_init(ZathuraDocument* widget)
   priv->settings.scale               = 1.0;
   priv->settings.scroll.step         = 40;
   priv->settings.scroll.full_overlap = 0.0;
+  priv->settings.scroll.page_aware   = false;
 
   priv->position.x = 0.0;
   priv->position.y = 0.0;
@@ -370,6 +384,34 @@ zathura_gtk_document_scroll(GtkWidget* document, zathura_gtk_document_scroll_dir
       break;
   }
 
+  /* Page-aware scrolling */
+  if (priv->settings.scroll.page_aware == true) {
+    unsigned int new_current_page = zathura_gtk_grid_position_to_page_number(priv, position_x, position_y);
+
+    switch (direction) {
+      case FULL_UP:
+      case HALF_UP:
+        zathura_gtk_grid_page_number_to_position(priv, new_current_page, 0.0, 0.0, NULL, &position_y);
+        break;
+      case FULL_DOWN:
+      case HALF_DOWN:
+        zathura_gtk_grid_page_number_to_position(priv, new_current_page, 0.0, 1.0, NULL, &position_y);
+        position_y -= horizontal_step;
+        break;
+      case FULL_LEFT:
+      case HALF_LEFT:
+        zathura_gtk_grid_page_number_to_position(priv, new_current_page, 1.0, 0.0, &position_x, NULL);
+        position_x -= vertical_step;
+        break;
+      case FULL_RIGHT:
+      case HALF_RIGHT:
+        zathura_gtk_grid_page_number_to_position(priv, new_current_page, 0.0, 0.0, &position_x, NULL);
+        break;
+      default:
+        break;
+    }
+  }
+
   /* Update position */
   zathura_gtk_grid_set_position(priv, position_x, position_y);
 }
@@ -426,6 +468,9 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
     case PROP_SCROLL_OVERLAP:
       priv->settings.scroll.full_overlap = g_value_get_double(value);
       break;
+    case PROP_SCROLL_PAGE_AWARE:
+      priv->settings.scroll.page_aware = g_value_get_boolean(value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
@@ -461,6 +506,9 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
       break;
     case PROP_SCROLL_OVERLAP:
       g_value_set_double(value, priv->settings.scroll.full_overlap);
+      break;
+    case PROP_SCROLL_PAGE_AWARE:
+      g_value_set_boolean(value, priv->settings.scroll.page_aware);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
