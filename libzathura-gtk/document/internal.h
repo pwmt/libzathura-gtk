@@ -12,6 +12,11 @@ typedef struct zathura_gtk_page_widget_status_s {
     gdouble y;
   } position;
 
+  struct {
+    int width;
+    int height;
+  } size;
+
   bool visible;
 } zathura_gtk_page_widget_status_t;
 

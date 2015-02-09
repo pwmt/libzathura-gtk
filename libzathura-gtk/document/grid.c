@@ -215,8 +215,10 @@ update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, do
     };
 
     /* Save page coordinates and visibility status */
-    widget_status->position.x = page_widget_x;
-    widget_status->position.y = page_widget_y;
+    widget_status->position.x  = page_widget_x;
+    widget_status->position.y  = page_widget_y;
+    widget_status->size.width  = page_widget_width;
+    widget_status->size.height = page_widget_height;
 
     /* Check if widget is visible */
     GdkRectangle viewport_rectangle = { position_x, position_y, viewport_width, viewport_height };

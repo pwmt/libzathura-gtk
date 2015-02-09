@@ -53,14 +53,6 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
           g_object_set(G_OBJECT(document), "rotation", rotation, NULL);
         }
         break;
-      case GDK_KEY_plus:
-        {
-          double scale;
-          g_object_get(G_OBJECT(document), "scale", &scale, NULL);
-          scale *= 1.2;
-          g_object_set(G_OBJECT(document), "scale", scale, NULL);
-        }
-        break;
       case GDK_KEY_minus:
         {
           double scale;
@@ -132,8 +124,22 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
     }
   } else if (event->state == GDK_SHIFT_MASK) {
     switch(event->keyval) {
+      case GDK_KEY_plus:
+        {
+          double scale;
+          g_object_get(G_OBJECT(document), "scale", &scale, NULL);
+          scale *= 1.2;
+          g_object_set(G_OBJECT(document), "scale", scale, NULL);
+        }
+        break;
       case GDK_KEY_G:
         zathura_gtk_document_scroll(document, BOTTOM);
+        break;
+      case GDK_KEY_H:
+        zathura_gtk_document_scroll(document, PAGE_TOP);
+        break;
+      case GDK_KEY_L:
+        zathura_gtk_document_scroll(document, PAGE_BOTTOM);
         break;
     }
   }

@@ -20,7 +20,10 @@ typedef enum zathura_gtk_document_scroll_direction_e {
   HALF_RIGHT,
 
   TOP,
-  BOTTOM
+  BOTTOM,
+
+  PAGE_TOP,
+  PAGE_BOTTOM
 } zathura_gtk_document_scroll_direction_t;
 
 #endif /* ZATHURA_GTK_DOCUMENT_TYPES */

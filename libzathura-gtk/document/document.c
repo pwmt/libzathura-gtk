@@ -267,14 +267,29 @@ zathura_gtk_document_scroll(GtkWidget* document, zathura_gtk_document_scroll_dir
     return;
   }
 
+  /* Current properties */
+  const double vertical_step   = (double) gtk_widget_get_allocated_width(priv->gtk.viewport);
+  const double horizontal_step = (double) gtk_widget_get_allocated_height(priv->gtk.viewport);
+
+  /* Go to top or bottom of current page */
+  if (direction == PAGE_TOP || direction == PAGE_BOTTOM) {
+    zathura_gtk_page_widget_status_t* widget_status =
+      g_list_nth_data(priv->document.pages_status, priv->document.current_page_number);
+
+    if (direction == PAGE_TOP) {
+      position_y = widget_status->position.y;
+    } else if (direction == PAGE_BOTTOM){
+      position_y = widget_status->position.y + widget_status->size.height - horizontal_step;
+    }
+
+    zathura_gtk_grid_set_position(priv, position_x, position_y);
+    return;
+  }
+
   /* Settings */
   gdouble scroll_step = 40;
   gdouble scroll_direction = 1.0;
   gdouble scroll_full_overlap = 0.0;
-
-  /* Current properties */
-  const double vertical_step   = (double) gtk_widget_get_allocated_width(priv->gtk.viewport);
-  const double horizontal_step = (double) gtk_widget_get_allocated_height(priv->gtk.viewport);
 
   /* Adjust direction */
   switch (direction) {
