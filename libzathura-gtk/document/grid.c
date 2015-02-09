@@ -192,8 +192,8 @@ gboolean cb_grid_draw(GtkWidget* UNUSED(scrolled_window), cairo_t* UNUSED(cr),
       g_list_nth_data(priv->document.pages_status, page_info->page_number);
 
     /* Calculate new position */
-    unsigned int x = widget_status->position.x - page_info->offset.x;
-    unsigned int y = widget_status->position.y - page_info->offset.y;
+    gdouble x = widget_status->position.x - page_info->offset.x;
+    gdouble y = widget_status->position.y - page_info->offset.y;
 
     zathura_gtk_grid_set_position(priv, x, y);
 
