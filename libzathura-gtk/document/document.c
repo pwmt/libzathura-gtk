@@ -13,6 +13,7 @@ static void zathura_gtk_document_set_property(GObject* object, guint prop_id, co
 static void zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
 static void set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable);
 static void set_pages_per_row(ZathuraDocumentPrivate* priv, guint pages_per_row);
+static void set_first_page_column(ZathuraDocumentPrivate* priv, guint first_page_column);
 static void set_current_page_number(ZathuraDocumentPrivate* priv, guint page_number);
 static void restore_current_page(ZathuraDocumentPrivate* priv);
 
@@ -22,6 +23,7 @@ enum {
   PROP_CURRENT_PAGE_NUMBER,
   PROP_CONTINUOUS_PAGES,
   PROP_PAGES_PER_ROW,
+  PROP_FIRST_PAGE_COLUMN,
   PROP_ROTATION,
   PROP_SCALE,
   PROP_SCROLL_STEP,
@@ -89,6 +91,20 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
       "pages-per-row",
       "pages-per-row",
       "Defines the number of pages per row",
+      1,
+      G_MAXUINT,
+      1,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_FIRST_PAGE_COLUMN,
+    g_param_spec_uint(
+      "first-page-column",
+      "first-page-column",
+      "Defines the column of the first page",
       1,
       G_MAXUINT,
       1,
@@ -193,6 +209,7 @@ zathura_gtk_document_init(ZathuraDocument* widget)
 
   priv->settings.continuous_pages    = TRUE;
   priv->settings.pages_per_row       = 1;
+  priv->settings.first_page_column   = 1;
   priv->settings.rotation            = 0;
   priv->settings.scale               = 1.0;
   priv->settings.scroll.step         = 40;
@@ -467,6 +484,9 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
     case PROP_PAGES_PER_ROW:
       set_pages_per_row(priv, g_value_get_uint(value));
       break;
+    case PROP_FIRST_PAGE_COLUMN:
+      set_first_page_column(priv, g_value_get_uint(value));
+      break;
     case PROP_ROTATION:
       {
         unsigned int rotation = g_value_get_uint(value);
@@ -530,6 +550,9 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
     case PROP_PAGES_PER_ROW:
       g_value_set_uint(value, priv->settings.pages_per_row);
       break;
+    case PROP_FIRST_PAGE_COLUMN:
+      g_value_set_uint(value, priv->settings.first_page_column);
+      break;
     case PROP_ROTATION:
       g_value_set_uint(value, priv->settings.rotation);
       break;
@@ -571,6 +594,23 @@ set_pages_per_row(ZathuraDocumentPrivate* priv, guint pages_per_row)
 {
   /* Update pages per row */
   priv->settings.pages_per_row = pages_per_row;
+
+  /* Empty and refill grid */
+  zathura_gtk_clear_grid(priv);
+  zathura_gtk_fill_grid(priv);
+}
+
+static void
+set_first_page_column(ZathuraDocumentPrivate* priv, guint first_page_column)
+{
+  /* Update pages per row */
+  if (first_page_column < 1) {
+    first_page_column = 1;
+  } else if (first_page_column > priv->settings.pages_per_row) {
+    first_page_column = ((first_page_column - 1) % priv->settings.pages_per_row) + 1;
+  }
+
+  priv->settings.first_page_column = first_page_column;
 
   /* Empty and refill grid */
   zathura_gtk_clear_grid(priv);

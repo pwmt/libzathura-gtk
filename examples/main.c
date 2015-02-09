@@ -33,7 +33,7 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
         break;
       case GDK_KEY_d:
         {
-          guint pages_per_row;;
+          guint pages_per_row;
           g_object_get(G_OBJECT(document), "pages-per-row", &pages_per_row, NULL);
 
           if (pages_per_row == 1) {
@@ -43,6 +43,20 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
           }
 
           g_object_set(G_OBJECT(document), "pages-per-row", pages_per_row, NULL);
+        }
+        break;
+      case GDK_KEY_v:
+        {
+          guint first_page_column;
+          g_object_get(G_OBJECT(document), "first-page-column", &first_page_column, NULL);
+
+          if (first_page_column == 1) {
+            first_page_column = 2;
+          } else {
+            first_page_column = 1;
+          }
+
+          g_object_set(G_OBJECT(document), "first-page-column", first_page_column, NULL);
         }
         break;
       case GDK_KEY_r:

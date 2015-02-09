@@ -35,7 +35,7 @@ zathura_gtk_fill_grid(ZathuraDocumentPrivate* priv)
    * which are in the same row as the current page */
   if (priv->settings.continuous_pages == false) {
     unsigned int nrow = priv->document.current_page_number / priv->settings.pages_per_row;
-    i = nrow * priv->settings.pages_per_row;
+    i = nrow * priv->settings.pages_per_row + (priv->settings.first_page_column - 1);
     n = i + priv->settings.pages_per_row;
   }
 
@@ -45,8 +45,8 @@ zathura_gtk_fill_grid(ZathuraDocumentPrivate* priv)
     GtkWidget* page_widget = g_list_nth_data(priv->document.pages, i);
 
     /* Get coordinates */
-    unsigned int x = i % priv->settings.pages_per_row;
-    unsigned int y = i / priv->settings.pages_per_row;
+    unsigned int x = (i + priv->settings.first_page_column - 1) % priv->settings.pages_per_row;
+    unsigned int y = (i + priv->settings.first_page_column - 1) / priv->settings.pages_per_row;
 
     if (x == 0) {
       gtk_widget_set_halign(page_widget, GTK_ALIGN_END);
