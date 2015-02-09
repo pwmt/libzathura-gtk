@@ -258,6 +258,15 @@ zathura_gtk_document_scroll(GtkWidget* document, zathura_gtk_document_scroll_dir
   gdouble position_x = priv->position.x;
   gdouble position_y = priv->position.y;
 
+  /* Go to top or go to bottom */
+  if (direction == TOP) {
+    zathura_gtk_grid_set_position(priv, position_x, 0);
+    return;
+  } else if (direction == BOTTOM) {
+    zathura_gtk_grid_set_position(priv, position_x, G_MAXDOUBLE);
+    return;
+  }
+
   /* Settings */
   gdouble scroll_step = 40;
   gdouble scroll_direction = 1.0;

@@ -105,6 +105,9 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
       case GDK_KEY_y:
         zathura_gtk_document_scroll(document, FULL_RIGHT);
         break;
+      case GDK_KEY_g:
+        zathura_gtk_document_scroll(document, TOP);
+        break;
     }
   } else if (event->state == GDK_CONTROL_MASK) {
     switch(event->keyval) {
@@ -125,6 +128,12 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
         break;
       case GDK_KEY_y:
         zathura_gtk_document_scroll(document, HALF_RIGHT);
+        break;
+    }
+  } else if (event->state == GDK_SHIFT_MASK) {
+    switch(event->keyval) {
+      case GDK_KEY_G:
+        zathura_gtk_document_scroll(document, BOTTOM);
         break;
     }
   }
