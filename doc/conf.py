@@ -22,7 +22,7 @@ pygments_style = 'sphinx'
 # -- Project configuration ------------------------------------------------
 
 project   = 'libzathura-gtk'
-copyright = '2014, pwmt.org'
+copyright = '2014-2015, pwmt.org'
 version   = '0.0.0'
 release   = '0.0.0'
 
