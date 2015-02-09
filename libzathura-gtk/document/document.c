@@ -254,21 +254,34 @@ zathura_gtk_document_scroll(GtkWidget* document, zathura_gtk_document_scroll_dir
 {
   ZathuraDocumentPrivate* priv = ZATHURA_DOCUMENT_GET_PRIVATE(document);
 
+  /* Current position */
   gdouble position_x = priv->position.x;
   gdouble position_y = priv->position.y;
 
+  /* Settings */
   gdouble scroll_step = 40;
   gdouble scroll_direction = 1.0;
+  gdouble scroll_full_overlap = 0.0;
 
+  /* Current properties */
+  const double vertical_step   = (double) gtk_widget_get_allocated_width(priv->gtk.viewport);
+  const double horizontal_step = (double) gtk_widget_get_allocated_height(priv->gtk.viewport);
+
+  /* Adjust direction */
   switch (direction) {
     case LEFT:
     case UP:
+    case FULL_LEFT:
+    case FULL_UP:
+    case HALF_LEFT:
+    case HALF_UP:
       scroll_direction = -1.0;
       break;
     default:
       break;
   }
 
+  /* Calculate new position */
   switch (direction) {
     case UP:
     case DOWN:
@@ -278,10 +291,30 @@ zathura_gtk_document_scroll(GtkWidget* document, zathura_gtk_document_scroll_dir
     case LEFT:
       position_x += scroll_direction * scroll_step;
       break;
+
+    case FULL_UP:
+    case FULL_DOWN:
+      position_y += scroll_direction * (1.0 - scroll_full_overlap) * vertical_step;
+      break;
+    case FULL_RIGHT:
+    case FULL_LEFT:
+      position_x += scroll_direction * (1.0 - scroll_full_overlap) * horizontal_step;
+      break;
+
+    case HALF_UP:
+    case HALF_DOWN:
+      position_y += scroll_direction * 0.5 * vertical_step;
+      break;
+    case HALF_RIGHT:
+    case HALF_LEFT:
+      position_x += scroll_direction * 0.5 * horizontal_step;
+      break;
+
     default:
       break;
   }
 
+  /* Update position */
   zathura_gtk_grid_set_position(priv, position_x, position_y);
 }
 

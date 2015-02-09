@@ -19,85 +19,114 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
 {
   GtkWidget* document = (GtkWidget*) data;
 
-  switch(event->keyval) {
-    case GDK_KEY_q:
-      gtk_main_quit();
-      break;
-    case GDK_KEY_c:
-      {
-        gboolean continuous_pages;
-        g_object_get(G_OBJECT(document), "continuous-pages", &continuous_pages, NULL);
-        g_object_set(G_OBJECT(document), "continuous-pages", !continuous_pages, NULL);
-      }
-      break;
-    case GDK_KEY_d:
-      {
-        guint pages_per_row;;
-        g_object_get(G_OBJECT(document), "pages-per-row", &pages_per_row, NULL);
-
-        if (pages_per_row == 1) {
-          pages_per_row = 2;
-        } else {
-          pages_per_row = 1;
+  if (event->state == 0) {
+    switch(event->keyval) {
+      case GDK_KEY_q:
+        gtk_main_quit();
+        break;
+      case GDK_KEY_c:
+        {
+          gboolean continuous_pages;
+          g_object_get(G_OBJECT(document), "continuous-pages", &continuous_pages, NULL);
+          g_object_set(G_OBJECT(document), "continuous-pages", !continuous_pages, NULL);
         }
+        break;
+      case GDK_KEY_d:
+        {
+          guint pages_per_row;;
+          g_object_get(G_OBJECT(document), "pages-per-row", &pages_per_row, NULL);
 
-        g_object_set(G_OBJECT(document), "pages-per-row", pages_per_row, NULL);
-      }
-      break;
-    case GDK_KEY_r:
-      {
-        guint rotation;
-        g_object_get(G_OBJECT(document), "rotation", &rotation, NULL);
-        rotation = (rotation + 90) % 360;
-        g_object_set(G_OBJECT(document), "rotation", rotation, NULL);
-      }
-      break;
-    case GDK_KEY_plus:
-      {
-        double scale;
-        g_object_get(G_OBJECT(document), "scale", &scale, NULL);
-        scale *= 1.2;
-        g_object_set(G_OBJECT(document), "scale", scale, NULL);
-      }
-      break;
-    case GDK_KEY_minus:
-      {
-        double scale;
-        g_object_get(G_OBJECT(document), "scale", &scale, NULL);
-        scale *= 0.9;
-        g_object_set(G_OBJECT(document), "scale", scale, NULL);
-      }
-      break;
-    case GDK_KEY_J:
-      {
-        guint current_page_number;
-        g_object_get(G_OBJECT(document), "current-page-number", &current_page_number, NULL);
-        current_page_number += 1;
-        g_object_set(G_OBJECT(document), "current-page-number", current_page_number, NULL);
-      }
-      break;
-    case GDK_KEY_K:
-      {
-        guint current_page_number;
-        g_object_get(G_OBJECT(document), "current-page-number", &current_page_number, NULL);
-        if (current_page_number != 0) {
-          current_page_number -= 1;
+          if (pages_per_row == 1) {
+            pages_per_row = 2;
+          } else {
+            pages_per_row = 1;
+          }
+
+          g_object_set(G_OBJECT(document), "pages-per-row", pages_per_row, NULL);
+        }
+        break;
+      case GDK_KEY_r:
+        {
+          guint rotation;
+          g_object_get(G_OBJECT(document), "rotation", &rotation, NULL);
+          rotation = (rotation + 90) % 360;
+          g_object_set(G_OBJECT(document), "rotation", rotation, NULL);
+        }
+        break;
+      case GDK_KEY_plus:
+        {
+          double scale;
+          g_object_get(G_OBJECT(document), "scale", &scale, NULL);
+          scale *= 1.2;
+          g_object_set(G_OBJECT(document), "scale", scale, NULL);
+        }
+        break;
+      case GDK_KEY_minus:
+        {
+          double scale;
+          g_object_get(G_OBJECT(document), "scale", &scale, NULL);
+          scale *= 0.9;
+          g_object_set(G_OBJECT(document), "scale", scale, NULL);
+        }
+        break;
+      case GDK_KEY_J:
+        {
+          guint current_page_number;
+          g_object_get(G_OBJECT(document), "current-page-number", &current_page_number, NULL);
+          current_page_number += 1;
           g_object_set(G_OBJECT(document), "current-page-number", current_page_number, NULL);
         }
-      }
-      break;
-    case GDK_KEY_h:
-      zathura_gtk_document_scroll(document, LEFT);
-      break;
-    case GDK_KEY_j:
-      zathura_gtk_document_scroll(document, DOWN);
-      break;
-    case GDK_KEY_k:
-      zathura_gtk_document_scroll(document, UP);
-      break;
-    case GDK_KEY_l:
-      zathura_gtk_document_scroll(document, RIGHT);
-      break;
+        break;
+      case GDK_KEY_K:
+        {
+          guint current_page_number;
+          g_object_get(G_OBJECT(document), "current-page-number", &current_page_number, NULL);
+          if (current_page_number != 0) {
+            current_page_number -= 1;
+            g_object_set(G_OBJECT(document), "current-page-number", current_page_number, NULL);
+          }
+        }
+        break;
+      case GDK_KEY_h:
+        zathura_gtk_document_scroll(document, LEFT);
+        break;
+      case GDK_KEY_j:
+        zathura_gtk_document_scroll(document, DOWN);
+        break;
+      case GDK_KEY_k:
+        zathura_gtk_document_scroll(document, UP);
+        break;
+      case GDK_KEY_l:
+        zathura_gtk_document_scroll(document, RIGHT);
+        break;
+      case GDK_KEY_t:
+        zathura_gtk_document_scroll(document, FULL_LEFT);
+        break;
+      case GDK_KEY_y:
+        zathura_gtk_document_scroll(document, FULL_RIGHT);
+        break;
+    }
+  } else if (event->state == GDK_CONTROL_MASK) {
+    switch(event->keyval) {
+      case GDK_KEY_f:
+        zathura_gtk_document_scroll(document, FULL_DOWN);
+        break;
+      case GDK_KEY_b:
+        zathura_gtk_document_scroll(document, FULL_UP);
+        break;
+      case GDK_KEY_t:
+        zathura_gtk_document_scroll(document, HALF_LEFT);
+        break;
+      case GDK_KEY_d:
+        zathura_gtk_document_scroll(document, HALF_DOWN);
+        break;
+      case GDK_KEY_u:
+        zathura_gtk_document_scroll(document, HALF_UP);
+        break;
+      case GDK_KEY_y:
+        zathura_gtk_document_scroll(document, HALF_RIGHT);
+        break;
+    }
   }
 
   return TRUE;

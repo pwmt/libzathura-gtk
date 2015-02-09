@@ -7,7 +7,17 @@ typedef enum zathura_gtk_document_scroll_direction_e {
   LEFT,
   DOWN,
   UP,
-  RIGHT
+  RIGHT,
+
+  FULL_LEFT,
+  FULL_DOWN,
+  FULL_UP,
+  FULL_RIGHT,
+
+  HALF_LEFT,
+  HALF_DOWN,
+  HALF_UP,
+  HALF_RIGHT
 } zathura_gtk_document_scroll_direction_t;
 
 #endif /* ZATHURA_GTK_DOCUMENT_TYPES */
