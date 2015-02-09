@@ -514,6 +514,7 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
           g_list_foreach(priv->document.pages, (GFunc) cb_document_pages_set_scale, priv);
         }
       }
+      break;
     case PROP_SCROLL_STEP:
       priv->settings.scroll.step = g_value_get_uint(value);
       break;
