@@ -23,7 +23,9 @@ enum {
   PROP_CONTINUOUS_PAGES,
   PROP_PAGES_PER_ROW,
   PROP_ROTATION,
-  PROP_SCALE
+  PROP_SCALE,
+  PROP_SCROLL_STEP,
+  PROP_SCROLL_OVERLAP
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraDocument, zathura_gtk_document, GTK_TYPE_BIN)
@@ -119,6 +121,34 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_SCROLL_STEP,
+    g_param_spec_uint(
+      "scroll-step",
+      "Scroll step",
+      "Number of pixels that should be scrolled per step",
+      1,
+      G_MAXUINT,
+      40,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_SCROLL_OVERLAP,
+    g_param_spec_double(
+      "scroll-full-overlap",
+      "Scroll full overlap",
+      "Optional overlap if full scroll actions are performed",
+      0,
+      0.99,
+      0.0,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
 }
 
 static void
@@ -135,10 +165,12 @@ zathura_gtk_document_init(ZathuraDocument* widget)
   priv->gtk.viewport        = NULL;
   priv->gtk.grid            = NULL;
 
-  priv->settings.continuous_pages = TRUE;
-  priv->settings.pages_per_row    = 1;
-  priv->settings.rotation         = 0;
-  priv->settings.scale            = 1.0;
+  priv->settings.continuous_pages    = TRUE;
+  priv->settings.pages_per_row       = 1;
+  priv->settings.rotation            = 0;
+  priv->settings.scale               = 1.0;
+  priv->settings.scroll.step         = 40;
+  priv->settings.scroll.full_overlap = 0.0;
 
   priv->position.x = 0.0;
   priv->position.y = 0.0;
@@ -287,11 +319,11 @@ zathura_gtk_document_scroll(GtkWidget* document, zathura_gtk_document_scroll_dir
   }
 
   /* Settings */
-  gdouble scroll_step = 40;
-  gdouble scroll_direction = 1.0;
-  gdouble scroll_full_overlap = 0.0;
+  gdouble scroll_step         = priv->settings.scroll.step;
+  gdouble scroll_full_overlap = priv->settings.scroll.full_overlap;
 
   /* Adjust direction */
+  gdouble scroll_direction = 1.0;
   switch (direction) {
     case LEFT:
     case UP:
@@ -388,6 +420,11 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
           g_list_foreach(priv->document.pages, (GFunc) cb_document_pages_set_scale, priv);
         }
       }
+    case PROP_SCROLL_STEP:
+      priv->settings.scroll.step = g_value_get_uint(value);
+      break;
+    case PROP_SCROLL_OVERLAP:
+      priv->settings.scroll.full_overlap = g_value_get_double(value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
@@ -418,6 +455,12 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
       break;
     case PROP_SCALE:
       g_value_set_double(value, priv->settings.scale);
+      break;
+    case PROP_SCROLL_STEP:
+      g_value_set_uint(value, priv->settings.scroll.step);
+      break;
+    case PROP_SCROLL_OVERLAP:
+      g_value_set_double(value, priv->settings.scroll.full_overlap);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);

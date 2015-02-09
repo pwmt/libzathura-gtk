@@ -52,6 +52,11 @@ struct _ZathuraDocumentPrivate {
     guint first_page_column;
     guint rotation;
     gdouble scale;
+
+    struct {
+      gdouble step;
+      gdouble full_overlap;
+    } scroll;
   } settings;
 
   struct {
