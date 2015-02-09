@@ -26,7 +26,8 @@ enum {
   PROP_SCALE,
   PROP_SCROLL_STEP,
   PROP_SCROLL_OVERLAP,
-  PROP_SCROLL_PAGE_AWARE
+  PROP_SCROLL_PAGE_AWARE,
+  PROP_SCROLL_WRAP
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraDocument, zathura_gtk_document, GTK_TYPE_BIN)
@@ -162,6 +163,18 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_SCROLL_WRAP,
+    g_param_spec_boolean(
+      "scroll-wrap",
+      "Scroll-wrap",
+      "Enables scroll wrapping",
+      FALSE,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
 }
 
 static void
@@ -185,6 +198,7 @@ zathura_gtk_document_init(ZathuraDocument* widget)
   priv->settings.scroll.step         = 40;
   priv->settings.scroll.full_overlap = 0.0;
   priv->settings.scroll.page_aware   = false;
+  priv->settings.scroll.wrap         = false;
 
   priv->position.x = 0.0;
   priv->position.y = 0.0;
@@ -317,6 +331,9 @@ zathura_gtk_document_scroll(GtkWidget* document, zathura_gtk_document_scroll_dir
   const double vertical_step   = (double) gtk_widget_get_allocated_width(priv->gtk.viewport);
   const double horizontal_step = (double) gtk_widget_get_allocated_height(priv->gtk.viewport);
 
+  const double grid_width  = (double) gtk_widget_get_allocated_width(priv->gtk.grid);
+  const double grid_height = (double) gtk_widget_get_allocated_height(priv->gtk.grid);
+
   /* Go to top or bottom of current page */
   if (direction == PAGE_TOP || direction == PAGE_BOTTOM) {
     zathura_gtk_page_widget_status_t* widget_status =
@@ -382,6 +399,21 @@ zathura_gtk_document_scroll(GtkWidget* document, zathura_gtk_document_scroll_dir
 
     default:
       break;
+  }
+
+  /* Scroll-wrap */
+  if (priv->settings.scroll.wrap == true) {
+    if ((position_y + horizontal_step) > grid_height) {
+      position_y = 0;
+    } else if (position_y < 0) {
+      position_y = G_MAXDOUBLE;
+    }
+
+    if ((position_x + vertical_step) > grid_width) {
+      position_x = 0;
+    } else if (position_x < 0) {
+      position_x = G_MAXDOUBLE;
+    }
   }
 
   /* Page-aware scrolling */
@@ -471,6 +503,9 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
     case PROP_SCROLL_PAGE_AWARE:
       priv->settings.scroll.page_aware = g_value_get_boolean(value);
       break;
+    case PROP_SCROLL_WRAP:
+      priv->settings.scroll.wrap = g_value_get_boolean(value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
@@ -509,6 +544,9 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
       break;
     case PROP_SCROLL_PAGE_AWARE:
       g_value_set_boolean(value, priv->settings.scroll.page_aware);
+      break;
+    case PROP_SCROLL_WRAP:
+      g_value_set_boolean(value, priv->settings.scroll.wrap);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
