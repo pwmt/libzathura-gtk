@@ -24,6 +24,10 @@ struct _ZathuraPagePrivate {
     guint rotation;
     double scale;
   } settings;
+
+  struct {
+    zathura_list_t* links;
+  } properties;
 };
 
 #endif /* ZATHURA_GTK_PAGE_INTERNAL */

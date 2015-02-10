@@ -77,15 +77,18 @@ zathura_gtk_page_init(ZathuraPage* widget)
 {
   ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(widget);
 
-  priv->page         = NULL;
+  priv->page               = NULL;
+  priv->overlay            = NULL;
   priv->layer.drawing_area = NULL;
-  priv->overlay      = NULL;
+  priv->layer.links        = NULL;
 
   priv->dimensions.width  = 0;
   priv->dimensions.height = 0;
 
   priv->settings.rotation = 0;
   priv->settings.scale    = 1.0;
+
+  priv->properties.links = NULL;
 }
 
 GtkWidget*
