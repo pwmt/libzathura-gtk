@@ -15,6 +15,7 @@ enum {
   PROP_PAGE,
   PROP_ROTATION,
   PROP_SCALE,
+  PROP_LINKS_HIGHLIGHT,
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraPage, zathura_gtk_page, GTK_TYPE_BIN)
@@ -70,6 +71,18 @@ zathura_gtk_page_class_init(ZathuraPageClass* class)
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_LINKS_HIGHLIGHT,
+    g_param_spec_boolean(
+      "highlight-links",
+      "highlight-links",
+      "Highlight links by drawing rectangles around them",
+      FALSE,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
 }
 
 static void
@@ -88,7 +101,9 @@ zathura_gtk_page_init(ZathuraPage* widget)
   priv->settings.rotation = 0;
   priv->settings.scale    = 1.0;
 
-  priv->properties.links = NULL;
+  priv->links.list      = NULL;
+  priv->links.retrieved = false;
+  priv->links.draw      = false;
 }
 
 GtkWidget*
@@ -171,6 +186,12 @@ zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* valu
         }
       }
       break;
+    case PROP_LINKS_HIGHLIGHT:
+      {
+        priv->links.draw = g_value_get_boolean(value);
+        render_page(priv);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
@@ -191,6 +212,9 @@ zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GPa
       break;
     case PROP_SCALE:
       g_value_set_double(value, priv->settings.scale);
+      break;
+    case PROP_LINKS_HIGHLIGHT:
+      g_value_set_boolean(value, priv->links.draw);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);

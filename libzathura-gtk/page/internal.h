@@ -26,8 +26,10 @@ struct _ZathuraPagePrivate {
   } settings;
 
   struct {
-    zathura_list_t* links;
-  } properties;
+    bool retrieved;
+    bool draw;
+    zathura_list_t* list;
+  } links;
 };
 
 #endif /* ZATHURA_GTK_PAGE_INTERNAL */

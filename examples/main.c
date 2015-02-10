@@ -110,6 +110,13 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
           g_object_set(G_OBJECT(document), "scroll-wrap", !scroll_wrap, NULL);
         }
         break;
+      case GDK_KEY_f:
+        {
+          gboolean highlight_links;
+          g_object_get(G_OBJECT(document), "highlight-links", &highlight_links, NULL);
+          g_object_set(G_OBJECT(document), "highlight-links", !highlight_links, NULL);
+        }
+        break;
     }
   } else if (event->state == GDK_CONTROL_MASK) {
     switch(event->keyval) {

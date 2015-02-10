@@ -54,6 +54,10 @@ struct _ZathuraDocumentPrivate {
     gdouble scale;
 
     struct {
+      bool highlight;
+    } links;
+
+    struct {
       gdouble step;
       gdouble full_overlap;
       bool page_aware;

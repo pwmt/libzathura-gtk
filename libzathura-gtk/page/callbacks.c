@@ -67,29 +67,33 @@ cb_page_draw_links(GtkWidget *widget, cairo_t *cairo, gpointer data)
 {
   ZathuraPagePrivate* priv = (ZathuraPagePrivate*) data;
 
-  /* Get links */
-  if (priv->properties.links == NULL) {
-    if (zathura_page_get_links(priv->page, &(priv->properties.links)) != ZATHURA_ERROR_OK) {
-      return FALSE;
+  /* Draw links if requested */
+  if (priv->links.draw == true) {
+    /* Retrieve links of page */
+    if (priv->links.retrieved == false) {
+      priv->links.retrieved = true;
+      if (zathura_page_get_links(priv->page, &(priv->links.list)) != ZATHURA_ERROR_OK) {
+        return FALSE;
+      }
     }
+
+    cairo_save(cairo);
+
+    /* Draw each link */
+    zathura_link_mapping_t* link_mapping;
+    ZATHURA_LIST_FOREACH(link_mapping, priv->links.list) {
+      zathura_rectangle_t position = calculate_correct_position(priv, link_mapping->position);
+      unsigned int width  = position.p2.x - position.p1.x;
+      unsigned int height = position.p2.y - position.p1.y;
+
+      /* Fill pink */
+      cairo_set_source_rgba(cairo, 72, 0, 98, 0.5);
+      cairo_rectangle(cairo, position.p1.x, position.p1.y, width, height);
+      cairo_fill(cairo);
+    }
+
+    cairo_restore(cairo);
   }
-
-  cairo_save(cairo);
-
-  /* Draw each link */
-  zathura_link_mapping_t* link_mapping;
-  ZATHURA_LIST_FOREACH(link_mapping, priv->properties.links) {
-    zathura_rectangle_t position = calculate_correct_position(priv, link_mapping->position);
-    unsigned int width  = position.p2.x - position.p1.x;
-    unsigned int height = position.p2.y - position.p1.y;
-
-    /* Fill pink */
-    cairo_set_source_rgba(cairo, 72, 0, 98, 0.5);
-    cairo_rectangle(cairo, position.p1.x, position.p1.y, width, height);
-    cairo_fill(cairo);
-  }
-
-  cairo_restore(cairo);
 
   return FALSE;
 }

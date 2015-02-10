@@ -11,4 +11,6 @@ void cb_document_pages_set_rotation(GtkWidget* page, ZathuraDocumentPrivate* pri
 
 void cb_document_pages_set_scale(GtkWidget* page, ZathuraDocumentPrivate* priv);
 
+void cb_document_pages_set_highlight_links(GtkWidget* page, ZathuraDocumentPrivate* priv);
+
 #endif /* ZATHURA_GTK_DOCUMENT_CALLBACKS */

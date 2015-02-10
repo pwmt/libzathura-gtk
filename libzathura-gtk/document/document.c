@@ -29,7 +29,8 @@ enum {
   PROP_SCROLL_STEP,
   PROP_SCROLL_OVERLAP,
   PROP_SCROLL_PAGE_AWARE,
-  PROP_SCROLL_WRAP
+  PROP_SCROLL_WRAP,
+  PROP_LINKS_HIGHLIGHT
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraDocument, zathura_gtk_document, GTK_TYPE_BIN)
@@ -191,6 +192,18 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_LINKS_HIGHLIGHT,
+    g_param_spec_boolean(
+      "highlight-links",
+      "Highlight-links",
+      "Highlight links by drawing rectangles around them",
+      FALSE,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
 }
 
 static void
@@ -216,6 +229,7 @@ zathura_gtk_document_init(ZathuraDocument* widget)
   priv->settings.scroll.full_overlap = 0.0;
   priv->settings.scroll.page_aware   = false;
   priv->settings.scroll.wrap         = false;
+  priv->settings.links.highlight     = false;
 
   priv->position.x = 0.0;
   priv->position.y = 0.0;
@@ -527,6 +541,18 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
     case PROP_SCROLL_WRAP:
       priv->settings.scroll.wrap = g_value_get_boolean(value);
       break;
+    case PROP_LINKS_HIGHLIGHT:
+      {
+        gboolean highlight = g_value_get_boolean(value);
+        if (priv->settings.links.highlight != highlight) {
+          priv->settings.links.highlight = highlight;
+          g_list_foreach(priv->document.pages,
+              (GFunc) cb_document_pages_set_highlight_links,
+              priv
+            );
+        }
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
@@ -571,6 +597,9 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
       break;
     case PROP_SCROLL_WRAP:
       g_value_set_boolean(value, priv->settings.scroll.wrap);
+      break;
+    case PROP_LINKS_HIGHLIGHT:
+      g_value_set_boolean(value, priv->settings.links.highlight);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
