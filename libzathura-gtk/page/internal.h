@@ -9,7 +9,11 @@
 struct _ZathuraPagePrivate {
   zathura_page_t* page;
   GtkWidget* overlay;
-  GtkWidget* drawing_area;
+
+  struct {
+    GtkWidget* drawing_area;
+    GtkWidget* links;
+  } layer;
 
   struct {
     unsigned int width;

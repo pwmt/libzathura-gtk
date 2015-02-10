@@ -49,3 +49,46 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
   return FALSE;
 }
 
+static zathura_rectangle_t
+calculate_correct_position(ZathuraPagePrivate* priv, zathura_rectangle_t position)
+{
+  zathura_rectangle_t correct_position;
+
+  correct_position.p1.x = position.p1.x * priv->settings.scale;
+  correct_position.p1.y = position.p1.y * priv->settings.scale;
+  correct_position.p2.x = position.p2.x * priv->settings.scale;
+  correct_position.p2.y = position.p2.y * priv->settings.scale;
+
+  return correct_position;
+}
+
+gboolean
+cb_page_draw_links(GtkWidget *widget, cairo_t *cairo, gpointer data)
+{
+  ZathuraPagePrivate* priv = (ZathuraPagePrivate*) data;
+
+  /* Get links */
+  zathura_list_t* links = NULL;
+  if (zathura_page_get_links(priv->page, &links) != ZATHURA_ERROR_OK) {
+    return FALSE;
+  }
+
+  cairo_save(cairo);
+
+  /* Draw each link */
+  zathura_link_mapping_t* link_mapping;
+  ZATHURA_LIST_FOREACH(link_mapping, links) {
+    zathura_rectangle_t position = calculate_correct_position(priv, link_mapping->position);
+    unsigned int width  = position.p2.x - position.p1.x;
+    unsigned int height = position.p2.y - position.p1.y;
+
+    /* Fill pink */
+    cairo_set_source_rgba(cairo, 72, 0, 98, 0.5);
+    cairo_rectangle(cairo, position.p1.x, position.p1.y, width, height);
+    cairo_fill(cairo);
+  }
+
+  cairo_restore(cairo);
+
+  return FALSE;
+}

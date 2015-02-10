@@ -78,7 +78,7 @@ zathura_gtk_page_init(ZathuraPage* widget)
   ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(widget);
 
   priv->page         = NULL;
-  priv->drawing_area = NULL;
+  priv->layer.drawing_area = NULL;
   priv->overlay      = NULL;
 
   priv->dimensions.width  = 0;
@@ -106,18 +106,23 @@ zathura_gtk_page_new(zathura_page_t* page)
     return NULL;
   }
 
+  /* Setup drawing area */
+  priv->layer.drawing_area = gtk_drawing_area_new();
+  gtk_widget_set_halign(priv->layer.drawing_area, GTK_ALIGN_START);
+  gtk_widget_set_valign(priv->layer.drawing_area, GTK_ALIGN_START);
+  gtk_widget_set_size_request(priv->layer.drawing_area, priv->dimensions.width, priv->dimensions.height);
+  g_signal_connect(G_OBJECT(priv->layer.drawing_area), "draw", G_CALLBACK(cb_page_draw), priv);
+
+  /* Setup links layer */
+  priv->layer.links = gtk_drawing_area_new();
+  g_signal_connect(G_OBJECT(priv->layer.links), "draw", G_CALLBACK(cb_page_draw_links), priv);
+
   /* Setup over lay */
   priv->overlay = gtk_overlay_new();
-
-  /* Setup drawing area */
-  priv->drawing_area = gtk_drawing_area_new();
-  gtk_widget_set_halign(priv->drawing_area, GTK_ALIGN_START);
-  gtk_widget_set_valign(priv->drawing_area, GTK_ALIGN_START);
-  gtk_widget_set_size_request(priv->drawing_area, priv->dimensions.width, priv->dimensions.height);
-  g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_page_draw), priv);
+  gtk_container_add(GTK_CONTAINER(priv->overlay), GTK_WIDGET(priv->layer.drawing_area));
+  gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.links);
 
   /* Setup container */
-  gtk_container_add(GTK_CONTAINER(priv->overlay), GTK_WIDGET(priv->drawing_area));
   gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->overlay));
 
   gtk_widget_show_all(GTK_WIDGET(widget));
@@ -210,6 +215,6 @@ render_page(ZathuraPagePrivate* priv)
 
   calculate_widget_size(priv, &page_widget_width, &page_widget_height);
 
-  gtk_widget_set_size_request(priv->drawing_area, page_widget_width, page_widget_height);
-  gtk_widget_queue_resize(priv->drawing_area);
+  gtk_widget_set_size_request(priv->layer.drawing_area, page_widget_width, page_widget_height);
+  gtk_widget_queue_resize(priv->layer.drawing_area);
 }
