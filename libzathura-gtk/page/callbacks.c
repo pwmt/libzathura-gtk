@@ -50,14 +50,66 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
 }
 
 static zathura_rectangle_t
-calculate_correct_position(ZathuraPagePrivate* priv, zathura_rectangle_t position)
+rotate_rectangle(zathura_rectangle_t rectangle, unsigned int degree, unsigned int width, unsigned int height)
 {
-  zathura_rectangle_t correct_position;
+  zathura_rectangle_t tmp;
 
-  correct_position.p1.x = position.p1.x * priv->settings.scale;
-  correct_position.p1.y = position.p1.y * priv->settings.scale;
-  correct_position.p2.x = position.p2.x * priv->settings.scale;
-  correct_position.p2.y = position.p2.y * priv->settings.scale;
+  switch (degree) {
+    case 90:
+      tmp.p1.x = height - rectangle.p2.y;
+      tmp.p1.y = rectangle.p1.x;
+      tmp.p2.x = height - rectangle.p1.y;
+      tmp.p2.y = rectangle.p2.x;
+      break;
+    case 180:
+      tmp.p1.x = width  - rectangle.p2.x;
+      tmp.p1.y = height - rectangle.p2.y;
+      tmp.p2.x = width  - rectangle.p1.x;
+      tmp.p2.y = height - rectangle.p1.y;
+      break;
+    case 270:
+      tmp.p1.x = rectangle.p1.y;
+      tmp.p1.y = width - rectangle.p2.x;
+      tmp.p2.x = rectangle.p2.y;
+      tmp.p2.y = width - rectangle.p1.x;
+      break;
+    default:
+      tmp.p1.x = rectangle.p1.x;
+      tmp.p1.y = rectangle.p1.y;
+      tmp.p2.x = rectangle.p2.x;
+      tmp.p2.y = rectangle.p2.y;
+      break;
+  }
+
+  return tmp;
+}
+
+static zathura_rectangle_t
+scale_rectangle(zathura_rectangle_t rectangle, double scale)
+{
+  zathura_rectangle_t scaled_rectangle;
+
+  scaled_rectangle.p1.x = rectangle.p1.x * scale;
+  scaled_rectangle.p1.y = rectangle.p1.y * scale;
+  scaled_rectangle.p2.x = rectangle.p2.x * scale;
+  scaled_rectangle.p2.y = rectangle.p2.y * scale;
+
+  return scaled_rectangle;
+}
+
+static zathura_rectangle_t
+calculate_correct_position(ZathuraPagePrivate* priv, GtkWidget* widget, zathura_rectangle_t position)
+{
+  /* Rotate rectangle */
+  zathura_rectangle_t correct_position = rotate_rectangle(
+      position,
+      priv->settings.rotation,
+      priv->dimensions.width,
+      priv->dimensions.height
+      );
+
+  /* Scale rectangle */
+  correct_position = scale_rectangle(correct_position, priv->settings.scale);
 
   return correct_position;
 }
@@ -82,7 +134,7 @@ cb_page_draw_links(GtkWidget *widget, cairo_t *cairo, gpointer data)
     /* Draw each link */
     zathura_link_mapping_t* link_mapping;
     ZATHURA_LIST_FOREACH(link_mapping, priv->links.list) {
-      zathura_rectangle_t position = calculate_correct_position(priv, link_mapping->position);
+      zathura_rectangle_t position = calculate_correct_position(priv, widget, link_mapping->position);
       unsigned int width  = position.p2.x - position.p1.x;
       unsigned int height = position.p2.y - position.p1.y;
 
