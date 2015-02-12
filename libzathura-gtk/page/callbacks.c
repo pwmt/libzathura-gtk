@@ -36,9 +36,21 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
   }
 
   /* Scale */
-  cairo_scale(cairo, priv->settings.scale, priv->settings.scale);
+  gdouble device_scale_x = 1.0;
+  gdouble device_scale_y = 1.0;
 
-  if (zathura_page_render_cairo(priv->page, cairo, priv->settings.scale, 0, 0) != ZATHURA_ERROR_OK) {
+#ifdef HAVE_HIDPI_SUPPORT
+  cairo_surface_t* surface = cairo_get_target(cairo);
+  cairo_surface_get_device_scale(surface, &device_scale_x, &device_scale_y);
+#endif
+
+  double scale_x = priv->settings.scale * device_scale_x;
+  double scale_y = priv->settings.scale * device_scale_y;
+
+  cairo_scale(cairo, scale_x, scale_y);
+
+  /* Render page */
+  if (zathura_page_render_cairo(priv->page, cairo, scale_x, 0, 0) != ZATHURA_ERROR_OK) {
     return FALSE;
   }
 
