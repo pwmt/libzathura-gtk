@@ -40,6 +40,16 @@ ifeq "$(VERBOSE)" "1"
 	$(ECHO) "CC      = ${CC}"
 endif
 
+# pkg-config based version checks
+${VERSIONCHECK_DIR}/%: config.mk
+	$(QUIET)test $($(*)_VERSION_CHECK) -eq 0 || \
+		pkg-config --atleast-version $($(*)_MIN_VERSION) $($(*)_PKG_CONFIG_NAME) || ( \
+		echo "The minium required version of $(*) is $($(*)_MIN_VERSION)" && \
+		false \
+	)
+	@mkdir -p ${VERSIONCHECK_DIR}
+	$(QUIET)touch $@
+
 ${PROJECT}/version.h: ${PROJECT}/version.h.in config.mk
 	$(QUIET)sed 's/ZVMAJOR/${LIBZATHURA_VERSION_MAJOR}/' < ${PROJECT}/version.h.in | \
 		sed 's/ZVMINOR/${LIBZATHURA_VERSION_MINOR}/' | \
@@ -49,7 +59,8 @@ ${PROJECT}/version.h: ${PROJECT}/version.h.in config.mk
 
 # release build
 
-${OBJECTS}:  config.mk ${PROJECT}/version.h
+${OBJECTS}:  config.mk ${PROJECT}/version.h \
+	${VERSIONCHECK_DIR}/GLIB ${VERSIONCHECK_DIR}/GTK ${VERSIONCHECK_DIR}/CAIRO
 
 ${BUILDDIR_RELEASE}/%.o: %.c
 	$(call colorecho,CC,$<)
@@ -75,7 +86,8 @@ release: options ${PROJECT}
 
 # debug build
 
-${OBJECTS_DEBUG}: config.mk ${PROJECT}/version.h
+${OBJECTS_DEBUG}: config.mk ${PROJECT}/version.h \
+	${VERSIONCHECK_DIR}/GLIB ${VERSIONCHECK_DIR}/GTK ${VERSIONCHECK_DIR}/CAIRO
 
 ${BUILDDIR_DEBUG}/%.o: %.c
 	$(call colorecho,CC,$<)
@@ -102,7 +114,8 @@ debug: options ${PROJECT}-debug
 
 # gcov build
 
-${OBJECTS_GCOV}: config.mk ${PROJECT}/version.h
+${OBJECTS_GCOV}: config.mk ${PROJECT}/version.h \
+	${VERSIONCHECK_DIR}/GLIB ${VERSIONCHECK_DIR}/GTK ${VERSIONCHECK_DIR}/CAIRO
 
 ${BUILDDIR_GCOV}/%.o: %.c
 	$(call colorecho,CC,$<)
@@ -141,6 +154,7 @@ clean:
 
 	$(call colorecho,RM, "Clean dependencies")
 	$(QUIET)rm -rf ${DEPENDDIR}
+	$(QUIET)rm -rf ${VERSIONCHECK_DIR}
 
 	$(call colorecho,RM, "Clean distribution files")
 	$(QUIET)rm -rf ${PROJECT}-${VERSION}.tar.gz

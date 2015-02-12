@@ -37,6 +37,25 @@ BUILDDIR_RELEASE ?= ${BUILDDIR}/release
 BUILDDIR_DEBUG ?= ${BUILDDIR}/debug
 BUILDDIR_GCOV ?= ${BUILDDIR}/gcov
 BINDIR ?= bin
+VERSIONCHECK_DIR ?= .version-checks
+
+# version checks
+# If you want to disable any of the checks, set *_VERSION_CHECK to 0.
+
+# glib
+GLIB_VERSION_CHECK ?= 1
+GLIB_MIN_VERSION = 2.28
+GLIB_PKG_CONFIG_NAME = glib-2.0
+
+# GTK
+GTK_VERSION_CHECK ?= 1
+GTK_MIN_VERSION = 3.0
+GTK_PKG_CONFIG_NAME = gtk+-3.0
+
+# cairo
+CAIRO_VERSION_CHECK ?= 1
+CAIRO_MIN_VERSION = 1.14
+CAIRO_PKG_CONFIG_NAME = cairo
 
 # libs
 LIBZATHURA_INC ?= $(shell pkg-config --cflags libzathura)
