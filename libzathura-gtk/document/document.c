@@ -518,6 +518,7 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
             // TODO: Pring warning message
             break;
         }
+        restore_current_page(priv);
       }
       break;
     case PROP_SCALE:
