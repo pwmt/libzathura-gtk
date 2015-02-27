@@ -30,7 +30,8 @@ enum {
   PROP_SCROLL_OVERLAP,
   PROP_SCROLL_PAGE_AWARE,
   PROP_SCROLL_WRAP,
-  PROP_LINKS_HIGHLIGHT
+  PROP_LINKS_HIGHLIGHT,
+  PROP_FORM_EDITING
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraDocument, zathura_gtk_document, GTK_TYPE_BIN)
@@ -204,6 +205,18 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_FORM_EDITING,
+    g_param_spec_boolean(
+      "edit-form-fields",
+      "edit-form-fields",
+      "Allow editing of form fields",
+      FALSE,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
 }
 
 static void
@@ -230,6 +243,7 @@ zathura_gtk_document_init(ZathuraDocument* widget)
   priv->settings.scroll.page_aware   = false;
   priv->settings.scroll.wrap         = false;
   priv->settings.links.highlight     = false;
+  priv->settings.forms.edit          = false;
 
   priv->position.x = 0.0;
   priv->position.y = 0.0;
@@ -258,7 +272,7 @@ zathura_gtk_document_new(zathura_document_t* document)
       "draw",
       G_CALLBACK(cb_grid_draw),
       priv);
-
+  
   GtkAdjustment* horizontal_adjustment = gtk_scrolled_window_get_hadjustment(
       GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window)
       );
@@ -553,6 +567,17 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
             );
         }
       }
+    case PROP_FORM_EDITING:
+      {
+        gboolean edit = g_value_get_boolean(value);
+        if (priv->settings.forms.edit != edit) {
+          priv->settings.forms.edit = edit;
+          g_list_foreach(priv->document.pages,
+              (GFunc) cb_document_pages_set_edit_form,
+              priv
+            );
+        }
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
@@ -601,6 +626,9 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
       break;
     case PROP_LINKS_HIGHLIGHT:
       g_value_set_boolean(value, priv->settings.links.highlight);
+      break;
+    case PROP_FORM_EDITING:
+      g_value_set_boolean(value, priv->settings.forms.edit);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);

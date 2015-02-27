@@ -117,6 +117,15 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
           g_object_set(G_OBJECT(document), "highlight-links", !highlight_links, NULL);
         }
         break;
+      case GDK_KEY_e:
+        {
+          gboolean edit_form_fields;
+          g_object_get(G_OBJECT(document), "edit-form-fields", &edit_form_fields, NULL);
+          g_object_set(G_OBJECT(document), "edit-form-fields", !edit_form_fields, NULL);
+        }
+        break;
+      default:
+        return FALSE;
     }
   } else if (event->state == GDK_CONTROL_MASK) {
     switch(event->keyval) {
@@ -138,6 +147,8 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
       case GDK_KEY_y:
         zathura_gtk_document_scroll(document, HALF_RIGHT);
         break;
+      default:
+        return FALSE;
     }
   } else if (event->state == GDK_SHIFT_MASK) {
     switch(event->keyval) {
@@ -176,6 +187,8 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
       case GDK_KEY_L:
         zathura_gtk_document_scroll(document, PAGE_BOTTOM);
         break;
+      default:
+        return FALSE;
     }
   }
 

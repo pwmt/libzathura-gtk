@@ -58,6 +58,10 @@ struct _ZathuraDocumentPrivate {
     } links;
 
     struct {
+      bool edit;
+    } forms;
+
+    struct {
       gdouble step;
       gdouble full_overlap;
       bool page_aware;

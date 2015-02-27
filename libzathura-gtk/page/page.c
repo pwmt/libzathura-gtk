@@ -5,6 +5,7 @@
 #include "page.h"
 #include "internal.h"
 #include "callbacks.h"
+#include "form-fields/editor.h"
 
 static void zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
@@ -16,6 +17,7 @@ enum {
   PROP_ROTATION,
   PROP_SCALE,
   PROP_LINKS_HIGHLIGHT,
+  PROP_FORM_EDITING
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraPage, zathura_gtk_page, GTK_TYPE_BIN)
@@ -83,6 +85,18 @@ zathura_gtk_page_class_init(ZathuraPageClass* class)
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_FORM_EDITING,
+    g_param_spec_boolean(
+      "edit-form-fields",
+      "edit-form-fields",
+      "Allow editing of form fields",
+      FALSE,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
 }
 
 static void
@@ -94,6 +108,7 @@ zathura_gtk_page_init(ZathuraPage* widget)
   priv->overlay            = NULL;
   priv->layer.drawing_area = NULL;
   priv->layer.links        = NULL;
+  priv->layer.form_fields  = NULL;
 
   priv->dimensions.width  = 0;
   priv->dimensions.height = 0;
@@ -104,6 +119,10 @@ zathura_gtk_page_init(ZathuraPage* widget)
   priv->links.list      = NULL;
   priv->links.retrieved = false;
   priv->links.draw      = false;
+
+  priv->form_fields.list      = NULL;
+  priv->form_fields.retrieved = false;
+  priv->form_fields.edit      = false;
 }
 
 GtkWidget*
@@ -135,10 +154,15 @@ zathura_gtk_page_new(zathura_page_t* page)
   priv->layer.links = gtk_drawing_area_new();
   g_signal_connect(G_OBJECT(priv->layer.links), "draw", G_CALLBACK(cb_page_draw_links), priv);
 
+  /* Setup form fields layer */
+  priv->layer.form_fields = gtk_fixed_new();
+  g_signal_connect(G_OBJECT(priv->layer.form_fields), "draw", G_CALLBACK(cb_form_field_editor_build), priv);
+
   /* Setup over lay */
   priv->overlay = gtk_overlay_new();
   gtk_container_add(GTK_CONTAINER(priv->overlay), GTK_WIDGET(priv->layer.drawing_area));
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.links);
+  gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.form_fields);
 
   /* Setup container */
   gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->overlay));
@@ -192,6 +216,12 @@ zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* valu
         render_page(priv);
       }
       break;
+    case PROP_FORM_EDITING:
+      {
+        priv->form_fields.edit = g_value_get_boolean(value);
+        render_page(priv);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
@@ -215,6 +245,9 @@ zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GPa
       break;
     case PROP_LINKS_HIGHLIGHT:
       g_value_set_boolean(value, priv->links.draw);
+      break;
+    case PROP_FORM_EDITING:
+      g_value_set_boolean(value, priv->form_fields.edit);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
@@ -241,6 +274,12 @@ render_page(ZathuraPagePrivate* priv)
   unsigned int page_widget_height;
 
   calculate_widget_size(priv, &page_widget_width, &page_widget_height);
+
+  if (priv->form_fields.edit == true) {
+    gtk_widget_show(priv->layer.form_fields);
+  } else {
+    gtk_widget_hide(priv->layer.form_fields);
+  }
 
   gtk_widget_set_size_request(priv->layer.drawing_area, page_widget_width, page_widget_height);
   gtk_widget_queue_resize(priv->layer.drawing_area);
