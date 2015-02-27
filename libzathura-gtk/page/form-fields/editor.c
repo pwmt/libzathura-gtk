@@ -105,6 +105,8 @@ cb_form_field_editor_build(GtkWidget *widget, cairo_t *UNUSED(cairo), gpointer d
       case ZATHURA_FORM_FIELD_BUTTON:
         form_field_widget = zathura_gtk_form_field_button_new(form_field_mapping->form_field);
         break;
+      case ZATHURA_FORM_FIELD_TEXT:
+        break;
       default:
         break;
     }

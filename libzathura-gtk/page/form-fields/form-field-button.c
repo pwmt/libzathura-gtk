@@ -117,13 +117,60 @@ zathura_gtk_form_field_button_draw(GtkWidget* widget, cairo_t* cairo)
 
   const unsigned int width  = gtk_widget_get_allocated_width(widget);
   const unsigned int height = gtk_widget_get_allocated_height(widget);
+  const unsigned int diameter = (width > height) ? height : width;
 
   switch (button_type) {
     case ZATHURA_FORM_FIELD_BUTTON_TYPE_PUSH:
+      {
+        cairo_save(cairo);
+
+        /* Draw rectangle */
+        cairo_rectangle(cairo, 0, 0, width, height);
+
+        if (button_state == true) {
+          cairo_set_source_rgb(cairo, 0, 0, 0);
+        } else {
+          cairo_set_source_rgb(cairo, 255, 255, 255);
+        }
+
+        cairo_fill_preserve(cairo);
+
+        /* Draw button name */
+        char* name;
+        if (zathura_form_field_get_name(priv->button, &name) == ZATHURA_ERROR_OK) {
+          cairo_select_font_face(cairo, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+          cairo_set_font_size(cairo, height / 2);
+          cairo_set_source_rgb(cairo, 0, 0, 0);
+
+          if (button_state == true) {
+            cairo_set_source_rgb(cairo, 255, 255, 255);
+          } else {
+            cairo_set_source_rgb(cairo, 0, 0, 0);
+          }
+
+          cairo_text_extents_t extents;
+          cairo_text_extents(cairo, name, &extents);
+          double x = width  * 0.5 - (extents.width  * 0.5 + extents.x_bearing);
+          double y = height * 0.5 - (extents.height * 0.5 + extents.y_bearing);
+          cairo_move_to(cairo, x, y);
+          cairo_show_text(cairo, name);
+        };
+
+        /* Draw border */
+        if (button_state == true) {
+          cairo_set_source_rgb(cairo, 255, 255, 255);
+        } else {
+          cairo_set_source_rgb(cairo, 0, 0, 0);
+        }
+
+        cairo_set_line_width (cairo, diameter/8);
+        cairo_stroke(cairo);
+
+        cairo_restore(cairo);
+      }
       break;
     case ZATHURA_FORM_FIELD_BUTTON_TYPE_CHECK:
       {
-        const unsigned int diameter = (width > height) ? height : width;
 
         cairo_save(cairo);
 
@@ -151,8 +198,6 @@ zathura_gtk_form_field_button_draw(GtkWidget* widget, cairo_t* cairo)
       break;
     case ZATHURA_FORM_FIELD_BUTTON_TYPE_RADIO:
       {
-        const unsigned int diameter = (width > height) ? height : width;
-
         cairo_save(cairo);
 
         /* Set clipping circle */
@@ -192,8 +237,14 @@ zathura_gtk_form_field_button_draw(GtkWidget* widget, cairo_t* cairo)
 static gboolean
 zathura_gtk_form_field_button_button_press_event(GtkWidget* widget, GdkEventButton* event_button)
 {
+  /* Only allow left clicks */
+  if (event_button->button != 1) {
+    return FALSE;
+  }
+
   ZathuraFormFieldButtonPrivate* priv = ZATHURA_FORM_FIELD_BUTTON_GET_PRIVATE(widget);
 
+  /* Toggle button state */
   bool button_state;
   if (zathura_form_field_button_get_state(priv->button, &button_state) != ZATHURA_ERROR_OK) {
     return FALSE;
@@ -203,6 +254,7 @@ zathura_gtk_form_field_button_button_press_event(GtkWidget* widget, GdkEventButt
     return FALSE;
   }
 
+  /* Queue redrawing of the button */
   gtk_widget_queue_draw(widget);
 
   return TRUE;
