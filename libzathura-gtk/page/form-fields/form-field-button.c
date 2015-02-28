@@ -41,8 +41,8 @@ zathura_gtk_form_field_button_class_init(ZathuraFormFieldButtonClass* class)
     object_class,
     PROP_FORM_FIELD,
     g_param_spec_pointer(
-      "button",
-      "button",
+      "form-field",
+      "form-field",
       "The zathura_form_field_t instance",
       G_PARAM_WRITABLE | G_PARAM_READABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS
     )
@@ -64,7 +64,7 @@ zathura_gtk_form_field_button_new(zathura_form_field_t* button)
 {
   g_return_val_if_fail(button != NULL, NULL);
 
-  GObject* widget = g_object_new(ZATHURA_TYPE_FORM_FIELD_BUTTON, "button", button, NULL);
+  GObject* widget = g_object_new(ZATHURA_TYPE_FORM_FIELD_BUTTON, "form-field", button, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
   return GTK_WIDGET(widget);

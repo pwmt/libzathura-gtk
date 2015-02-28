@@ -2,6 +2,7 @@
 
 #include "callbacks.h"
 #include "internal.h"
+#include "../macros.h"
 
 gboolean
 cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
@@ -110,7 +111,7 @@ scale_rectangle(zathura_rectangle_t rectangle, double scale)
 }
 
 static zathura_rectangle_t
-calculate_correct_position(ZathuraPagePrivate* priv, GtkWidget* widget, zathura_rectangle_t position)
+calculate_correct_position(ZathuraPagePrivate* priv, GtkWidget* UNUSED(widget), zathura_rectangle_t position)
 {
   /* Rotate rectangle */
   zathura_rectangle_t correct_position = rotate_rectangle(

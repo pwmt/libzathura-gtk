@@ -3,7 +3,9 @@
 #include "editor.h"
 #include "../internal.h"
 #include "../../macros.h"
+
 #include "form-field-button.h"
+#include "form-field-text.h"
 
 static zathura_rectangle_t
 rotate_rectangle(zathura_rectangle_t rectangle, unsigned int degree, unsigned int width, unsigned int height)
@@ -106,6 +108,7 @@ cb_form_field_editor_build(GtkWidget *widget, cairo_t *UNUSED(cairo), gpointer d
         form_field_widget = zathura_gtk_form_field_button_new(form_field_mapping->form_field);
         break;
       case ZATHURA_FORM_FIELD_TEXT:
+        form_field_widget = zathura_gtk_form_field_text_new(form_field_mapping->form_field);
         break;
       default:
         break;
