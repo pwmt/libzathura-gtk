@@ -1,5 +1,7 @@
 /* See LICENSE file for license and copyright information */
 
+#include <math.h>
+
 #include "editor.h"
 #include "../internal.h"
 #include "../../macros.h"
@@ -120,8 +122,8 @@ cb_form_field_editor_build(GtkWidget *widget, cairo_t *UNUSED(cairo), gpointer d
 
     if (form_field_widget != NULL) {
       zathura_rectangle_t position = calculate_correct_position(priv, widget, form_field_mapping->position);
-      unsigned int width  = position.p2.x - position.p1.x;
-      unsigned int height = position.p2.y - position.p1.y;
+      const unsigned int width  = ceil(position.p2.x - position.p1.x);
+      const unsigned int height = ceil(position.p2.y - position.p1.y);
 
       gtk_fixed_put(GTK_FIXED(priv->layer.form_fields), form_field_widget, position.p1.x, position.p1.y);
       gtk_widget_set_size_request(form_field_widget, width, height);
