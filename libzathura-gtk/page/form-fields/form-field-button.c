@@ -197,32 +197,35 @@ zathura_gtk_form_field_button_draw(GtkWidget* widget, cairo_t* cairo)
       break;
     case ZATHURA_FORM_FIELD_BUTTON_TYPE_RADIO:
       {
-        const unsigned int radius = (diameter - border) / 2;
+        /* Draw border as outer circle */
+        cairo_save(cairo);
+        cairo_translate(cairo, width / 2., height / 2.);
+        cairo_scale(cairo, width/2.0, height/2.0);
+        cairo_arc(cairo, 0., 0., 1., 0., 2 * M_PI);
+        cairo_set_source_rgb(cairo, RGB_TO_CAIRO(0,0,0));
+        cairo_fill(cairo);
+        cairo_restore(cairo);
 
+        /* Draw inner circle */
         cairo_save(cairo);
 
-        /* Setup circle and draw border */
-        cairo_set_line_width(cairo, border);
-        cairo_set_source_rgb(cairo, 0, 0, 0);
-
-        cairo_arc(cairo, width/2, height/2, radius, 0, 2 * M_PI);
-        cairo_stroke_preserve(cairo);
-
-        /* Fill circle */
+        cairo_translate(cairo, width / 2., height / 2.);
+        cairo_scale(cairo, width/2.0 - border, height/2.0 -border);
+        cairo_arc(cairo, 0., 0., 1., 0., 2 * M_PI);
         cairo_set_source_rgb(cairo, RGB_TO_CAIRO(75, 181, 193));
         cairo_fill_preserve(cairo);
 
-        /* Set clipping circle */
-        cairo_clip(cairo);
-
         /* Draw cross */
         if (button_state == true) {
+          cairo_clip(cairo);
           cairo_set_source_rgb(cairo, 0, 0, 0);
+          cairo_translate (cairo, -width/2.0, -height/2.0);
           cairo_move_to(cairo, 0, 0);
           cairo_line_to(cairo, width, height);
           cairo_move_to(cairo, width, 0);
           cairo_line_to(cairo, 0, height);
           cairo_set_line_width(cairo, border);
+          cairo_scale (cairo, 1/(width/2.0 - border), 1/(height/2.0 -border));
           cairo_stroke(cairo);
         }
 
