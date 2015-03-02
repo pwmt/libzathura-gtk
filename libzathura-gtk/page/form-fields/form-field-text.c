@@ -3,12 +3,18 @@
 #include "../../macros.h"
 #include "form-field-text.h"
 
-static gboolean cb_form_field_text_focus_out(GtkWidget* widget, GdkEventFocus* event, ZathuraFormFieldText* form_field_widget);
-static gboolean cb_form_field_text_multiline_focus_out(GtkWidget* widget, GdkEventFocus* event, ZathuraFormFieldText* form_field_widget);
+#define RGB_TO_CAIRO(r, g, b) \
+  (r)/255.0, (g)/255.0, (b)/255.0
+
+static gboolean cb_form_field_text_focus_out(GtkWidget* widget, GdkEventFocus* event, GtkWidget* form_field_widget);
+static gboolean cb_form_field_text_multiline_focus_out(GtkWidget* widget, GdkEventFocus* event, GtkWidget* form_field_widget);
+static gboolean cb_form_field_text_rectangle_draw(GtkWidget* widget, cairo_t* cairo, GtkWidget* form_field_widget);
+static gboolean cb_form_field_text_rectangle_button_press_event(GtkWidget* widget, GdkEventButton* event_button, GtkWidget* form_field_widget);
 
 struct _ZathuraFormFieldTextPrivate {
   zathura_form_field_t* form_field;
 
+  GtkWidget* rectangle;
   GtkWidget* text_widget;
   GtkWidget* scrolled_window;
 };
@@ -31,6 +37,7 @@ zathura_gtk_form_field_text_init(ZathuraFormFieldText* widget)
 
   priv->form_field  = NULL;
   priv->text_widget = NULL;
+  priv->rectangle   = NULL;
 
   gtk_widget_add_events(GTK_WIDGET(widget), GDK_BUTTON_PRESS_MASK);
 }
@@ -46,16 +53,30 @@ zathura_gtk_form_field_text_new(zathura_form_field_t* form_field)
   ZathuraFormFieldTextPrivate* priv = ZATHURA_FORM_FIELD_TEXT_GET_PRIVATE(widget);
   priv->form_field = form_field;
 
+  /* Get type */
   zathura_form_field_text_type_t text_type;
   if (zathura_form_field_text_get_type(priv->form_field, &text_type) != ZATHURA_ERROR_OK) {
     return NULL;
   }
 
+  /* Get text */
   char* text;
   if (zathura_form_field_text_get_text(priv->form_field, &text) != ZATHURA_ERROR_OK) {
     return NULL;
   }
 
+  /* Setup rectangle */
+  priv->rectangle = gtk_drawing_area_new();
+  gtk_widget_add_events(GTK_WIDGET(priv->rectangle), GDK_BUTTON_PRESS_MASK);
+  g_signal_connect(priv->rectangle, "draw",
+      G_CALLBACK(cb_form_field_text_rectangle_draw),
+      widget);
+
+  g_signal_connect(priv->rectangle, "button-press-event",
+      G_CALLBACK(cb_form_field_text_rectangle_button_press_event),
+      widget);
+
+  /* Build widget depending on type */
   switch (text_type) {
     case ZATHURA_FORM_FIELD_TEXT_TYPE_NORMAL:
       {
@@ -81,8 +102,6 @@ zathura_gtk_form_field_text_new(zathura_form_field_t* form_field)
         if (text != NULL) {
           gtk_entry_set_text(GTK_ENTRY(priv->text_widget), text);
         }
-
-        gtk_container_add(GTK_CONTAINER(widget), priv->text_widget);
       }
       break;
     case ZATHURA_FORM_FIELD_TEXT_TYPE_MULTILINE:
@@ -106,9 +125,6 @@ zathura_gtk_form_field_text_new(zathura_form_field_t* form_field)
         if (do_scroll == true) {
           priv->scrolled_window = gtk_scrolled_window_new(NULL, NULL);
           gtk_container_add(GTK_CONTAINER(priv->scrolled_window), priv->text_widget);
-          gtk_container_add(GTK_CONTAINER(widget), priv->scrolled_window);
-        } else {
-          gtk_container_add(GTK_CONTAINER(widget), priv->text_widget);
         }
       }
       break;
@@ -116,14 +132,36 @@ zathura_gtk_form_field_text_new(zathura_form_field_t* form_field)
       return NULL; // TODO: Implement file selection dialog
   }
 
+  gtk_container_add(GTK_CONTAINER(widget), priv->rectangle);
   gtk_widget_show_all(GTK_WIDGET(widget));
 
   return GTK_WIDGET(widget);
 }
 
+static void
+reset_to_drawing_area(GtkWidget* widget) 
+{
+  ZathuraFormFieldTextPrivate* priv = ZATHURA_FORM_FIELD_TEXT_GET_PRIVATE(widget);
+
+  /* Don't reset if current visible widget is the rectangle already */
+  GtkWidget* child = gtk_bin_get_child(GTK_BIN(widget));
+  if (child == priv->rectangle) {
+    return;
+  }
+
+  /* Remove child */
+  g_object_ref(child);
+  gtk_container_remove(GTK_CONTAINER(widget), child);
+
+  /* Add rectangle */
+  gtk_container_add(GTK_CONTAINER(widget), priv->rectangle);
+
+  gtk_widget_show_all(GTK_WIDGET(widget));
+}
+
 static gboolean
 cb_form_field_text_focus_out(GtkWidget* widget, GdkEventFocus* UNUSED(event),
-    ZathuraFormFieldText* form_field_widget)
+    GtkWidget* form_field_widget)
 {
   g_return_val_if_fail(widget != NULL, FALSE);
   g_return_val_if_fail(form_field_widget != NULL, FALSE);
@@ -131,15 +169,18 @@ cb_form_field_text_focus_out(GtkWidget* widget, GdkEventFocus* UNUSED(event),
   ZathuraFormFieldTextPrivate* priv = ZATHURA_FORM_FIELD_TEXT_GET_PRIVATE(form_field_widget);
 
   if (zathura_form_field_text_set_text(priv->form_field, gtk_entry_get_text(GTK_ENTRY(priv->text_widget))) != ZATHURA_ERROR_OK) {
+    reset_to_drawing_area(form_field_widget);
     return FALSE;
   }
+
+  reset_to_drawing_area(form_field_widget);
 
   return TRUE;
 }
 
 static gboolean
 cb_form_field_text_multiline_focus_out(GtkWidget* widget, GdkEventFocus* UNUSED(event),
-    ZathuraFormFieldText* form_field_widget)
+    GtkWidget* form_field_widget)
 {
   g_return_val_if_fail(widget != NULL, FALSE);
   g_return_val_if_fail(form_field_widget != NULL, FALSE);
@@ -154,8 +195,55 @@ cb_form_field_text_multiline_focus_out(GtkWidget* widget, GdkEventFocus* UNUSED(
 
   if (zathura_form_field_text_set_text(priv->form_field, text) !=
       ZATHURA_ERROR_OK) {
+    reset_to_drawing_area(form_field_widget);
     return FALSE;
   }
 
+  reset_to_drawing_area(form_field_widget);
+
   return FALSE;
+}
+
+static gboolean
+cb_form_field_text_rectangle_draw(GtkWidget* widget, cairo_t* cairo, GtkWidget* UNUSED(form_field_widget))
+{
+  const unsigned int width  = gtk_widget_get_allocated_width(widget);
+  const unsigned int height = gtk_widget_get_allocated_height(widget);
+
+  cairo_save(cairo);
+
+  /* Draw background */
+  cairo_set_source_rgba(cairo, RGB_TO_CAIRO(75, 181, 193), 0.5);
+  cairo_rectangle(cairo, 0, 0, width, height);
+  cairo_fill_preserve(cairo);
+
+  cairo_restore(cairo);
+
+  return FALSE;
+}
+
+static gboolean
+cb_form_field_text_rectangle_button_press_event(GtkWidget* UNUSED(widget),
+    GdkEventButton* event_button, GtkWidget* form_field_widget)
+{
+  ZathuraFormFieldTextPrivate* priv = ZATHURA_FORM_FIELD_TEXT_GET_PRIVATE(form_field_widget);
+
+  /* Only allow left clicks */
+  if (event_button->button != 1) {
+    return TRUE;
+  }
+
+  g_object_ref(priv->rectangle);
+  gtk_container_remove(GTK_CONTAINER(form_field_widget), priv->rectangle);
+
+  if (priv->scrolled_window != NULL) {
+    gtk_container_add(GTK_CONTAINER(form_field_widget), priv->scrolled_window);
+  } {
+    gtk_container_add(GTK_CONTAINER(form_field_widget), priv->text_widget);
+  }
+
+  gtk_widget_grab_focus(priv->text_widget);
+  gtk_widget_show_all(form_field_widget);
+
+  return TRUE;
 }
