@@ -16,6 +16,7 @@ static gboolean cb_form_field_text_rectangle_button_press_event(GtkWidget* widge
 struct _ZathuraFormFieldTextPrivate {
   zathura_form_field_t* form_field;
 
+  GtkWidget* previous_focus;
   GtkWidget* rectangle;
   GtkWidget* text_widget;
   GtkWidget* scrolled_window;
@@ -37,9 +38,10 @@ zathura_gtk_form_field_text_init(ZathuraFormFieldText* widget)
 {
   ZathuraFormFieldTextPrivate* priv = ZATHURA_FORM_FIELD_TEXT_GET_PRIVATE(widget);
 
-  priv->form_field  = NULL;
-  priv->text_widget = NULL;
-  priv->rectangle   = NULL;
+  priv->form_field     = NULL;
+  priv->text_widget    = NULL;
+  priv->rectangle      = NULL;
+  priv->previous_focus = NULL;
 
   gtk_widget_add_events(GTK_WIDGET(widget), GDK_BUTTON_PRESS_MASK);
 }
@@ -168,7 +170,10 @@ set_back_to_drawing_area(GtkWidget* widget)
 
   gtk_widget_show_all(GTK_WIDGET(widget));
 
-  gtk_widget_grab_focus(priv->text_widget);
+  /* Restore old focus */
+  if (priv->previous_focus != NULL) {
+    gtk_widget_grab_focus(priv->previous_focus);
+  }
 
   return FALSE;
 }
@@ -282,6 +287,14 @@ cb_form_field_text_rectangle_button_press_event(GtkWidget* UNUSED(widget),
   }
 
   gtk_widget_show_all(form_field_widget);
+
+  /* Save old focus */
+  GtkWidget* top_level = gtk_widget_get_toplevel(form_field_widget);
+
+  if (top_level != NULL) {
+    priv->previous_focus = gtk_window_get_focus(GTK_WINDOW(top_level));
+  }
+
   gtk_widget_grab_focus(priv->text_widget);
 
   return TRUE;
