@@ -6,6 +6,10 @@
 #include <gtk/gtk.h>
 #include "page.h"
 
+#define ZATHURA_PAGE_GET_PRIVATE(obj) \
+  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_PAGE, \
+                               ZathuraPagePrivate))
+
 struct _ZathuraPagePrivate {
   zathura_page_t* page;
   GtkWidget* overlay;

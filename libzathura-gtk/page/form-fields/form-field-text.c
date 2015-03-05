@@ -193,6 +193,10 @@ save_text_single_line(GtkWidget* widget)
     return false;
   }
 
+  if (zathura_form_field_save(priv->form_field) != ZATHURA_ERROR_OK) {
+    return FALSE;
+  }
+
   return true;
 }
 
@@ -230,6 +234,10 @@ save_text_multi_line(GtkWidget* widget)
   if (zathura_form_field_text_set_text(priv->form_field, text) !=
       ZATHURA_ERROR_OK) {
     return false;
+  }
+
+  if (zathura_form_field_save(priv->form_field) != ZATHURA_ERROR_OK) {
+    return FALSE;
   }
 
   return true;

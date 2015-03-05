@@ -4,102 +4,74 @@
 
 #include "editor.h"
 #include "../internal.h"
+#include "../utils.h"
 #include "../../macros.h"
 
 #include "form-field-button.h"
 #include "form-field-choice.h"
 #include "form-field-text.h"
 
-static zathura_rectangle_t
-rotate_rectangle(zathura_rectangle_t rectangle, unsigned int degree, unsigned int width, unsigned int height)
+struct _ZathuraFormFieldEditorPrivate {
+  ZathuraPage* page;
+  zathura_list_t* form_fields;
+};
+
+typedef struct form_field_widget_mapping_s {
+  GtkWidget* widget;
+  zathura_rectangle_t position;
+} form_field_widget_mapping_t;
+
+static void create_widgets(GtkWidget* editor);
+static void zathura_gtk_form_field_editor_size_allocate(GtkWidget* widget, GdkRectangle* allocation);
+
+G_DEFINE_TYPE_WITH_PRIVATE(ZathuraFormFieldEditor, zathura_gtk_form_field_editor, GTK_TYPE_FIXED)
+
+#define ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(obj) \
+  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_FORM_FIELD_EDITOR, \
+                               ZathuraFormFieldEditorPrivate))
+
+static void
+zathura_gtk_form_field_editor_class_init(ZathuraFormFieldEditorClass* class)
 {
-  zathura_rectangle_t tmp;
-
-  switch (degree) {
-    case 90:
-      tmp.p1.x = height - rectangle.p2.y;
-      tmp.p1.y = rectangle.p1.x;
-      tmp.p2.x = height - rectangle.p1.y;
-      tmp.p2.y = rectangle.p2.x;
-      break;
-    case 180:
-      tmp.p1.x = width  - rectangle.p2.x;
-      tmp.p1.y = height - rectangle.p2.y;
-      tmp.p2.x = width  - rectangle.p1.x;
-      tmp.p2.y = height - rectangle.p1.y;
-      break;
-    case 270:
-      tmp.p1.x = rectangle.p1.y;
-      tmp.p1.y = width - rectangle.p2.x;
-      tmp.p2.x = rectangle.p2.y;
-      tmp.p2.y = width - rectangle.p1.x;
-      break;
-    default:
-      tmp.p1.x = rectangle.p1.x;
-      tmp.p1.y = rectangle.p1.y;
-      tmp.p2.x = rectangle.p2.x;
-      tmp.p2.y = rectangle.p2.y;
-      break;
-  }
-
-  return tmp;
+  GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(class);
+  widget_class->size_allocate = zathura_gtk_form_field_editor_size_allocate;
 }
 
-static zathura_rectangle_t
-scale_rectangle(zathura_rectangle_t rectangle, double scale)
+static void
+zathura_gtk_form_field_editor_init(ZathuraFormFieldEditor* widget)
 {
-  zathura_rectangle_t scaled_rectangle;
+  ZathuraFormFieldEditorPrivate* priv = ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(widget);
 
-  scaled_rectangle.p1.x = rectangle.p1.x * scale;
-  scaled_rectangle.p1.y = rectangle.p1.y * scale;
-  scaled_rectangle.p2.x = rectangle.p2.x * scale;
-  scaled_rectangle.p2.y = rectangle.p2.y * scale;
-
-  return scaled_rectangle;
+  priv->form_fields = NULL;
+  priv->page        = NULL;
 }
 
-static zathura_rectangle_t
-calculate_correct_position(ZathuraPagePrivate* priv, GtkWidget* UNUSED(widget), zathura_rectangle_t position)
+GtkWidget*
+zathura_gtk_form_field_editor_new(ZathuraPage* page)
 {
-  /* Rotate rectangle */
-  zathura_rectangle_t correct_position = rotate_rectangle(
-      position,
-      priv->settings.rotation,
-      priv->dimensions.width,
-      priv->dimensions.height
-      );
+  GObject* widget = g_object_new(ZATHURA_TYPE_FORM_FIELD_EDITOR, NULL);
+  g_return_val_if_fail(widget != NULL, NULL);
 
-  /* Scale rectangle */
-  correct_position = scale_rectangle(correct_position, priv->settings.scale);
+  ZathuraFormFieldEditorPrivate* priv = ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(widget);
 
-  return correct_position;
+  priv->page = page;
+
+  return GTK_WIDGET(widget);
 }
 
-gboolean
-cb_form_field_editor_build(GtkWidget *widget, cairo_t *UNUSED(cairo), gpointer data)
+static void
+create_widgets(GtkWidget* editor)
 {
-  ZathuraPagePrivate* priv = (ZathuraPagePrivate*) data;
+  ZathuraFormFieldEditorPrivate* priv = ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(editor);
+  ZathuraPagePrivate* page_priv = ZATHURA_PAGE_GET_PRIVATE(priv->page);
 
-  /* Draw form-fields if requested */
-  if (priv->form_fields.edit == false) {
-    return FALSE;
+  zathura_list_t* form_fields;
+  if (zathura_page_get_form_fields(page_priv->page, &form_fields) != ZATHURA_ERROR_OK) {
+    return;
   }
 
-  /* Check if we created the editor already */
-  if (priv->form_fields.retrieved == true) {
-    return FALSE;
-  }
-
-  priv->form_fields.retrieved = true;
-
-  /* Retrieve the form fields for this page */
-  if (zathura_page_get_form_fields(priv->page, &(priv->form_fields.list)) != ZATHURA_ERROR_OK) {
-    return FALSE;
-  }
-
-  /* Create link widgets */
   zathura_form_field_mapping_t* form_field_mapping;
-  ZATHURA_LIST_FOREACH(form_field_mapping, priv->form_fields.list) {
+  ZATHURA_LIST_FOREACH(form_field_mapping, form_fields) {
     zathura_form_field_type_t form_field_type = ZATHURA_FORM_FIELD_UNKNOWN;
     if (zathura_form_field_get_type(form_field_mapping->form_field, &form_field_type) != ZATHURA_ERROR_OK) {
       continue;
@@ -121,15 +93,44 @@ cb_form_field_editor_build(GtkWidget *widget, cairo_t *UNUSED(cairo), gpointer d
     }
 
     if (form_field_widget != NULL) {
-      zathura_rectangle_t position = calculate_correct_position(priv, widget, form_field_mapping->position);
+      /* Create new mapping */
+      form_field_widget_mapping_t* mapping = g_malloc0(sizeof(form_field_widget_mapping_t));
+
+      mapping->position = form_field_mapping->position;
+      mapping->widget   = form_field_widget;
+
+      priv->form_fields = zathura_list_append(priv->form_fields, mapping);
+
+      /* Setup initial position of widgets */
+      zathura_rectangle_t position = calculate_correct_position(priv->page, form_field_mapping->position);
       const unsigned int width  = ceil(position.p2.x) - floor(position.p1.x);
       const unsigned int height = ceil(position.p2.y) - floor(position.p1.y);
 
-      gtk_fixed_put(GTK_FIXED(priv->layer.form_fields), form_field_widget, position.p1.x, position.p1.y);
+      gtk_fixed_put(GTK_FIXED(editor), form_field_widget, position.p1.x, position.p1.y);
       gtk_widget_set_size_request(form_field_widget, width, height);
       gtk_widget_show(form_field_widget);
     }
   }
+}
 
-  return TRUE;
+static void
+zathura_gtk_form_field_editor_size_allocate(GtkWidget* widget, GdkRectangle* allocation)
+{
+  ZathuraFormFieldEditorPrivate* priv = ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(widget);
+
+  if (priv->form_fields == NULL) {
+    create_widgets(widget);
+  }
+
+  form_field_widget_mapping_t* form_field_mapping;
+  ZATHURA_LIST_FOREACH(form_field_mapping, priv->form_fields) {
+      zathura_rectangle_t position = calculate_correct_position(priv->page, form_field_mapping->position);
+      const unsigned int width  = ceil(position.p2.x) - floor(position.p1.x);
+      const unsigned int height = ceil(position.p2.y) - floor(position.p1.y);
+
+      gtk_fixed_move(GTK_FIXED(widget), form_field_mapping->widget, position.p1.x, position.p1.y);
+      gtk_widget_set_size_request(form_field_mapping->widget, width, height);
+  }
+
+  GTK_WIDGET_CLASS(zathura_gtk_form_field_editor_parent_class)->size_allocate(widget, allocation);
 }

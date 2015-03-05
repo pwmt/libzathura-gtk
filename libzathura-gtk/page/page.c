@@ -22,10 +22,6 @@ enum {
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraPage, zathura_gtk_page, GTK_TYPE_BIN)
 
-#define ZATHURA_PAGE_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_PAGE, \
-                               ZathuraPagePrivate))
-
 static void
 zathura_gtk_page_class_init(ZathuraPageClass* class)
 {
@@ -155,8 +151,7 @@ zathura_gtk_page_new(zathura_page_t* page)
   g_signal_connect(G_OBJECT(priv->layer.links), "draw", G_CALLBACK(cb_page_draw_links), priv);
 
   /* Setup form fields layer */
-  priv->layer.form_fields = gtk_fixed_new();
-  g_signal_connect(G_OBJECT(priv->layer.form_fields), "draw", G_CALLBACK(cb_form_field_editor_build), priv);
+  priv->layer.form_fields = zathura_gtk_form_field_editor_new(ZATHURA_PAGE(widget));
 
   /* Setup over lay */
   priv->overlay = gtk_overlay_new();
@@ -274,12 +269,6 @@ render_page(ZathuraPagePrivate* priv)
   unsigned int page_widget_height;
 
   calculate_widget_size(priv, &page_widget_width, &page_widget_height);
-
-  if (priv->form_fields.edit == true) {
-    gtk_widget_show(priv->layer.form_fields);
-  } else {
-    gtk_widget_hide(priv->layer.form_fields);
-  }
 
   gtk_widget_set_size_request(priv->layer.drawing_area, page_widget_width, page_widget_height);
   gtk_widget_queue_resize(priv->layer.drawing_area);
