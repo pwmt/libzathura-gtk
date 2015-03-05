@@ -240,7 +240,7 @@ int main(int argc, char* argv[])
   gtk_window_set_title(GTK_WINDOW(window), "libzathura-gtk example");
   gtk_container_add(GTK_CONTAINER(window), document_widget);
 
-  g_signal_connect(G_OBJECT(window), "key-press-event", G_CALLBACK(cb_key_press_event), document_widget);
+  g_signal_connect(G_OBJECT(document_widget), "key-press-event", G_CALLBACK(cb_key_press_event), document_widget);
 
   gtk_widget_show_all(window);
 

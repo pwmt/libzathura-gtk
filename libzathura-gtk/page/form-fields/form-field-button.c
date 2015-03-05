@@ -257,6 +257,10 @@ zathura_gtk_form_field_button_button_press_event(GtkWidget* widget, GdkEventButt
     return FALSE;
   }
 
+  if (zathura_form_field_save(priv->button) != ZATHURA_ERROR_OK) {
+    return FALSE;
+  }
+
   /* Queue redrawing of the button */
   gtk_widget_queue_draw(widget);
 

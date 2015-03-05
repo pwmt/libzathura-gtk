@@ -7,6 +7,8 @@
   (r)/255.0, (g)/255.0, (b)/255.0
 
 static gboolean cb_form_field_text_focus_out(GtkWidget* widget, GdkEventFocus* event, GtkWidget* form_field_widget);
+static gboolean cb_form_field_text_changed(GtkWidget* widget, GtkWidget* form_field_widget);
+static gboolean cb_form_field_text_activate(GtkWidget* widget, GtkWidget* form_field_widget);
 static gboolean cb_form_field_text_multiline_focus_out(GtkWidget* widget, GdkEventFocus* event, GtkWidget* form_field_widget);
 static gboolean cb_form_field_text_rectangle_draw(GtkWidget* widget, cairo_t* cairo, GtkWidget* form_field_widget);
 static gboolean cb_form_field_text_rectangle_button_press_event(GtkWidget* widget, GdkEventButton* event_button, GtkWidget* form_field_widget);
@@ -99,6 +101,14 @@ zathura_gtk_form_field_text_new(zathura_form_field_t* form_field)
             G_CALLBACK(cb_form_field_text_focus_out),
             widget);
 
+        g_signal_connect(priv->text_widget, "changed",
+            G_CALLBACK(cb_form_field_text_changed),
+            widget);
+
+        g_signal_connect(priv->text_widget, "activate",
+            G_CALLBACK(cb_form_field_text_activate),
+            widget);
+
         if (text != NULL) {
           gtk_entry_set_text(GTK_ENTRY(priv->text_widget), text);
         }
@@ -138,15 +148,15 @@ zathura_gtk_form_field_text_new(zathura_form_field_t* form_field)
   return GTK_WIDGET(widget);
 }
 
-static void
-reset_to_drawing_area(GtkWidget* widget) 
+static gboolean
+set_back_to_drawing_area(GtkWidget* widget)
 {
   ZathuraFormFieldTextPrivate* priv = ZATHURA_FORM_FIELD_TEXT_GET_PRIVATE(widget);
 
   /* Don't reset if current visible widget is the rectangle already */
   GtkWidget* child = gtk_bin_get_child(GTK_BIN(widget));
   if (child == priv->rectangle) {
-    return;
+    return FALSE;
   }
 
   /* Remove child */
@@ -157,6 +167,28 @@ reset_to_drawing_area(GtkWidget* widget)
   gtk_container_add(GTK_CONTAINER(widget), priv->rectangle);
 
   gtk_widget_show_all(GTK_WIDGET(widget));
+
+  gtk_widget_grab_focus(priv->text_widget);
+
+  return FALSE;
+}
+
+static void
+reset_to_drawing_area(GtkWidget* widget)
+{
+  g_idle_add((GSourceFunc) set_back_to_drawing_area, widget);
+}
+
+static bool
+save_text_single_line(GtkWidget* widget)
+{
+  ZathuraFormFieldTextPrivate* priv = ZATHURA_FORM_FIELD_TEXT_GET_PRIVATE(widget);
+
+  if (zathura_form_field_text_set_text(priv->form_field, gtk_entry_get_text(GTK_ENTRY(priv->text_widget))) != ZATHURA_ERROR_OK) {
+    return false;
+  }
+
+  return true;
 }
 
 static gboolean
@@ -166,26 +198,23 @@ cb_form_field_text_focus_out(GtkWidget* widget, GdkEventFocus* UNUSED(event),
   g_return_val_if_fail(widget != NULL, FALSE);
   g_return_val_if_fail(form_field_widget != NULL, FALSE);
 
-  ZathuraFormFieldTextPrivate* priv = ZATHURA_FORM_FIELD_TEXT_GET_PRIVATE(form_field_widget);
-
-  if (zathura_form_field_text_set_text(priv->form_field, gtk_entry_get_text(GTK_ENTRY(priv->text_widget))) != ZATHURA_ERROR_OK) {
-    reset_to_drawing_area(form_field_widget);
-    return FALSE;
-  }
-
   reset_to_drawing_area(form_field_widget);
 
   return TRUE;
 }
 
 static gboolean
-cb_form_field_text_multiline_focus_out(GtkWidget* widget, GdkEventFocus* UNUSED(event),
-    GtkWidget* form_field_widget)
+cb_form_field_text_changed(GtkWidget* UNUSED(widget), GtkWidget* form_field_widget)
 {
-  g_return_val_if_fail(widget != NULL, FALSE);
-  g_return_val_if_fail(form_field_widget != NULL, FALSE);
+  save_text_single_line(form_field_widget);
 
-  ZathuraFormFieldTextPrivate* priv = ZATHURA_FORM_FIELD_TEXT_GET_PRIVATE(form_field_widget);
+  return TRUE;
+}
+
+static bool
+save_text_multi_line(GtkWidget* widget)
+{
+  ZathuraFormFieldTextPrivate* priv = ZATHURA_FORM_FIELD_TEXT_GET_PRIVATE(widget);
 
   GtkTextBuffer* buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->text_widget));
   GtkTextIter start, end;
@@ -195,10 +224,20 @@ cb_form_field_text_multiline_focus_out(GtkWidget* widget, GdkEventFocus* UNUSED(
 
   if (zathura_form_field_text_set_text(priv->form_field, text) !=
       ZATHURA_ERROR_OK) {
-    reset_to_drawing_area(form_field_widget);
-    return FALSE;
+    return false;
   }
 
+  return true;
+}
+
+static gboolean
+cb_form_field_text_multiline_focus_out(GtkWidget* widget, GdkEventFocus* UNUSED(event),
+    GtkWidget* form_field_widget)
+{
+  g_return_val_if_fail(widget != NULL, FALSE);
+  g_return_val_if_fail(form_field_widget != NULL, FALSE);
+
+  save_text_multi_line(form_field_widget);
   reset_to_drawing_area(form_field_widget);
 
   return FALSE;
@@ -238,12 +277,20 @@ cb_form_field_text_rectangle_button_press_event(GtkWidget* UNUSED(widget),
 
   if (priv->scrolled_window != NULL) {
     gtk_container_add(GTK_CONTAINER(form_field_widget), priv->scrolled_window);
-  } {
+  } else {
     gtk_container_add(GTK_CONTAINER(form_field_widget), priv->text_widget);
   }
 
-  gtk_widget_grab_focus(priv->text_widget);
   gtk_widget_show_all(form_field_widget);
+  gtk_widget_grab_focus(priv->text_widget);
+
+  return TRUE;
+}
+
+static gboolean
+cb_form_field_text_activate(GtkWidget* UNUSED(widget), GtkWidget* form_field_widget)
+{
+  reset_to_drawing_area(form_field_widget);
 
   return TRUE;
 }
