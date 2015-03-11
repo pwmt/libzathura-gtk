@@ -10,5 +10,6 @@
 gboolean cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data);
 gboolean cb_page_draw_links(GtkWidget *widget, cairo_t *cairo, gpointer data);
 gboolean cb_page_draw_form_fields(GtkWidget *widget, cairo_t *cairo, gpointer data);
+void cb_page_overlay_realized(GtkWidget* widget, gpointer data);
 
 #endif /* ZATHURA_GTK_PAGE_CALLBACKS */

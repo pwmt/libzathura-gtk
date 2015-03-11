@@ -98,3 +98,15 @@ cb_page_draw_links(GtkWidget *widget, cairo_t *cairo, gpointer data)
 
   return FALSE;
 }
+
+void
+cb_page_overlay_realized(GtkWidget* widget, gpointer data)
+{
+  ZathuraPagePrivate* priv = (ZathuraPagePrivate*) data;
+
+  if (priv->form_fields.edit == true) {
+    gtk_widget_show(priv->layer.form_fields);
+  } else {
+    gtk_widget_hide(priv->layer.form_fields);
+  }
+}

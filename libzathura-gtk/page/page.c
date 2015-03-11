@@ -17,7 +17,7 @@ enum {
   PROP_ROTATION,
   PROP_SCALE,
   PROP_LINKS_HIGHLIGHT,
-  PROP_FORM_EDITING
+  PROP_FORM_FIELDS_EDIT,
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraPage, zathura_gtk_page, GTK_TYPE_BIN)
@@ -84,12 +84,12 @@ zathura_gtk_page_class_init(ZathuraPageClass* class)
 
   g_object_class_install_property(
     object_class,
-    PROP_FORM_EDITING,
+    PROP_FORM_FIELDS_EDIT,
     g_param_spec_boolean(
       "edit-form-fields",
       "edit-form-fields",
       "Allow editing of form fields",
-      FALSE,
+      TRUE,
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
@@ -118,7 +118,7 @@ zathura_gtk_page_init(ZathuraPage* widget)
 
   priv->form_fields.list      = NULL;
   priv->form_fields.retrieved = false;
-  priv->form_fields.edit      = false;
+  priv->form_fields.edit      = true;
 }
 
 GtkWidget*
@@ -158,6 +158,8 @@ zathura_gtk_page_new(zathura_page_t* page)
   gtk_container_add(GTK_CONTAINER(priv->overlay), GTK_WIDGET(priv->layer.drawing_area));
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.links);
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.form_fields);
+
+  g_signal_connect(priv->overlay, "realize", G_CALLBACK(cb_page_overlay_realized), priv);
 
   /* Setup container */
   gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->overlay));
@@ -211,7 +213,7 @@ zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* valu
         render_page(priv);
       }
       break;
-    case PROP_FORM_EDITING:
+    case PROP_FORM_FIELDS_EDIT:
       {
         priv->form_fields.edit = g_value_get_boolean(value);
         render_page(priv);
@@ -241,7 +243,7 @@ zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GPa
     case PROP_LINKS_HIGHLIGHT:
       g_value_set_boolean(value, priv->links.draw);
       break;
-    case PROP_FORM_EDITING:
+    case PROP_FORM_FIELDS_EDIT:
       g_value_set_boolean(value, priv->form_fields.edit);
       break;
     default:
@@ -269,6 +271,12 @@ render_page(ZathuraPagePrivate* priv)
   unsigned int page_widget_height;
 
   calculate_widget_size(priv, &page_widget_width, &page_widget_height);
+
+  if (priv->form_fields.edit == true) {
+    gtk_widget_show(priv->layer.form_fields);
+  } else {
+    gtk_widget_hide(priv->layer.form_fields);
+  }
 
   gtk_widget_set_size_request(priv->layer.drawing_area, page_widget_width, page_widget_height);
   gtk_widget_queue_resize(priv->layer.drawing_area);
