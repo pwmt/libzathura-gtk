@@ -18,6 +18,7 @@ enum {
   PROP_SCALE,
   PROP_LINKS_HIGHLIGHT,
   PROP_FORM_FIELDS_EDIT,
+  PROP_FORM_FIELDS_HIGHLIGHT
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraPage, zathura_gtk_page, GTK_TYPE_BIN)
@@ -93,6 +94,18 @@ zathura_gtk_page_class_init(ZathuraPageClass* class)
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_FORM_FIELDS_HIGHLIGHT,
+    g_param_spec_boolean(
+      "highlight-form-fields",
+      "highlight-form-fields",
+      "Highlight form-fields by drawing rectangles around them",
+      FALSE,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
 }
 
 static void
@@ -119,6 +132,7 @@ zathura_gtk_page_init(ZathuraPage* widget)
   priv->form_fields.list      = NULL;
   priv->form_fields.retrieved = false;
   priv->form_fields.edit      = true;
+  priv->form_fields.highlight = false;
 }
 
 GtkWidget*
@@ -172,7 +186,7 @@ zathura_gtk_page_new(zathura_page_t* page)
 static void
 zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec)
 {
-  ZathuraPage* page    = ZATHURA_PAGE(object);
+  ZathuraPage* page        = ZATHURA_PAGE(object);
   ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(page);
 
   switch (prop_id) {
@@ -219,6 +233,12 @@ zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* valu
         render_page(priv);
       }
       break;
+    case PROP_FORM_FIELDS_HIGHLIGHT:
+      {
+        priv->form_fields.highlight = g_value_get_boolean(value);
+        render_page(priv);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
@@ -245,6 +265,9 @@ zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GPa
       break;
     case PROP_FORM_FIELDS_EDIT:
       g_value_set_boolean(value, priv->form_fields.edit);
+      break;
+    case PROP_FORM_FIELDS_HIGHLIGHT:
+      g_value_set_boolean(value, priv->form_fields.highlight);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);

@@ -38,6 +38,7 @@ struct _ZathuraPagePrivate {
 
   struct {
     bool edit;
+    bool highlight;
     bool retrieved;
     zathura_list_t* list;
   } form_fields;

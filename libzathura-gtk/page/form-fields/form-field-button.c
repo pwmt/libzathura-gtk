@@ -76,7 +76,7 @@ zathura_gtk_form_field_button_new(zathura_form_field_t* button)
 static void
 zathura_gtk_form_field_button_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec)
 {
-  ZathuraFormFieldButton* button    = ZATHURA_FORM_FIELD_BUTTON(object);
+  ZathuraFormFieldButton* button      = ZATHURA_FORM_FIELD_BUTTON(object);
   ZathuraFormFieldButtonPrivate* priv = ZATHURA_FORM_FIELD_BUTTON_GET_PRIVATE(button);
 
   switch (prop_id) {

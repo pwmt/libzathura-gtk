@@ -14,6 +14,12 @@
 struct _ZathuraFormFieldEditorPrivate {
   ZathuraPage* page;
   zathura_list_t* form_fields;
+  bool highlight;
+};
+
+enum {
+  PROP_0,
+  PROP_FORM_FIELDS_HIGHLIGHT,
 };
 
 typedef struct form_field_widget_mapping_s {
@@ -21,6 +27,8 @@ typedef struct form_field_widget_mapping_s {
   zathura_rectangle_t position;
 } form_field_widget_mapping_t;
 
+static void zathura_gtk_form_field_editor_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
+static void zathura_gtk_form_field_editor_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
 static void create_widgets(GtkWidget* editor);
 static void zathura_gtk_form_field_editor_size_allocate(GtkWidget* widget, GdkRectangle* allocation);
 
@@ -33,8 +41,27 @@ G_DEFINE_TYPE_WITH_PRIVATE(ZathuraFormFieldEditor, zathura_gtk_form_field_editor
 static void
 zathura_gtk_form_field_editor_class_init(ZathuraFormFieldEditorClass* class)
 {
+  /* overwrite methods */
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(class);
   widget_class->size_allocate = zathura_gtk_form_field_editor_size_allocate;
+
+  /* overwrite methods */
+  GObjectClass* object_class = G_OBJECT_CLASS(class);
+  object_class->set_property = zathura_gtk_form_field_editor_set_property;
+  object_class->get_property = zathura_gtk_form_field_editor_get_property;
+
+  /* properties */
+  g_object_class_install_property(
+    object_class,
+    PROP_FORM_FIELDS_HIGHLIGHT,
+    g_param_spec_boolean(
+      "highlight-form-fields",
+      "highlight-form-fields",
+      "Highlight form-fields by drawing rectangles around them",
+      FALSE,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
 }
 
 static void
@@ -44,6 +71,7 @@ zathura_gtk_form_field_editor_init(ZathuraFormFieldEditor* widget)
 
   priv->form_fields = NULL;
   priv->page        = NULL;
+  priv->highlight   = false;
 }
 
 GtkWidget*
@@ -133,4 +161,36 @@ zathura_gtk_form_field_editor_size_allocate(GtkWidget* widget, GdkRectangle* all
   }
 
   GTK_WIDGET_CLASS(zathura_gtk_form_field_editor_parent_class)->size_allocate(widget, allocation);
+}
+
+static void
+zathura_gtk_form_field_editor_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec)
+{
+  ZathuraFormFieldEditor* editor      = ZATHURA_FORM_FIELD_EDITOR(object);
+  ZathuraFormFieldEditorPrivate* priv = ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(editor);
+
+  switch (prop_id) {
+    case PROP_FORM_FIELDS_HIGHLIGHT:
+      {
+        priv->highlight = g_value_get_boolean(value);
+      }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
+  }
+}
+
+static void
+zathura_gtk_form_field_editor_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec)
+{
+  ZathuraFormFieldEditor* editor      = ZATHURA_FORM_FIELD_EDITOR(object);
+  ZathuraFormFieldEditorPrivate* priv = ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(editor);
+
+  switch (prop_id) {
+    case PROP_FORM_FIELDS_HIGHLIGHT:
+      g_value_set_boolean(value, priv->highlight);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
+  }
 }
