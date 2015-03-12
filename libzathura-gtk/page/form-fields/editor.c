@@ -43,7 +43,8 @@ typedef struct form_field_widget_mapping_s {
 static void zathura_gtk_form_field_editor_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_form_field_editor_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_form_field_editor_size_allocate(GtkWidget* widget, GdkRectangle* allocation);
-gboolean cb_draw_highlights(GtkWidget *widget, cairo_t *cairo, gpointer data);
+static gboolean cb_draw_highlights(GtkWidget *widget, cairo_t *cairo, gpointer data);
+static void cb_form_field_button_changed(GtkWidget* widget, gpointer data);
 static void create_widgets(GtkWidget* editor);
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraFormFieldEditor, zathura_gtk_form_field_editor, GTK_TYPE_BIN)
@@ -145,6 +146,7 @@ create_widgets(GtkWidget* editor)
     switch (form_field_type) {
       case ZATHURA_FORM_FIELD_BUTTON:
         form_field_widget = zathura_gtk_form_field_button_new(form_field_mapping->form_field);
+        g_signal_connect(G_OBJECT(form_field_widget), "changed", G_CALLBACK(cb_form_field_button_changed), priv);
         break;
       case ZATHURA_FORM_FIELD_TEXT:
         form_field_widget = zathura_gtk_form_field_text_new(form_field_mapping->form_field);
@@ -238,7 +240,7 @@ zathura_gtk_form_field_editor_get_property(GObject* object, guint prop_id, GValu
   }
 }
 
-gboolean
+static gboolean
 cb_draw_highlights(GtkWidget* UNUSED(widget), cairo_t* cairo, gpointer data)
 {
   ZathuraFormFieldEditorPrivate* priv = (ZathuraFormFieldEditorPrivate*) data;
@@ -288,4 +290,24 @@ cb_draw_highlights(GtkWidget* UNUSED(widget), cairo_t* cairo, gpointer data)
   cairo_restore(cairo);
 
   return FALSE;
+}
+
+static void
+cb_form_field_button_changed(GtkWidget* UNUSED(widget), gpointer data)
+{
+  ZathuraFormFieldEditorPrivate* priv = (ZathuraFormFieldEditorPrivate*) data;
+
+  form_field_widget_mapping_t* form_field_mapping;
+  ZATHURA_LIST_FOREACH(form_field_mapping, priv->form_fields) {
+    zathura_form_field_type_t form_field_type = ZATHURA_FORM_FIELD_UNKNOWN;
+    if (zathura_form_field_get_type(form_field_mapping->form_field, &form_field_type) != ZATHURA_ERROR_OK) {
+      continue;
+    }
+
+    if (form_field_type != ZATHURA_FORM_FIELD_BUTTON) {
+      continue;
+    }
+
+    gtk_widget_queue_draw(form_field_mapping->widget);
+  }
 }

@@ -15,6 +15,13 @@ enum {
   PROP_FORM_FIELD,
 };
 
+enum {
+  SIGNAL_CHANGED,
+  N_SIGNALS
+};
+
+static guint signals[N_SIGNALS];
+
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraFormFieldButton, zathura_gtk_form_field_button, GTK_TYPE_DRAWING_AREA)
 
 #define ZATHURA_FORM_FIELD_BUTTON_GET_PRIVATE(obj) \
@@ -43,6 +50,17 @@ zathura_gtk_form_field_button_class_init(ZathuraFormFieldButtonClass* class)
       G_PARAM_WRITABLE | G_PARAM_READABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS
     )
   );
+
+  /* signals */
+  signals[SIGNAL_CHANGED] = g_signal_new("changed",
+      ZATHURA_TYPE_FORM_FIELD_BUTTON,
+      G_SIGNAL_RUN_LAST,
+      0,
+      NULL,
+      NULL,
+      g_cclosure_marshal_generic,
+      G_TYPE_NONE,
+      0);
 }
 
 static void
@@ -119,6 +137,8 @@ zathura_gtk_form_field_button_button_press_event(GtkWidget* widget, GdkEventButt
   if (zathura_form_field_save(priv->button) != ZATHURA_ERROR_OK) {
     return FALSE;
   }
+
+  g_signal_emit(widget, signals[SIGNAL_CHANGED], 0);
 
   /* Queue redrawing of the button */
   gtk_widget_queue_draw(widget);
