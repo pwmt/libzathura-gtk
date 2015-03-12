@@ -11,7 +11,19 @@
 #include "form-field-choice.h"
 #include "form-field-text.h"
 
+#define RGB_TO_CAIRO(r, g, b) \
+  (r)/255.0, (g)/255.0, (b)/255.0
+
+#define M_PI 3.14159265358979323846
+
 struct _ZathuraFormFieldEditorPrivate {
+  GtkWidget* overlay;
+
+  struct {
+    GtkWidget* drawing_area;
+    GtkWidget* form_fields;
+  } layer;
+
   ZathuraPage* page;
   zathura_list_t* form_fields;
   bool highlight;
@@ -24,15 +36,17 @@ enum {
 
 typedef struct form_field_widget_mapping_s {
   GtkWidget* widget;
+  zathura_form_field_t* form_field;
   zathura_rectangle_t position;
 } form_field_widget_mapping_t;
 
 static void zathura_gtk_form_field_editor_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_form_field_editor_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
-static void create_widgets(GtkWidget* editor);
 static void zathura_gtk_form_field_editor_size_allocate(GtkWidget* widget, GdkRectangle* allocation);
+gboolean cb_draw_highlights(GtkWidget *widget, cairo_t *cairo, gpointer data);
+static void create_widgets(GtkWidget* editor);
 
-G_DEFINE_TYPE_WITH_PRIVATE(ZathuraFormFieldEditor, zathura_gtk_form_field_editor, GTK_TYPE_FIXED)
+G_DEFINE_TYPE_WITH_PRIVATE(ZathuraFormFieldEditor, zathura_gtk_form_field_editor, GTK_TYPE_BIN)
 
 #define ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_FORM_FIELD_EDITOR, \
@@ -69,9 +83,12 @@ zathura_gtk_form_field_editor_init(ZathuraFormFieldEditor* widget)
 {
   ZathuraFormFieldEditorPrivate* priv = ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(widget);
 
-  priv->form_fields = NULL;
-  priv->page        = NULL;
-  priv->highlight   = false;
+  priv->overlay            = NULL;
+  priv->layer.drawing_area = NULL;
+  priv->layer.form_fields  = NULL;
+  priv->form_fields        = NULL;
+  priv->page               = NULL;
+  priv->highlight          = false;
 }
 
 GtkWidget*
@@ -83,6 +100,25 @@ zathura_gtk_form_field_editor_new(ZathuraPage* page)
   ZathuraFormFieldEditorPrivate* priv = ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(widget);
 
   priv->page = page;
+
+  /* Drawing area for highlighting */
+  priv->layer.drawing_area = gtk_drawing_area_new();
+  gtk_widget_set_halign(priv->layer.drawing_area, GTK_ALIGN_START);
+  gtk_widget_set_valign(priv->layer.drawing_area, GTK_ALIGN_START);
+
+  g_signal_connect(G_OBJECT(priv->layer.drawing_area), "draw", G_CALLBACK(cb_draw_highlights), priv);
+
+  /* Fixed container for form field widgets */
+  priv->layer.form_fields = gtk_fixed_new();
+
+  /* Setup over lay*/
+  priv->overlay = gtk_overlay_new();
+  gtk_container_add(GTK_CONTAINER(priv->overlay), GTK_WIDGET(priv->layer.drawing_area));
+  gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.form_fields);
+
+  /* Setup container */
+  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->overlay));
+  gtk_widget_show_all(GTK_WIDGET(widget));
 
   return GTK_WIDGET(widget);
 }
@@ -124,8 +160,9 @@ create_widgets(GtkWidget* editor)
       /* Create new mapping */
       form_field_widget_mapping_t* mapping = g_malloc0(sizeof(form_field_widget_mapping_t));
 
-      mapping->position = form_field_mapping->position;
-      mapping->widget   = form_field_widget;
+      mapping->position   = form_field_mapping->position;
+      mapping->widget     = form_field_widget;
+      mapping->form_field = form_field_mapping->form_field;
 
       priv->form_fields = zathura_list_append(priv->form_fields, mapping);
 
@@ -134,7 +171,7 @@ create_widgets(GtkWidget* editor)
       const unsigned int width  = ceil(position.p2.x) - floor(position.p1.x);
       const unsigned int height = ceil(position.p2.y) - floor(position.p1.y);
 
-      gtk_fixed_put(GTK_FIXED(editor), form_field_widget, position.p1.x, position.p1.y);
+      gtk_fixed_put(GTK_FIXED(priv->layer.form_fields), form_field_widget, position.p1.x, position.p1.y);
       gtk_widget_set_size_request(form_field_widget, width, height);
       gtk_widget_show(form_field_widget);
     }
@@ -150,13 +187,18 @@ zathura_gtk_form_field_editor_size_allocate(GtkWidget* widget, GdkRectangle* all
     create_widgets(widget);
   }
 
+  if (priv->highlight == true) {
+    gtk_widget_set_size_request(priv->layer.drawing_area, allocation->width, allocation->height);
+    gtk_widget_queue_resize(priv->layer.drawing_area);
+  }
+
   form_field_widget_mapping_t* form_field_mapping;
   ZATHURA_LIST_FOREACH(form_field_mapping, priv->form_fields) {
       zathura_rectangle_t position = calculate_correct_position(priv->page, form_field_mapping->position);
       const unsigned int width  = ceil(position.p2.x) - floor(position.p1.x);
       const unsigned int height = ceil(position.p2.y) - floor(position.p1.y);
 
-      gtk_fixed_move(GTK_FIXED(widget), form_field_mapping->widget, position.p1.x, position.p1.y);
+      gtk_fixed_move(GTK_FIXED(priv->layer.form_fields), form_field_mapping->widget, position.p1.x, position.p1.y);
       gtk_widget_set_size_request(form_field_mapping->widget, width, height);
   }
 
@@ -173,6 +215,7 @@ zathura_gtk_form_field_editor_set_property(GObject* object, guint prop_id, const
     case PROP_FORM_FIELDS_HIGHLIGHT:
       {
         priv->highlight = g_value_get_boolean(value);
+        gtk_widget_queue_resize(priv->layer.drawing_area);
       }
       break;
     default:
@@ -193,4 +236,56 @@ zathura_gtk_form_field_editor_get_property(GObject* object, guint prop_id, GValu
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
+}
+
+gboolean
+cb_draw_highlights(GtkWidget* UNUSED(widget), cairo_t* cairo, gpointer data)
+{
+  ZathuraFormFieldEditorPrivate* priv = (ZathuraFormFieldEditorPrivate*) data;
+
+  /* Draw links if requested */
+  if (priv->highlight == false) {
+    return FALSE;
+  }
+
+  cairo_save(cairo);
+
+  form_field_widget_mapping_t* form_field_mapping;
+  ZATHURA_LIST_FOREACH(form_field_mapping, priv->form_fields) {
+    zathura_rectangle_t position = calculate_correct_position(priv->page, form_field_mapping->position);
+    const unsigned int width  = ceil(position.p2.x) - floor(position.p1.x);
+    const unsigned int height = ceil(position.p2.y) - floor(position.p1.y);
+
+    zathura_form_field_type_t form_field_type = ZATHURA_FORM_FIELD_UNKNOWN;
+    if (zathura_form_field_get_type(form_field_mapping->form_field, &form_field_type) != ZATHURA_ERROR_OK) {
+      continue;
+    }
+
+    if (form_field_type == ZATHURA_FORM_FIELD_BUTTON) {
+      zathura_form_field_button_type_t button_type;
+      if (zathura_form_field_button_get_type(form_field_mapping->form_field, &button_type) != ZATHURA_ERROR_OK) {
+        continue;
+      }
+
+      if (button_type == ZATHURA_FORM_FIELD_BUTTON_TYPE_RADIO) {
+        cairo_save(cairo);
+        cairo_translate(cairo, position.p1.x + width / 2, position.p1.y + height / 2);
+        cairo_scale(cairo, width/2.0, height/2.0);
+        cairo_arc(cairo, 0., 0., 1., 0., 2 * M_PI);
+        cairo_set_source_rgba(cairo, RGB_TO_CAIRO(75, 181, 193), 0.5);
+        cairo_fill(cairo);
+        cairo_restore(cairo);
+        continue;
+      }
+    }
+
+    /* Draw rectangle */
+    cairo_set_source_rgba(cairo, RGB_TO_CAIRO(75, 181, 193), 0.5);
+    cairo_rectangle(cairo, floor(position.p1.x), floor(position.p1.y), width, height);
+    cairo_fill(cairo);
+  }
+
+  cairo_restore(cairo);
+
+  return FALSE;
 }

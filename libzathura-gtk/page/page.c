@@ -132,7 +132,6 @@ zathura_gtk_page_init(ZathuraPage* widget)
   priv->form_fields.list      = NULL;
   priv->form_fields.retrieved = false;
   priv->form_fields.edit      = true;
-  priv->form_fields.highlight = false;
 }
 
 GtkWidget*
@@ -234,10 +233,7 @@ zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* valu
       }
       break;
     case PROP_FORM_FIELDS_HIGHLIGHT:
-      {
-        priv->form_fields.highlight = g_value_get_boolean(value);
-        render_page(priv);
-      }
+      g_object_set(priv->layer.form_fields, "highlight-form-fields", g_value_get_boolean(value), NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
@@ -267,7 +263,11 @@ zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GPa
       g_value_set_boolean(value, priv->form_fields.edit);
       break;
     case PROP_FORM_FIELDS_HIGHLIGHT:
-      g_value_set_boolean(value, priv->form_fields.highlight);
+      {
+        bool highlight_form_fields;
+        g_object_get(priv->layer.form_fields, "highlight-form-fields", &highlight_form_fields, NULL);
+        g_value_set_boolean(value, highlight_form_fields);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);

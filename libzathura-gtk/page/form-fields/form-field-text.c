@@ -3,14 +3,10 @@
 #include "../../macros.h"
 #include "form-field-text.h"
 
-#define RGB_TO_CAIRO(r, g, b) \
-  (r)/255.0, (g)/255.0, (b)/255.0
-
 static gboolean cb_form_field_text_focus_out(GtkWidget* widget, GdkEventFocus* event, GtkWidget* form_field_widget);
 static gboolean cb_form_field_text_changed(GtkWidget* widget, GtkWidget* form_field_widget);
 static gboolean cb_form_field_text_activate(GtkWidget* widget, GtkWidget* form_field_widget);
 static gboolean cb_form_field_text_multiline_focus_out(GtkWidget* widget, GdkEventFocus* event, GtkWidget* form_field_widget);
-static gboolean cb_form_field_text_rectangle_draw(GtkWidget* widget, cairo_t* cairo, GtkWidget* form_field_widget);
 static gboolean cb_form_field_text_rectangle_button_press_event(GtkWidget* widget, GdkEventButton* event_button, GtkWidget* form_field_widget);
 
 struct _ZathuraFormFieldTextPrivate {
@@ -72,9 +68,6 @@ zathura_gtk_form_field_text_new(zathura_form_field_t* form_field)
   /* Setup rectangle */
   priv->rectangle = gtk_drawing_area_new();
   gtk_widget_add_events(GTK_WIDGET(priv->rectangle), GDK_BUTTON_PRESS_MASK);
-  g_signal_connect(priv->rectangle, "draw",
-      G_CALLBACK(cb_form_field_text_rectangle_draw),
-      widget);
 
   g_signal_connect(priv->rectangle, "button-press-event",
       G_CALLBACK(cb_form_field_text_rectangle_button_press_event),
@@ -252,24 +245,6 @@ cb_form_field_text_multiline_focus_out(GtkWidget* widget, GdkEventFocus* UNUSED(
 
   save_text_multi_line(form_field_widget);
   reset_to_drawing_area(form_field_widget);
-
-  return FALSE;
-}
-
-static gboolean
-cb_form_field_text_rectangle_draw(GtkWidget* widget, cairo_t* cairo, GtkWidget* UNUSED(form_field_widget))
-{
-  const unsigned int width  = gtk_widget_get_allocated_width(widget);
-  const unsigned int height = gtk_widget_get_allocated_height(widget);
-
-  cairo_save(cairo);
-
-  /* Draw background */
-  cairo_set_source_rgba(cairo, RGB_TO_CAIRO(75, 181, 193), 0.5);
-  cairo_rectangle(cairo, 0, 0, width, height);
-  cairo_fill_preserve(cairo);
-
-  cairo_restore(cairo);
 
   return FALSE;
 }

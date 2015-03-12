@@ -1,19 +1,14 @@
- /* See LICENSE file for license and copyright information */
 
 #include <string.h>
 
 #include "../../macros.h"
 #include "form-field-choice.h"
 
-#define RGB_TO_CAIRO(r, g, b) \
-  (r)/255.0, (g)/255.0, (b)/255.0
-
 static GtkWidget* form_field_choice_combo_new(GtkWidget* form_field_widget);
 static void cb_form_field_choice_combo_changed(GtkComboBox* widget, GtkWidget* form_field_widget);
 static GtkWidget* form_field_choice_list_new(GtkWidget* form_field_widget);
 static void cb_form_field_choice_list_changed(GtkTreeSelection* selection, zathura_form_field_t* form_field);
 static void cb_form_field_choice_list_destroy(GtkTreeSelection* selection, GtkWidget* widget);
-static gboolean cb_form_field_choice_rectangle_draw(GtkWidget* widget, cairo_t* cairo, GtkWidget* form_field_widget);
 static gboolean cb_form_field_choice_rectangle_choice_press_event(GtkWidget* widget, GdkEventButton* event_button, GtkWidget* form_field_widget);
 static void reset_to_drawing_area(GtkWidget* widget);
 
@@ -80,9 +75,6 @@ zathura_gtk_form_field_choice_new(zathura_form_field_t* form_field)
   /* Setup rectangle */
   priv->rectangle = gtk_drawing_area_new();
   gtk_widget_add_events(GTK_WIDGET(priv->rectangle), GDK_BUTTON_PRESS_MASK);
-  g_signal_connect(priv->rectangle, "draw",
-      G_CALLBACK(cb_form_field_choice_rectangle_draw),
-      widget);
 
   g_signal_connect(priv->rectangle, "button-press-event",
       G_CALLBACK(cb_form_field_choice_rectangle_choice_press_event),
@@ -338,24 +330,6 @@ static void
 reset_to_drawing_area(GtkWidget* widget)
 {
   g_idle_add((GSourceFunc) set_back_to_drawing_area, widget);
-}
-
-static gboolean
-cb_form_field_choice_rectangle_draw(GtkWidget* widget, cairo_t* cairo, GtkWidget* UNUSED(form_field_widget))
-{
-  const unsigned int width  = gtk_widget_get_allocated_width(widget);
-  const unsigned int height = gtk_widget_get_allocated_height(widget);
-
-  cairo_save(cairo);
-
-  /* Draw background */
-  cairo_set_source_rgba(cairo, RGB_TO_CAIRO(75, 181, 193), 0.5);
-  cairo_rectangle(cairo, 0, 0, width, height);
-  cairo_fill_preserve(cairo);
-
-  cairo_restore(cairo);
-
-  return FALSE;
 }
 
 static gboolean

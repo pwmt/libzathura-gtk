@@ -59,6 +59,7 @@ struct _ZathuraDocumentPrivate {
 
     struct {
       bool edit;
+      bool highlight;
     } forms;
 
     struct {

@@ -31,7 +31,8 @@ enum {
   PROP_SCROLL_PAGE_AWARE,
   PROP_SCROLL_WRAP,
   PROP_LINKS_HIGHLIGHT,
-  PROP_FORM_EDITING
+  PROP_FORM_FIELDS_EDIT,
+  PROP_FORM_FIELDS_HIGHLIGHT
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraDocument, zathura_gtk_document, GTK_TYPE_BIN)
@@ -208,11 +209,23 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
 
   g_object_class_install_property(
     object_class,
-    PROP_FORM_EDITING,
+    PROP_FORM_FIELDS_EDIT,
     g_param_spec_boolean(
       "edit-form-fields",
       "edit-form-fields",
       "Allow editing of form fields",
+      FALSE,
+      G_PARAM_WRITABLE | G_PARAM_READABLE
+    )
+  );
+
+  g_object_class_install_property(
+    object_class,
+    PROP_FORM_FIELDS_HIGHLIGHT,
+    g_param_spec_boolean(
+      "highlight-form-fields",
+      "highlight-form-fields",
+      "Highlight form-fields by drawing rectangles around them",
       FALSE,
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
@@ -567,13 +580,25 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
             );
         }
       }
-    case PROP_FORM_EDITING:
+    case PROP_FORM_FIELDS_EDIT:
       {
         gboolean edit = g_value_get_boolean(value);
         if (priv->settings.forms.edit != edit) {
           priv->settings.forms.edit = edit;
           g_list_foreach(priv->document.pages,
               (GFunc) cb_document_pages_set_edit_form,
+              priv
+            );
+        }
+      }
+      break;
+    case PROP_FORM_FIELDS_HIGHLIGHT:
+      {
+        gboolean highlight = g_value_get_boolean(value);
+        if (priv->settings.forms.highlight != highlight) {
+          priv->settings.forms.highlight = highlight;
+          g_list_foreach(priv->document.pages,
+              (GFunc) cb_document_pages_set_highlight_form,
               priv
             );
         }
@@ -627,8 +652,11 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
     case PROP_LINKS_HIGHLIGHT:
       g_value_set_boolean(value, priv->settings.links.highlight);
       break;
-    case PROP_FORM_EDITING:
+    case PROP_FORM_FIELDS_EDIT:
       g_value_set_boolean(value, priv->settings.forms.edit);
+      break;
+    case PROP_FORM_FIELDS_HIGHLIGHT:
+      g_value_set_boolean(value, priv->settings.forms.highlight);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);

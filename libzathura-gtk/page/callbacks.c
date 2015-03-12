@@ -83,7 +83,7 @@ cb_page_draw_links(GtkWidget *widget, cairo_t *cairo, gpointer data)
     /* Draw each link */
     zathura_link_mapping_t* link_mapping;
     ZATHURA_LIST_FOREACH(link_mapping, priv->links.list) {
-      zathura_rectangle_t position = calculate_correct_position(priv, link_mapping->position);
+      zathura_rectangle_t position = calculate_correct_position(ZATHURA_PAGE(widget), link_mapping->position);
       unsigned int width  = position.p2.x - position.p1.x;
       unsigned int height = position.p2.y - position.p1.y;
 
@@ -100,7 +100,7 @@ cb_page_draw_links(GtkWidget *widget, cairo_t *cairo, gpointer data)
 }
 
 void
-cb_page_overlay_realized(GtkWidget* widget, gpointer data)
+cb_page_overlay_realized(GtkWidget* UNUSED(widget), gpointer data)
 {
   ZathuraPagePrivate* priv = (ZathuraPagePrivate*) data;
 

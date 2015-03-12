@@ -124,6 +124,13 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
           g_object_set(G_OBJECT(document), "edit-form-fields", !edit_form_fields, NULL);
         }
         break;
+      case GDK_KEY_1:
+        {
+          gboolean highlight_form_fields;
+          g_object_get(G_OBJECT(document), "highlight-form-fields", &highlight_form_fields, NULL);
+          g_object_set(G_OBJECT(document), "highlight-form-fields", !highlight_form_fields, NULL);
+        }
+        break;
       default:
         return FALSE;
     }
