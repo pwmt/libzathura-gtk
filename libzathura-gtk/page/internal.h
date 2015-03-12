@@ -6,6 +6,10 @@
 #include <gtk/gtk.h>
 #include "page.h"
 
+#define ZATHURA_PAGE_GET_PRIVATE(obj) \
+  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_PAGE, \
+                               ZathuraPagePrivate))
+
 struct _ZathuraPagePrivate {
   zathura_page_t* page;
   GtkWidget* overlay;
@@ -13,6 +17,7 @@ struct _ZathuraPagePrivate {
   struct {
     GtkWidget* drawing_area;
     GtkWidget* links;
+    GtkWidget* form_fields;
   } layer;
 
   struct {
@@ -30,6 +35,12 @@ struct _ZathuraPagePrivate {
     bool draw;
     zathura_list_t* list;
   } links;
+
+  struct {
+    bool edit;
+    bool retrieved;
+    zathura_list_t* list;
+  } form_fields;
 };
 
 #endif /* ZATHURA_GTK_PAGE_INTERNAL */

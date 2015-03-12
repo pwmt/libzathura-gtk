@@ -22,3 +22,15 @@ cb_document_pages_set_highlight_links(GtkWidget* page, ZathuraDocumentPrivate* p
 {
   g_object_set(G_OBJECT(page), "highlight-links", priv->settings.links.highlight, NULL);
 }
+
+void
+cb_document_pages_set_edit_form(GtkWidget* page, ZathuraDocumentPrivate* priv)
+{
+  g_object_set(G_OBJECT(page), "edit-form-fields", priv->settings.forms.edit, NULL);
+}
+
+void
+cb_document_pages_set_highlight_form(GtkWidget* page, ZathuraDocumentPrivate* priv)
+{
+  g_object_set(G_OBJECT(page), "highlight-form-fields", priv->settings.forms.highlight, NULL);
+}
