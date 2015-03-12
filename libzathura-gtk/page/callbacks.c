@@ -5,10 +5,14 @@
 #include "utils.h"
 #include "../macros.h"
 
+#define RGB_TO_CAIRO(r, g, b) \
+  (r)/255.0, (g)/255.0, (b)/255.0
+
+
 gboolean
 cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraPagePrivate* priv = (ZathuraPagePrivate*) data;
+  ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(data);
 
   const unsigned int page_width  = gtk_widget_get_allocated_width(widget);
   const unsigned int page_height = gtk_widget_get_allocated_height(widget);
@@ -64,9 +68,9 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
 }
 
 gboolean
-cb_page_draw_links(GtkWidget *widget, cairo_t *cairo, gpointer data)
+cb_page_draw_links(GtkWidget* UNUSED(widget), cairo_t *cairo, gpointer data)
 {
-  ZathuraPagePrivate* priv = (ZathuraPagePrivate*) data;
+  ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(data);
 
   /* Draw links if requested */
   if (priv->links.draw == true) {
@@ -83,14 +87,15 @@ cb_page_draw_links(GtkWidget *widget, cairo_t *cairo, gpointer data)
     /* Draw each link */
     zathura_link_mapping_t* link_mapping;
     ZATHURA_LIST_FOREACH(link_mapping, priv->links.list) {
-      zathura_rectangle_t position = calculate_correct_position(ZATHURA_PAGE(widget), link_mapping->position);
+      zathura_rectangle_t position = calculate_correct_position(ZATHURA_PAGE(data), link_mapping->position);
       unsigned int width  = position.p2.x - position.p1.x;
       unsigned int height = position.p2.y - position.p1.y;
 
-      /* Fill pink */
-      cairo_set_source_rgba(cairo, 72, 0, 98, 0.5);
+      cairo_set_line_width(cairo, 1);
+      cairo_set_source_rgb(cairo, RGB_TO_CAIRO(84, 208, 237));
+
       cairo_rectangle(cairo, position.p1.x, position.p1.y, width, height);
-      cairo_fill(cairo);
+      cairo_stroke(cairo);
     }
 
     cairo_restore(cairo);
@@ -102,7 +107,7 @@ cb_page_draw_links(GtkWidget *widget, cairo_t *cairo, gpointer data)
 void
 cb_page_overlay_realized(GtkWidget* UNUSED(widget), gpointer data)
 {
-  ZathuraPagePrivate* priv = (ZathuraPagePrivate*) data;
+  ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(data);
 
   if (priv->form_fields.edit == true) {
     gtk_widget_show(priv->layer.form_fields);

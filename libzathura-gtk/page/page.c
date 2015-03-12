@@ -157,11 +157,11 @@ zathura_gtk_page_new(zathura_page_t* page)
   gtk_widget_set_halign(priv->layer.drawing_area, GTK_ALIGN_START);
   gtk_widget_set_valign(priv->layer.drawing_area, GTK_ALIGN_START);
   gtk_widget_set_size_request(priv->layer.drawing_area, priv->dimensions.width, priv->dimensions.height);
-  g_signal_connect(G_OBJECT(priv->layer.drawing_area), "draw", G_CALLBACK(cb_page_draw), priv);
+  g_signal_connect(G_OBJECT(priv->layer.drawing_area), "draw", G_CALLBACK(cb_page_draw), widget);
 
   /* Setup links layer */
   priv->layer.links = gtk_drawing_area_new();
-  g_signal_connect(G_OBJECT(priv->layer.links), "draw", G_CALLBACK(cb_page_draw_links), priv);
+  g_signal_connect(G_OBJECT(priv->layer.links), "draw", G_CALLBACK(cb_page_draw_links), widget);
 
   /* Setup form fields layer */
   priv->layer.form_fields = zathura_gtk_form_field_editor_new(ZATHURA_PAGE(widget));
@@ -172,7 +172,7 @@ zathura_gtk_page_new(zathura_page_t* page)
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.links);
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.form_fields);
 
-  g_signal_connect(priv->overlay, "realize", G_CALLBACK(cb_page_overlay_realized), priv);
+  g_signal_connect(priv->overlay, "realize", G_CALLBACK(cb_page_overlay_realized), widget);
 
   /* Setup container */
   gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->overlay));
