@@ -19,6 +19,7 @@ struct _ZathuraPagePrivate {
     GtkWidget* drawing_area;
     GtkWidget* links;
     GtkWidget* form_fields;
+    GtkWidget* annotations;
   } layer;
 
   struct {

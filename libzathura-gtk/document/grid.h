@@ -29,5 +29,4 @@ void zathura_gtk_grid_page_number_to_position(ZathuraDocumentPrivate* priv,
     unsigned int page_number, double x_align, double y_align, double*
     position_x, double* position_y);
 
-
 #endif /* ZATHURA_GTK_DOCUMENT_GRID */

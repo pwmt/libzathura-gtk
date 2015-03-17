@@ -5,6 +5,7 @@
 #include "page.h"
 #include "internal.h"
 #include "callbacks.h"
+#include "annotations/overlay.h"
 #include "form-fields/editor.h"
 #include "../widgets/rotated-bin.h"
 
@@ -120,6 +121,7 @@ zathura_gtk_page_init(ZathuraPage* widget)
   priv->layer.drawing_area = NULL;
   priv->layer.links        = NULL;
   priv->layer.form_fields  = NULL;
+  priv->layer.annotations  = NULL;
 
   priv->dimensions.width  = 0;
   priv->dimensions.height = 0;
@@ -171,11 +173,15 @@ zathura_gtk_page_new(zathura_page_t* page)
   /* Setup form fields layer */
   priv->layer.form_fields = zathura_gtk_form_field_editor_new(ZATHURA_PAGE(widget));
 
+  /* Setup annotation layer */
+  priv->layer.annotations = zathura_gtk_annotation_overlay_new(ZATHURA_PAGE(widget));
+
   /* Setup over lay */
   priv->overlay = gtk_overlay_new();
   gtk_container_add(GTK_CONTAINER(priv->overlay), GTK_WIDGET(priv->layer.drawing_area));
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.links);
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.form_fields);
+  gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.annotations);
 
   g_signal_connect(priv->overlay, "realize", G_CALLBACK(cb_page_overlay_realized), widget);
 

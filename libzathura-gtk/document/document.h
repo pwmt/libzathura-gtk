@@ -31,7 +31,6 @@ struct _ZathuraDocumentClass {
   GtkBinClass parent_class;
 };
 
-
 GType zathura_gtk_document_get_type(void);
 
 GtkWidget* zathura_gtk_document_new(zathura_document_t* document);
