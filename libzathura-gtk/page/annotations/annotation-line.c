@@ -18,7 +18,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationLine, zathura_gtk_annotation_line, G
 static void
 zathura_gtk_annotation_line_class_init(ZathuraAnnotationLineClass* class)
 {
-  /* overwrite methods */
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(class);
 
   widget_class->draw = cb_zathura_gtk_annotation_line_draw;

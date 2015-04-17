@@ -89,7 +89,7 @@ LIBS = ${LIBZATHURA_LIB} ${GTK_LIB} ${GTHREAD_LIB} ${GLIB_LIB} ${GMODULE_LIB} ${
 CPPFLAGS += -DHAVE_CAIRO -D_FILE_OFFSET_BITS=64
 
 # compiler flags
-CFLAGS += -std=c99 -pedantic -Wall -Wextra -fPIC $(INCS)
+CFLAGS += -std=c11 -pedantic -Wall -Wextra -fPIC $(INCS)
 
 # linker flags
 LDFLAGS += -fPIC

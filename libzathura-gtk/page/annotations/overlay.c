@@ -8,7 +8,10 @@
 #include "../utils.h"
 #include "../../macros.h"
 
+#include "annotation-highlight.h"
 #include "annotation-line.h"
+#include "annotation-strike-out.h"
+#include "annotation-underline.h"
 
 struct _ZathuraAnnotationOverlayPrivate {
   ZathuraPage* page;
@@ -184,6 +187,15 @@ create_widgets(GtkWidget* overlay)
       case ZATHURA_ANNOTATION_LINE:
         annotation_widget = zathura_gtk_annotation_line_new(annotation);
         break;
+      case ZATHURA_ANNOTATION_HIGHLIGHT:
+        annotation_widget = zathura_gtk_annotation_highlight_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_STRIKE_OUT:
+        annotation_widget = zathura_gtk_annotation_strike_out_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_UNDERLINE:
+        annotation_widget = zathura_gtk_annotation_underline_new(annotation);
+        break;
       default:
         continue;
     }
@@ -199,7 +211,7 @@ create_widgets(GtkWidget* overlay)
       priv->annotations = zathura_list_append(priv->annotations, mapping);
 
       /* Setup initial position of widgets */
-      zathura_rectangle_t position = calculate_correct_position(priv->page, position);
+      position = calculate_correct_position(priv->page, position);
       const unsigned int width  = ceil(position.p2.x) - floor(position.p1.x);
       const unsigned int height = ceil(position.p2.y) - floor(position.p1.y);
 
