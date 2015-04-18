@@ -10,6 +10,7 @@
 
 #include "annotation-highlight.h"
 #include "annotation-line.h"
+#include "annotation-squiggly.h"
 #include "annotation-strike-out.h"
 #include "annotation-underline.h"
 
@@ -195,6 +196,9 @@ create_widgets(GtkWidget* overlay)
         break;
       case ZATHURA_ANNOTATION_UNDERLINE:
         annotation_widget = zathura_gtk_annotation_underline_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_SQUIGGLY:
+        annotation_widget = zathura_gtk_annotation_squiggly_new(annotation);
         break;
       default:
         continue;
