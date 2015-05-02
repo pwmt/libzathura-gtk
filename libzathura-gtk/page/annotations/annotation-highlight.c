@@ -51,9 +51,6 @@ cb_zathura_gtk_annotation_highlight_draw(GtkWidget* widget, cairo_t *cairo)
 {
   ZathuraAnnotationHighlightPrivate* priv = ZATHURA_ANNOTATION_HIGHLIGHT_GET_PRIVATE(widget);
 
-  const unsigned int page_height = gtk_widget_get_allocated_height(widget);
-  const unsigned int page_width  = gtk_widget_get_allocated_width(widget);
-
   cairo_save(cairo);
 
   zathura_list_t* quad_points;

@@ -200,6 +200,9 @@ create_widgets(GtkWidget* overlay)
       case ZATHURA_ANNOTATION_SQUIGGLY:
         annotation_widget = zathura_gtk_annotation_squiggly_new(annotation);
         break;
+      case ZATHURA_ANNOTATION_CARET:
+        annotation_widget = zathura_gtk_annotation_caret_new(annotation);
+        break;
       default:
         continue;
     }
