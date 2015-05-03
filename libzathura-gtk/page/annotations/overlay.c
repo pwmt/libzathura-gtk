@@ -8,6 +8,8 @@
 #include "../utils.h"
 #include "../../macros.h"
 
+#include "annotation-caret.h"
+#include "annotation-circle.h"
 #include "annotation-highlight.h"
 #include "annotation-line.h"
 #include "annotation-squiggly.h"
@@ -202,6 +204,9 @@ create_widgets(GtkWidget* overlay)
         break;
       case ZATHURA_ANNOTATION_CARET:
         annotation_widget = zathura_gtk_annotation_caret_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_CIRCLE:
+        annotation_widget = zathura_gtk_annotation_circle_new(annotation);
         break;
       default:
         continue;

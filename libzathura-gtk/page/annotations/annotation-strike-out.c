@@ -55,7 +55,8 @@ cb_zathura_gtk_annotation_strike_out_draw(GtkWidget* widget, cairo_t *cairo)
   const unsigned int page_width  = gtk_widget_get_allocated_width(widget);
 
   cairo_save(cairo);
-  cairo_rectangle(cairo, 0, 0, page_width, page_height);
+
+  cairo_set_operator(cairo, CAIRO_OPERATOR_MULTIPLY);
 
   zathura_annotation_color_t color;
   if (zathura_annotation_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {
@@ -67,7 +68,21 @@ cb_zathura_gtk_annotation_strike_out_draw(GtkWidget* widget, cairo_t *cairo)
     cairo_set_source_rgb(cairo, 0, 0, 0);
   }
 
-  cairo_fill(cairo);
+  zathura_list_t* quad_points;
+  zathura_annotation_highlight_get_quad_points(priv->annotation, &quad_points);
+
+  zathura_quad_point_t* quad_point;
+  ZATHURA_LIST_FOREACH(quad_point, quad_points) {
+    cairo_new_path(cairo);
+    cairo_move_to(cairo, quad_point->p1.x, quad_point->p1.y);
+    cairo_line_to(cairo, quad_point->p2.x, quad_point->p2.y);
+    cairo_line_to(cairo, quad_point->p4.x, quad_point->p4.y);
+    cairo_line_to(cairo, quad_point->p3.x, quad_point->p3.y);
+    cairo_close_path(cairo);
+
+    cairo_fill(cairo);
+  }
+
   cairo_restore(cairo);
 
   return TRUE;

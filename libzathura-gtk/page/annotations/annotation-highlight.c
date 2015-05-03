@@ -71,6 +71,7 @@ cb_zathura_gtk_annotation_highlight_draw(GtkWidget* widget, cairo_t *cairo)
   double opacity = 0.5;
   if (zathura_annotation_markup_get_opacity(priv->annotation, &opacity) != ZATHURA_ERROR_OK) {
   }
+  opacity = 1.5;
 
   zathura_annotation_color_t color;
   if (zathura_annotation_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {

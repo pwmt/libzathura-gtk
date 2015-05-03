@@ -49,14 +49,33 @@ zathura_gtk_annotation_line_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_line_draw(GtkWidget* widget, cairo_t *cairo)
 {
+  ZathuraAnnotationLinePrivate* priv = ZATHURA_ANNOTATION_LINE_GET_PRIVATE(widget);
+
   const unsigned int page_height = gtk_widget_get_allocated_height(widget);
   const unsigned int page_width  = gtk_widget_get_allocated_width(widget);
+
+  /* Set opacity */
+  double opacity = 0.5;
+  if (zathura_annotation_markup_get_opacity(priv->annotation, &opacity) != ZATHURA_ERROR_OK) {
+    opacity = 1.0;
+  }
+
+  /* Set color */
+  zathura_annotation_color_t color;
+  if (zathura_annotation_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {
+    cairo_set_source_rgba(cairo,
+        color.values[0] / 65535,
+        color.values[1] / 65535,
+        color.values[2] / 65535,
+        opacity);
+  } else {
+    cairo_set_source_rgb(cairo, 0, 0, 0);
+  }
 
   cairo_save(cairo);
   cairo_set_line_width(cairo, 1);
   cairo_move_to(cairo, 0, page_height);
   cairo_line_to(cairo, page_width, 0);
-  cairo_set_source_rgb(cairo, 0.5, 0.3, 0);
   cairo_stroke(cairo);
 
   cairo_restore(cairo);
