@@ -4,12 +4,13 @@
 #include "../../macros.h"
 
 struct _ZathuraAnnotationHighlightPrivate {
+  GtkWidget* drawing_area;
   zathura_annotation_t* annotation;
 };
 
-static gboolean cb_zathura_gtk_annotation_highlight_draw(GtkWidget* widget, cairo_t *cairo);
+static gboolean cb_zathura_gtk_annotation_highlight_draw(GtkWidget* widget, cairo_t *cairo, gpointer data);
 
-G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationHighlight, zathura_gtk_annotation_highlight, GTK_TYPE_DRAWING_AREA)
+G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationHighlight, zathura_gtk_annotation_highlight, ZATHURA_TYPE_ANNOTATION)
 
 #define ZATHURA_ANNOTATION_HIGHLIGHT_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_HIGHLIGHT, \
@@ -19,8 +20,6 @@ static void
 zathura_gtk_annotation_highlight_class_init(ZathuraAnnotationHighlightClass* class)
 {
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(class);
-
-  widget_class->draw = cb_zathura_gtk_annotation_highlight_draw;
 }
 
 static void
@@ -28,7 +27,8 @@ zathura_gtk_annotation_highlight_init(ZathuraAnnotationHighlight* widget)
 {
   ZathuraAnnotationHighlightPrivate* priv = ZATHURA_ANNOTATION_HIGHLIGHT_GET_PRIVATE(widget);
 
-  priv->annotation = NULL;
+  priv->drawing_area = NULL;
+  priv->annotation   = NULL;
 }
 
 GtkWidget*
@@ -43,28 +43,39 @@ zathura_gtk_annotation_highlight_new(zathura_annotation_t* annotation)
 
   priv->annotation = annotation;
 
+  priv->drawing_area = gtk_drawing_area_new();
+  g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_zathura_gtk_annotation_highlight_draw), widget);
+
+  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->drawing_area));
+
+  gtk_widget_show_all(GTK_WIDGET(widget));
+
   return GTK_WIDGET(widget);
 }
 
 static gboolean
-cb_zathura_gtk_annotation_highlight_draw(GtkWidget* widget, cairo_t *cairo)
+cb_zathura_gtk_annotation_highlight_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationHighlightPrivate* priv = ZATHURA_ANNOTATION_HIGHLIGHT_GET_PRIVATE(widget);
-
-  cairo_save(cairo);
-
-  cairo_set_operator(cairo, CAIRO_OPERATOR_MULTIPLY);
+  ZathuraAnnotationHighlightPrivate* priv = ZATHURA_ANNOTATION_HIGHLIGHT_GET_PRIVATE(data);
 
   zathura_list_t* quad_points;
-  zathura_annotation_highlight_get_quad_points(priv->annotation, &quad_points);
+  if (zathura_annotation_highlight_get_quad_points(priv->annotation, &quad_points) != ZATHURA_ERROR_OK) {
+    return FALSE;
+  }
+
+  double scale;
+  g_object_get(G_OBJECT(data), "scale", &scale, NULL);
+
+  cairo_save(cairo);
+  cairo_set_operator(cairo, CAIRO_OPERATOR_MULTIPLY);
 
   zathura_quad_point_t* quad_point;
   ZATHURA_LIST_FOREACH(quad_point, quad_points) {
     cairo_new_path(cairo);
-    cairo_move_to(cairo, quad_point->p1.x, quad_point->p1.y);
-    cairo_line_to(cairo, quad_point->p3.x, quad_point->p3.y);
-    cairo_line_to(cairo, quad_point->p4.x, quad_point->p4.y);
-    cairo_line_to(cairo, quad_point->p2.x, quad_point->p2.y);
+    cairo_move_to(cairo, quad_point->p1.x * scale, quad_point->p1.y * scale);
+    cairo_line_to(cairo, quad_point->p3.x * scale, quad_point->p3.y * scale);
+    cairo_line_to(cairo, quad_point->p4.x * scale, quad_point->p4.y * scale);
+    cairo_line_to(cairo, quad_point->p2.x * scale, quad_point->p2.y * scale);
     cairo_close_path(cairo);
   }
 

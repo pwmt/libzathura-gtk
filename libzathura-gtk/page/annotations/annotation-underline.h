@@ -6,6 +6,8 @@
 #include <gtk/gtk.h>
 #include <libzathura/libzathura.h>
 
+#include "annotation.h"
+
 G_BEGIN_DECLS
 
 typedef struct _ZathuraAnnotationUnderline ZathuraAnnotationUnderline;
@@ -21,12 +23,12 @@ typedef struct _ZathuraAnnotationUnderlineClass ZathuraAnnotationUnderlineClass;
 typedef struct _ZathuraAnnotationUnderlinePrivate ZathuraAnnotationUnderlinePrivate;
 
 struct _ZathuraAnnotationUnderline {
-  GtkDrawingArea parent;
+  ZathuraAnnotation parent;
   ZathuraAnnotationUnderlinePrivate* priv;
 };
 
 struct _ZathuraAnnotationUnderlineClass {
-  GtkDrawingAreaClass parent_class;
+  ZathuraAnnotationClass parent_class;
 };
 
 

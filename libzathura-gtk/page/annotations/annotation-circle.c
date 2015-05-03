@@ -8,12 +8,13 @@
 #endif
 
 struct _ZathuraAnnotationCirclePrivate {
+  GtkWidget* drawing_area;
   zathura_annotation_t* annotation;
 };
 
-static gboolean cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t *cairo);
+static gboolean cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t *cairo, gpointer data);
 
-G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationCircle, zathura_gtk_annotation_circle, GTK_TYPE_DRAWING_AREA)
+G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationCircle, zathura_gtk_annotation_circle, ZATHURA_TYPE_ANNOTATION)
 
 #define ZATHURA_ANNOTATION_CIRCLE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_CIRCLE, \
@@ -23,8 +24,6 @@ static void
 zathura_gtk_annotation_circle_class_init(ZathuraAnnotationCircleClass* class)
 {
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(class);
-
-  widget_class->draw = cb_zathura_gtk_annotation_circle_draw;
 }
 
 static void
@@ -32,7 +31,8 @@ zathura_gtk_annotation_circle_init(ZathuraAnnotationCircle* widget)
 {
   ZathuraAnnotationCirclePrivate* priv = ZATHURA_ANNOTATION_CIRCLE_GET_PRIVATE(widget);
 
-  priv->annotation = NULL;
+  priv->drawing_area = NULL;
+  priv->annotation   = NULL;
 }
 
 GtkWidget*
@@ -47,13 +47,23 @@ zathura_gtk_annotation_circle_new(zathura_annotation_t* annotation)
 
   priv->annotation = annotation;
 
+  priv->drawing_area = gtk_drawing_area_new();
+  g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_zathura_gtk_annotation_circle_draw), widget);
+
+  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->drawing_area));
+
+  gtk_widget_show_all(GTK_WIDGET(widget));
+
   return GTK_WIDGET(widget);
 }
 
 static gboolean
-cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t *cairo)
+cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationCirclePrivate* priv = ZATHURA_ANNOTATION_CIRCLE_GET_PRIVATE(widget);
+  ZathuraAnnotationCirclePrivate* priv = ZATHURA_ANNOTATION_CIRCLE_GET_PRIVATE(data);
+
+  double scale = 1.0;
+  g_object_get(G_OBJECT(data), "scale", &scale, NULL);
 
   const unsigned int height = gtk_widget_get_allocated_height(widget);
   const unsigned int width  = gtk_widget_get_allocated_width(widget);
@@ -82,7 +92,7 @@ cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t *cairo)
   /* Define blending-mode */
   cairo_set_operator(cairo, CAIRO_OPERATOR_MULTIPLY);
 
-  double line_width = 1.333334;
+  double line_width = 1.333334 * scale;
 
   double circle_width_half  = (width - 2*line_width) / 2;
   double circle_height_half = (height - 2*line_width) / 2;

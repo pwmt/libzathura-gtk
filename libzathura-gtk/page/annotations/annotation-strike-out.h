@@ -6,6 +6,8 @@
 #include <gtk/gtk.h>
 #include <libzathura/libzathura.h>
 
+#include "annotation.h"
+
 G_BEGIN_DECLS
 
 typedef struct _ZathuraAnnotationStrikeOut ZathuraAnnotationStrikeOut;
@@ -21,12 +23,12 @@ typedef struct _ZathuraAnnotationStrikeOutClass ZathuraAnnotationStrikeOutClass;
 typedef struct _ZathuraAnnotationStrikeOutPrivate ZathuraAnnotationStrikeOutPrivate;
 
 struct _ZathuraAnnotationStrikeOut {
-  GtkDrawingArea parent;
+  ZathuraAnnotation parent;
   ZathuraAnnotationStrikeOutPrivate* priv;
 };
 
 struct _ZathuraAnnotationStrikeOutClass {
-  GtkDrawingAreaClass parent_class;
+  ZathuraAnnotationClass parent_class;
 };
 
 

@@ -4,12 +4,13 @@
 #include "../../macros.h"
 
 struct _ZathuraAnnotationSquigglyPrivate {
+  GtkWidget* drawing_area;
   zathura_annotation_t* annotation;
 };
 
-static gboolean cb_zathura_gtk_annotation_squiggly_draw(GtkWidget* widget, cairo_t *cairo);
+static gboolean cb_zathura_gtk_annotation_squiggly_draw(GtkWidget* widget, cairo_t *cairo, gpointer data);
 
-G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationSquiggly, zathura_gtk_annotation_squiggly, GTK_TYPE_DRAWING_AREA)
+G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationSquiggly, zathura_gtk_annotation_squiggly, ZATHURA_TYPE_ANNOTATION)
 
 #define ZATHURA_ANNOTATION_SQUIGGLY_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_SQUIGGLY, \
@@ -19,8 +20,6 @@ static void
 zathura_gtk_annotation_squiggly_class_init(ZathuraAnnotationSquigglyClass* class)
 {
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(class);
-
-  widget_class->draw = cb_zathura_gtk_annotation_squiggly_draw;
 }
 
 static void
@@ -28,7 +27,8 @@ zathura_gtk_annotation_squiggly_init(ZathuraAnnotationSquiggly* widget)
 {
   ZathuraAnnotationSquigglyPrivate* priv = ZATHURA_ANNOTATION_SQUIGGLY_GET_PRIVATE(widget);
 
-  priv->annotation = NULL;
+  priv->drawing_area = NULL;
+  priv->annotation   = NULL;
 }
 
 GtkWidget*
@@ -43,13 +43,20 @@ zathura_gtk_annotation_squiggly_new(zathura_annotation_t* annotation)
 
   priv->annotation = annotation;
 
+  priv->drawing_area = gtk_drawing_area_new();
+  g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_zathura_gtk_annotation_squiggly_draw), widget);
+
+  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->drawing_area));
+
+  gtk_widget_show_all(GTK_WIDGET(widget));
+
   return GTK_WIDGET(widget);
 }
 
 static gboolean
-cb_zathura_gtk_annotation_squiggly_draw(GtkWidget* widget, cairo_t *cairo)
+cb_zathura_gtk_annotation_squiggly_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationSquigglyPrivate* priv = ZATHURA_ANNOTATION_SQUIGGLY_GET_PRIVATE(widget);
+  ZathuraAnnotationSquigglyPrivate* priv = ZATHURA_ANNOTATION_SQUIGGLY_GET_PRIVATE(data);
 
   const unsigned int height = gtk_widget_get_allocated_height(widget);
   const unsigned int width  = gtk_widget_get_allocated_width(widget);

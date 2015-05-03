@@ -4,12 +4,13 @@
 #include "../../macros.h"
 
 struct _ZathuraAnnotationLinePrivate {
+  GtkWidget* drawing_area;
   zathura_annotation_t* annotation;
 };
 
-static gboolean cb_zathura_gtk_annotation_line_draw(GtkWidget* widget, cairo_t *cairo);
+static gboolean cb_zathura_gtk_annotation_line_draw(GtkWidget* widget, cairo_t *cairo, gpointer data);
 
-G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationLine, zathura_gtk_annotation_line, GTK_TYPE_DRAWING_AREA)
+G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationLine, zathura_gtk_annotation_line, ZATHURA_TYPE_ANNOTATION)
 
 #define ZATHURA_ANNOTATION_LINE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_LINE, \
@@ -19,8 +20,6 @@ static void
 zathura_gtk_annotation_line_class_init(ZathuraAnnotationLineClass* class)
 {
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(class);
-
-  widget_class->draw = cb_zathura_gtk_annotation_line_draw;
 }
 
 static void
@@ -28,7 +27,8 @@ zathura_gtk_annotation_line_init(ZathuraAnnotationLine* widget)
 {
   ZathuraAnnotationLinePrivate* priv = ZATHURA_ANNOTATION_LINE_GET_PRIVATE(widget);
 
-  priv->annotation = NULL;
+  priv->drawing_area = NULL;
+  priv->annotation   = NULL;
 }
 
 GtkWidget*
@@ -43,13 +43,23 @@ zathura_gtk_annotation_line_new(zathura_annotation_t* annotation)
 
   priv->annotation = annotation;
 
+  priv->drawing_area = gtk_drawing_area_new();
+  g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_zathura_gtk_annotation_line_draw), widget);
+
+  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->drawing_area));
+
+  gtk_widget_show_all(GTK_WIDGET(widget));
+
   return GTK_WIDGET(widget);
 }
 
 static gboolean
-cb_zathura_gtk_annotation_line_draw(GtkWidget* widget, cairo_t *cairo)
+cb_zathura_gtk_annotation_line_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationLinePrivate* priv = ZATHURA_ANNOTATION_LINE_GET_PRIVATE(widget);
+  ZathuraAnnotationLinePrivate* priv = ZATHURA_ANNOTATION_LINE_GET_PRIVATE(data);
+
+  double scale = 1.0;
+  g_object_get(G_OBJECT(data), "scale", &scale, NULL);
 
   const unsigned int page_height = gtk_widget_get_allocated_height(widget);
   const unsigned int page_width  = gtk_widget_get_allocated_width(widget);
@@ -73,7 +83,7 @@ cb_zathura_gtk_annotation_line_draw(GtkWidget* widget, cairo_t *cairo)
   }
 
   cairo_save(cairo);
-  cairo_set_line_width(cairo, 1);
+  cairo_set_line_width(cairo, 1*scale);
   cairo_move_to(cairo, 0, page_height);
   cairo_line_to(cairo, page_width, 0);
   cairo_stroke(cairo);
