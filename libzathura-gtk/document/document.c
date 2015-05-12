@@ -8,9 +8,11 @@
 #include "grid.h"
 
 #include "../page/page.h"
+#include "../page/annotations/icons.h"
 
 static void zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
+static void zathura_gtk_document_finalize(GObject* object);
 static void set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable);
 static void set_pages_per_row(ZathuraDocumentPrivate* priv, guint pages_per_row);
 static void set_first_page_column(ZathuraDocumentPrivate* priv, guint first_page_column);
@@ -48,6 +50,7 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
   GObjectClass* object_class = G_OBJECT_CLASS(class);
   object_class->set_property = zathura_gtk_document_set_property;
   object_class->get_property = zathura_gtk_document_get_property;
+  object_class->finalize     = zathura_gtk_document_finalize;
 
   /* properties */
   g_object_class_install_property(
@@ -661,6 +664,13 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
+}
+
+static void
+zathura_gtk_document_finalize(GObject* object)
+{
+  /* Clean-up icon cache */
+  zathura_gtk_annotation_icon_cache_free();
 }
 
 static void

@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "annotation-sound.h"
+#include "icons.h"
 #include "../../macros.h"
 
 struct _ZathuraAnnotationSoundPrivate {
@@ -76,9 +77,9 @@ cb_zathura_gtk_annotation_sound_draw(GtkWidget* widget, cairo_t *cairo, gpointer
   RsvgHandle* svg_handle = NULL;
 
   if (strcmp(icon_name, "Mic") == 0) {
-    svg_handle = rsvg_handle_new_from_file(LIBZATHURA_GTK_ICONDIR "/annotations/Mic.svg", NULL);
+    svg_handle = zathura_gtk_annotation_icon_get_handle(ZATHURA_GTK_ANNOTATION_ICON_MIC);
   } else {
-    svg_handle = rsvg_handle_new_from_file(LIBZATHURA_GTK_ICONDIR "/annotations/Speaker.svg", NULL);
+    svg_handle = zathura_gtk_annotation_icon_get_handle(ZATHURA_GTK_ANNOTATION_ICON_SPEAKER);
   }
   if (svg_handle == NULL) {
     cairo_restore(cairo);
