@@ -13,6 +13,7 @@
 #include "annotation-highlight.h"
 #include "annotation-line.h"
 #include "annotation-squiggly.h"
+#include "annotation-sound.h"
 #include "annotation-strike-out.h"
 #include "annotation-underline.h"
 
@@ -212,6 +213,9 @@ create_widgets(GtkWidget* overlay)
         break;
       case ZATHURA_ANNOTATION_CIRCLE:
         annotation_widget = zathura_gtk_annotation_circle_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_SOUND:
+        annotation_widget = zathura_gtk_annotation_sound_new(annotation);
         break;
       default:
         continue;

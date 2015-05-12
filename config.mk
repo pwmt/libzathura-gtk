@@ -31,12 +31,17 @@ PREFIX ?= /usr
 LIBDIR ?= ${PREFIX}/lib
 INCLUDEDIR ?= ${PREFIX}/include
 DEPENDDIR=.depend
-PLUGINDIR ?= ${PREFIX}/lib/zathura
+PLUGINDIR ?= ${LIBDIR}/${PROJECT}
+DATADIR ?= ${PREFIX}/share/${PROJECT}
+ICONDIR ?= ${DATADIR}/icons
+ICONDIR_LOCAL = data/icons
+
 BUILDDIR ?= build
 BUILDDIR_RELEASE ?= ${BUILDDIR}/release
 BUILDDIR_DEBUG ?= ${BUILDDIR}/debug
 BUILDDIR_GCOV ?= ${BUILDDIR}/gcov
 BINDIR ?= bin
+
 VERSIONCHECK_DIR ?= .version-checks
 
 # version checks
@@ -79,11 +84,14 @@ GMODULE_LIB ?= $(shell ${PKG_CONFIG} --libs gmodule-no-export-2.0)
 CAIRO_INC ?= $(shell ${PKG_CONFIG} --cflags cairo)
 CAIRO_LIB ?= $(shell ${PKG_CONFIG} --libs cairo)
 
-FIU_INC ?= $(shell ${PKG_CONFIG} --cflags libfiu)
-FIU_LIB ?= $(shell ${PKG_CONFIG} --libs libfiu)
+LIBRSVG_INC ?= $(shell pkg-config --cflags librsvg-2.0)
+LIBRSVG_LIB ?= $(shell pkg-config --libs librsvg-2.0)
 
-INCS = ${LIBZATHURA_INC} ${GTK_INC} ${GTHREAD_INC} ${GLIB_INC} ${GMODULE_INC} ${CAIRO_INC}
-LIBS = ${LIBZATHURA_LIB} ${GTK_LIB} ${GTHREAD_LIB} ${GLIB_LIB} ${GMODULE_LIB} ${CAIRO_LIB} -lm
+FIU_INC ?= $(shell pkg-config --cflags libfiu)
+FIU_LIB ?= $(shell pkg-config --libs libfiu)
+
+INCS = ${LIBZATHURA_INC} ${GTK_INC} ${GTHREAD_INC} ${GLIB_INC} ${GMODULE_INC} ${CAIRO_INC} ${LIBRSVG_INC}
+LIBS = ${LIBZATHURA_LIB} ${GTK_LIB} ${GTHREAD_LIB} ${GLIB_LIB} ${GMODULE_LIB} ${CAIRO_LIB} ${LIBRSVG_LIB} -lm
 
 # pre-processor flags
 CPPFLAGS += -DHAVE_CAIRO -D_FILE_OFFSET_BITS=64

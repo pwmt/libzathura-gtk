@@ -23,6 +23,12 @@ HEADERS         = $(filter-out ${PROJECT}/version.h, \
                   ))))))
 HEADERS_INSTALL = ${HEADERS} ${PROJECT}/version.h
 
+DATA_ICONS      = $(wildcard \
+                  data/icons/*.svg \
+                  data/icons/**/*.svg \
+                  data/icons/**/**/*.svg)
+ICONS = $(subst ${ICONDIR_LOCAL},,${DATA_ICONS})
+
 # libfiu support
 ifneq (${WITH_LIBFIU},0)
 INCS += ${FIU_INC}
@@ -37,6 +43,11 @@ ifeq (${HIDPI_SUPPORT_CAIRO},0)
 ifeq (${HIDPI_SUPPORT_GTK},0)
 	CPPFLAGS += -DHAVE_HIDPI_SUPPORT
 endif
+endif
+
+# icon dir
+ifeq (,$(findstring -DLIBZATHURA_GTK_ICONDIR,${CPPFLAGS}))
+CPPFLAGS += -DLIBZATHURA_GTK_ICONDIR=\"${ICONDIR}\"
 endif
 
 all: options ${PROJECT}
@@ -208,7 +219,15 @@ install-shared: shared
 	$(QUIET)ln -s ${PROJECT}.so.${SOVERSION} ${DESTDIR}${LIBDIR}/${PROJECT}.so || \
 		echo "Failed to create ${PROJECT}.so. Please check if it exists and points to the correct version of ${PROJECT}.so."
 
-install: options install-static install-shared install-headers
+install-icons:
+	$(call colorecho,INSTALL,"Install icons")
+	$(QUIET)mkdir -m 755 -p ${DESTDIR}${ICONDIR}
+	$(QUIET)for icon in ${ICONS}; do \
+		mkdir -m 755 -p ${DESTDIR}${ICONDIR}/`dirname $$icon`; \
+		install -m 644 ${ICONDIR_LOCAL}/$$icon ${DESTDIR}${ICONDIR}/$$icon; \
+	done
+
+install: options install-static install-shared install-headers install-icons
 
 install-headers: ${PROJECT}/version.h ${PROJECT}.pc
 	$(call colorecho,INSTALL,"Install pkg-config file")
@@ -221,7 +240,7 @@ install-headers: ${PROJECT}/version.h ${PROJECT}.pc
 		install -m 644 $$header ${DESTDIR}${INCLUDEDIR}/$$header; \
 	done
 
-uninstall: uninstall-headers
+uninstall: uninstall-headers uninstall-icons
 	$(call colorecho,UNINSTALL,"Remove library files")
 	$(QUIET)rm -f ${LIBDIR}/${PROJECT}.a ${LIBDIR}/${PROJECT}.so.${SOVERSION} \
 		${LIBDIR}/${PROJECT}.so.${SOMAJOR} ${LIBDIR}/${PROJECT}.so
@@ -231,6 +250,10 @@ uninstall-headers:
 	$(QUIET)rm -rf ${INCLUDEDIR}/${PROJECT}
 	$(call colorecho,UNINSTALL,"Remove pkg-config file")
 	$(QUIET)rm -f ${LIBDIR}/pkgconfig/${PROJECT}.pc
+
+uninstall-icons:
+	$(call colorecho,UNINSTALL,"Remove icons")
+	$(QUIET)rm -rf ${DATADIR}
 
 .PHONY: all options clean debug doc test dist install install-headers \
 	uninstall ninstall-headers ${PROJECT} ${PROJECT}-debug static shared \
