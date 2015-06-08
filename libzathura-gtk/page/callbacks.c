@@ -51,23 +51,31 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
     return FALSE;
   }
 
+  /* Fill white */
+  cairo_set_source_rgb(image_cairo, 1, 1, 1);
+  cairo_rectangle(image_cairo, 0, 0, width, height);
+  cairo_fill(image_cairo);
+
   /* Scale */
   cairo_scale(image_cairo, scale_x, scale_y);
+
+  cairo_save(cairo);
 
   /* Render page */
   if (zathura_page_render_cairo(priv->page, image_cairo, scale_x, 0, 0) != ZATHURA_ERROR_OK) {
     return FALSE;
   }
 
-  cairo_destroy(image_cairo);
+  cairo_restore(cairo);
 
   /* Paint to device surface */
   cairo_set_source_surface(cairo, image_surface, 0, 0);
   cairo_paint(cairo);
-  cairo_restore(cairo);
 
   /* Clean-up */
+  cairo_destroy(image_cairo);
   cairo_surface_destroy(image_surface);
+  cairo_restore(cairo);
 
   return TRUE;
 }
