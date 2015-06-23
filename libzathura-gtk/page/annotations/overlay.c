@@ -8,14 +8,30 @@
 #include "../utils.h"
 #include "../../macros.h"
 
+
+#include "annotation-3d.h"
 #include "annotation-caret.h"
 #include "annotation-circle.h"
+#include "annotation-file-attachment.h"
+#include "annotation-free-text.h"
 #include "annotation-highlight.h"
+#include "annotation-ink.h"
 #include "annotation-line.h"
-#include "annotation-squiggly.h"
+#include "annotation-link.h"
+#include "annotation-movie.h"
+#include "annotation-polygon.h"
+#include "annotation-polyline.h"
+#include "annotation-printer-mark.h"
+#include "annotation-screen.h"
 #include "annotation-sound.h"
+#include "annotation-square.h"
+#include "annotation-squiggly.h"
+#include "annotation-stamp.h"
 #include "annotation-strike-out.h"
+#include "annotation-text.h"
 #include "annotation-underline.h"
+#include "annotation-watermark.h"
+#include "annotation-widget.h"
 
 struct _ZathuraAnnotationOverlayPrivate {
   ZathuraPage* page;
@@ -193,20 +209,8 @@ create_widgets(GtkWidget* overlay)
 
     GtkWidget* annotation_widget = NULL;
     switch (annotation_type) {
-      case ZATHURA_ANNOTATION_LINE:
-        annotation_widget = zathura_gtk_annotation_line_new(annotation);
-        break;
-      case ZATHURA_ANNOTATION_HIGHLIGHT:
-        annotation_widget = zathura_gtk_annotation_highlight_new(annotation);
-        break;
-      case ZATHURA_ANNOTATION_STRIKE_OUT:
-        annotation_widget = zathura_gtk_annotation_strike_out_new(annotation);
-        break;
-      case ZATHURA_ANNOTATION_UNDERLINE:
-        annotation_widget = zathura_gtk_annotation_underline_new(annotation);
-        break;
-      case ZATHURA_ANNOTATION_SQUIGGLY:
-        annotation_widget = zathura_gtk_annotation_squiggly_new(annotation);
+      case ZATHURA_ANNOTATION_3D:
+        annotation_widget = zathura_gtk_annotation_3d_new(annotation);
         break;
       case ZATHURA_ANNOTATION_CARET:
         annotation_widget = zathura_gtk_annotation_caret_new(annotation);
@@ -214,8 +218,65 @@ create_widgets(GtkWidget* overlay)
       case ZATHURA_ANNOTATION_CIRCLE:
         annotation_widget = zathura_gtk_annotation_circle_new(annotation);
         break;
+      case ZATHURA_ANNOTATION_FILE_ATTACHMENT:
+        annotation_widget = zathura_gtk_annotation_file_attachment_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_FREE_TEXT:
+        annotation_widget = zathura_gtk_annotation_free_text_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_HIGHLIGHT:
+        annotation_widget = zathura_gtk_annotation_highlight_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_INK:
+        annotation_widget = zathura_gtk_annotation_ink_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_LINE:
+        annotation_widget = zathura_gtk_annotation_line_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_LINK:
+        annotation_widget = zathura_gtk_annotation_link_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_MOVIE:
+        annotation_widget = zathura_gtk_annotation_movie_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_POLYGON:
+        annotation_widget = zathura_gtk_annotation_polygon_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_POLY_LINE:
+        annotation_widget = zathura_gtk_annotation_poly_line_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_PRINTER_MARK:
+        annotation_widget = zathura_gtk_annotation_printer_mark_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_SCREEN:
+        annotation_widget = zathura_gtk_annotation_screen_new(annotation);
+        break;
       case ZATHURA_ANNOTATION_SOUND:
         annotation_widget = zathura_gtk_annotation_sound_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_SQUARE:
+        annotation_widget = zathura_gtk_annotation_square_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_SQUIGGLY:
+        annotation_widget = zathura_gtk_annotation_squiggly_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_STAMP:
+        annotation_widget = zathura_gtk_annotation_stamp_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_STRIKE_OUT:
+        annotation_widget = zathura_gtk_annotation_strike_out_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_TEXT:
+        annotation_widget = zathura_gtk_annotation_text_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_UNDERLINE:
+        annotation_widget = zathura_gtk_annotation_underline_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_WATERMARK:
+        annotation_widget = zathura_gtk_annotation_watermark_new(annotation);
+        break;
+      case ZATHURA_ANNOTATION_WIDGET:
+        annotation_widget = zathura_gtk_annotation_widget_new(annotation);
         break;
       default:
         continue;
