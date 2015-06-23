@@ -70,13 +70,12 @@ cb_zathura_gtk_annotation_sound_draw(GtkWidget* widget, cairo_t *cairo, gpointer
       ZATHURA_ERROR_OK) {
     return FALSE;
   }
-
   cairo_save(cairo);
 
   /* Open SVG file */
   RsvgHandle* svg_handle = NULL;
 
-  if (strcmp(icon_name, "Mic") == 0) {
+  if (icon_name != NULL && strcmp(icon_name, "Mic") == 0) {
     svg_handle = zathura_gtk_annotation_icon_get_handle(ZATHURA_GTK_ANNOTATION_ICON_MIC);
   } else {
     svg_handle = zathura_gtk_annotation_icon_get_handle(ZATHURA_GTK_ANNOTATION_ICON_SPEAKER);
