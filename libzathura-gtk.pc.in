@@ -1,7 +1,7 @@
 Name: ${project}
-Description: document library
+Description: document library (GTK widgets)
 Version: ${version}
-URL: http://pwmt.org/projects/libzathura
+URL: http://pwmt.org/projects/libzathura-gtk
 Cflags: -I${includedir}
-Libs: -L${libdir} -lzathura
-Requires.private: cairo
+Libs: -L${libdir} -lzathura-gtk
+Requires.private: cairo libzathura
