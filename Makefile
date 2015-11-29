@@ -31,8 +31,8 @@ CPPFLAGS += -DFIU_ENABLE
 endif
 
 # hidpi support
-HIDPI_SUPPORT_CAIRO = $(shell pkg-config --atleast-version=1.14 ${CAIRO_PKG_CONFIG_NAME} 1>&2 2> /dev/null; echo $$?)
-HIDPI_SUPPORT_GTK = $(shell pkg-config --atleast-version=3.10 ${GTK_PKG_CONFIG_NAME} 1>&2 2> /dev/null; echo $$?)
+HIDPI_SUPPORT_CAIRO = $(shell ${PKG_CONFIG} --atleast-version=1.14 ${CAIRO_PKG_CONFIG_NAME} 1>&2 2> /dev/null; echo $$?)
+HIDPI_SUPPORT_GTK = $(shell ${PKG_CONFIG} --atleast-version=3.10 ${GTK_PKG_CONFIG_NAME} 1>&2 2> /dev/null; echo $$?)
 ifeq (${HIDPI_SUPPORT_CAIRO},0)
 ifeq (${HIDPI_SUPPORT_GTK},0)
 	CPPFLAGS += -DHAVE_HIDPI_SUPPORT
