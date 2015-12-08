@@ -31,8 +31,8 @@ CPPFLAGS += -DFIU_ENABLE
 endif
 
 # hidpi support
-HIDPI_SUPPORT_CAIRO = $(shell pkg-config --atleast-version=1.14 ${CAIRO_PKG_CONFIG_NAME} 1>&2 2> /dev/null; echo $$?)
-HIDPI_SUPPORT_GTK = $(shell pkg-config --atleast-version=3.10 ${GTK_PKG_CONFIG_NAME} 1>&2 2> /dev/null; echo $$?)
+HIDPI_SUPPORT_CAIRO = $(shell ${PKG_CONFIG} --atleast-version=1.14 ${CAIRO_PKG_CONFIG_NAME} 1>&2 2> /dev/null; echo $$?)
+HIDPI_SUPPORT_GTK = $(shell ${PKG_CONFIG} --atleast-version=3.10 ${GTK_PKG_CONFIG_NAME} 1>&2 2> /dev/null; echo $$?)
 ifeq (${HIDPI_SUPPORT_CAIRO},0)
 ifeq (${HIDPI_SUPPORT_GTK},0)
 	CPPFLAGS += -DHAVE_HIDPI_SUPPORT
@@ -85,7 +85,7 @@ shared: ${BUILDDIR_RELEASE}/${PROJECT}.so.${SOVERSION}
 
 ${BUILDDIR_RELEASE}/${PROJECT}.a: ${OBJECTS}
 	$(call colorecho,AR,$@)
-	$(QUIET)ar rcs ${BUILDDIR_RELEASE}/${PROJECT}.a ${OBJECTS}
+	$(QUIET)${AR} rcs ${BUILDDIR_RELEASE}/${PROJECT}.a ${OBJECTS}
 
 ${BUILDDIR_RELEASE}/${PROJECT}.so.${SOVERSION}: ${OBJECTS}
 	$(call colorecho,LD,$@)
@@ -113,7 +113,7 @@ shared-debug: ${BUILDDIR_DEBUG}/${PROJECT}.so.${SOVERSION}
 
 ${BUILDDIR_DEBUG}/${PROJECT}.a: ${OBJECTS_DEBUG}
 	$(call colorecho,AR,${PROJECT}.a)
-	$(QUIET)ar rc ${BUILDDIR_DEBUG}/${PROJECT}.a ${OBJECTS_DEBUG}
+	$(QUIET)${AR} rc ${BUILDDIR_DEBUG}/${PROJECT}.a ${OBJECTS_DEBUG}
 
 ${BUILDDIR_DEBUG}/${PROJECT}.so.${SOVERSION}: ${OBJECTS_DEBUG}
 	$(call colorecho,LD,${PROJECT}.so.${SOMAJOR})
@@ -141,7 +141,7 @@ shared-gcov: ${BUILDDIR_GCOV}/${PROJECT}.so.${SOVERSION}
 
 ${BUILDDIR_GCOV}/${PROJECT}.a: ${OBJECTS_GCOV}
 	$(call colorecho,AR,${PROJECT}.a)
-	$(QUIET)ar rc ${BUILDDIR_GCOV}/${PROJECT}.a ${OBJECTS_GCOV}
+	$(QUIET)${AR} rc ${BUILDDIR_GCOV}/${PROJECT}.a ${OBJECTS_GCOV}
 
 ${BUILDDIR_GCOV}/${PROJECT}.so.${SOVERSION}: ${OBJECTS_GCOV}
 	$(call colorecho,LD,${PROJECT}.so.${SOMAJOR})

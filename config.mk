@@ -57,33 +57,38 @@ CAIRO_VERSION_CHECK ?= 1
 CAIRO_MIN_VERSION = 1.12.9
 CAIRO_PKG_CONFIG_NAME = cairo
 
+# pkg-config binary
+PKG_CONFIG ?= pkg-config
+
 # libs
-LIBZATHURA_INC ?= $(shell pkg-config --cflags libzathura)
-LIBZATHURA_LIB ?= $(shell pkg-config --libs libzathura)
+LIBZATHURA_INC ?= $(shell ${PKG_CONFIG} --cflags libzathura)
+LIBZATHURA_LIB ?= $(shell ${PKG_CONFIG} --libs libzathura)
 
-GTK_INC ?= $(shell pkg-config --cflags gtk+-3.0)
-GTK_LIB ?= $(shell pkg-config --libs gtk+-3.0)
+GTK_INC ?= $(shell ${PKG_CONFIG} --cflags gtk+-3.0)
+GTK_LIB ?= $(shell ${PKG_CONFIG} --libs gtk+-3.0)
 
-GTHREAD_INC ?= $(shell pkg-config --cflags gthread-2.0)
-GTHREAD_LIB ?= $(shell pkg-config --libs   gthread-2.0)
+GTHREAD_INC ?= $(shell ${PKG_CONFIG} --cflags gthread-2.0)
+GTHREAD_LIB ?= $(shell ${PKG_CONFIG} --libs   gthread-2.0)
 
-GLIB_INC ?= $(shell pkg-config --cflags glib-2.0 gio-2.0)
-GLIB_LIB ?= $(shell pkg-config --libs glib-2.0 gio-2.0)
+GLIB_INC ?= $(shell ${PKG_CONFIG} --cflags glib-2.0 gio-2.0)
+GLIB_LIB ?= $(shell ${PKG_CONFIG} --libs glib-2.0 gio-2.0)
 
-GMODULE_INC ?= $(shell pkg-config --cflags gmodule-no-export-2.0)
-GMODULE_LIB ?= $(shell pkg-config --libs gmodule-no-export-2.0)
+GMODULE_INC ?= $(shell ${PKG_CONFIG} --cflags gmodule-no-export-2.0)
+GMODULE_LIB ?= $(shell ${PKG_CONFIG} --libs gmodule-no-export-2.0)
 
-CAIRO_INC ?= $(shell pkg-config --cflags cairo)
-CAIRO_LIB ?= $(shell pkg-config --libs cairo)
+CAIRO_INC ?= $(shell ${PKG_CONFIG} --cflags cairo)
+CAIRO_LIB ?= $(shell ${PKG_CONFIG} --libs cairo)
 
-FIU_INC ?= $(shell pkg-config --cflags libfiu)
-FIU_LIB ?= $(shell pkg-config --libs libfiu)
+FIU_INC ?= $(shell ${PKG_CONFIG} --cflags libfiu)
+FIU_LIB ?= $(shell ${PKG_CONFIG} --libs libfiu)
 
 INCS = ${LIBZATHURA_INC} ${GTK_INC} ${GTHREAD_INC} ${GLIB_INC} ${GMODULE_INC} ${CAIRO_INC}
 LIBS = ${LIBZATHURA_LIB} ${GTK_LIB} ${GTHREAD_LIB} ${GLIB_LIB} ${GMODULE_LIB} ${CAIRO_LIB} -lm
 
-# flags
-CPPFLAGS += -DHAVE_CAIRO
+# pre-processor flags
+CPPFLAGS += -DHAVE_CAIRO -D_FILE_OFFSET_BITS=64
+
+# compiler flags
 CFLAGS += -std=c99 -pedantic -Wall -Wextra -fPIC $(INCS)
 
 # linker flags
@@ -94,6 +99,9 @@ DFLAGS = -O0 -g
 
 # compiler
 CC ?= gcc
+
+# archiver
+AR ?= ar
 
 # strip
 SFLAGS ?= -s
