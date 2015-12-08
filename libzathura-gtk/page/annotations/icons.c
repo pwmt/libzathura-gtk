@@ -1,8 +1,11 @@
  /* See LICENSE file for license and copyright information */
 
 #include <librsvg/rsvg.h>
+#include <string.h>
 
 #include "icons.h"
+
+#define LENGTH(x) (sizeof(x)/sizeof((x)[0]))
 
 static RsvgHandle* icons[ZATHURA_GTK_ANNOTATION_ICON_N] = {0};
 
@@ -13,18 +16,27 @@ zathura_gtk_annotation_icon_get_handle(zathura_gtk_annotation_icon_t icon)
     return icons[icon];
   }
 
-  char* file_path = NULL;
+  typedef struct icon_mapping_s {
+    zathura_gtk_annotation_icon_t icon;
+    const char* path;
+  } icon_mapping_t;
+
+  icon_mapping_t icon_mappings[] = {
+    { ZATHURA_GTK_ANNOTATION_ICON_SPEAKER,    LIBZATHURA_GTK_ICONDIR "/annotations/Speaker.svg" },
+    { ZATHURA_GTK_ANNOTATION_ICON_MIC,        LIBZATHURA_GTK_ICONDIR "/annotations/Mic.svg" },
+    { ZATHURA_GTK_ANNOTATION_ICON_GRAPH,      LIBZATHURA_GTK_ICONDIR "/annotations/Graph.svg" },
+    { ZATHURA_GTK_ANNOTATION_ICON_PAPER_CLIP, LIBZATHURA_GTK_ICONDIR "/annotations/PaperClip.svg" },
+    { ZATHURA_GTK_ANNOTATION_ICON_TAG,        LIBZATHURA_GTK_ICONDIR "/annotations/Tag.svg" },
+    { ZATHURA_GTK_ANNOTATION_ICON_PUSH_PIN,   LIBZATHURA_GTK_ICONDIR "/annotations/PushPin.svg" }
+  };
 
   /* Select icon file */
-  switch (icon) {
-    case ZATHURA_GTK_ANNOTATION_ICON_SPEAKER:
-      file_path = LIBZATHURA_GTK_ICONDIR "/annotations/Speaker.svg";
+  const char* file_path = NULL;
+  for (unsigned int i = 0; i < LENGTH(icon_mappings); i++) {
+    if (icon_mappings[i].icon == icon) {
+      file_path = icon_mappings[i].path;
       break;
-    case ZATHURA_GTK_ANNOTATION_ICON_MIC:
-      file_path = LIBZATHURA_GTK_ICONDIR "/annotations/Mic.svg";
-      break;
-    default:
-      return NULL;
+    }
   }
 
   if (file_path == NULL) {
