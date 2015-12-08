@@ -9,7 +9,7 @@
 
 static void zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
-static void render_page(ZathuraPagePrivate* priv);
+static void render_page(ZathuraPage* widget);
 
 enum {
   PROP_0,
@@ -152,11 +152,14 @@ zathura_gtk_page_new(zathura_page_t* page)
     return NULL;
   }
 
+  gint scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(widget));
+
   /* Setup drawing area */
   priv->layer.drawing_area = gtk_drawing_area_new();
   gtk_widget_set_halign(priv->layer.drawing_area, GTK_ALIGN_START);
   gtk_widget_set_valign(priv->layer.drawing_area, GTK_ALIGN_START);
-  gtk_widget_set_size_request(priv->layer.drawing_area, priv->dimensions.width, priv->dimensions.height);
+  gtk_widget_set_size_request(priv->layer.drawing_area, priv->dimensions.width *
+      scale_factor, priv->dimensions.height * scale_factor);
   g_signal_connect(G_OBJECT(priv->layer.drawing_area), "draw", G_CALLBACK(cb_page_draw), widget);
 
   /* Setup links layer */
@@ -202,7 +205,7 @@ zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* valu
           case 270:
             if (priv->settings.rotation != rotation) {
               priv->settings.rotation = rotation;
-              render_page(priv);
+              render_page(page);
             }
             break;
           default:
@@ -216,20 +219,20 @@ zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* valu
         double scale = g_value_get_double(value);
         if (priv->settings.scale != scale) {
           priv->settings.scale = scale;
-          render_page(priv);
+          render_page(page);
         }
       }
       break;
     case PROP_LINKS_HIGHLIGHT:
       {
         priv->links.draw = g_value_get_boolean(value);
-        render_page(priv);
+        render_page(page);
       }
       break;
     case PROP_FORM_FIELDS_EDIT:
       {
         priv->form_fields.edit = g_value_get_boolean(value);
-        render_page(priv);
+        render_page(page);
       }
       break;
     case PROP_FORM_FIELDS_HIGHLIGHT:
@@ -288,8 +291,10 @@ calculate_widget_size(ZathuraPagePrivate* priv, unsigned int* widget_width,
 }
 
 static void
-render_page(ZathuraPagePrivate* priv)
+render_page(ZathuraPage* widget)
 {
+  ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(widget);
+
   unsigned int page_widget_width;
   unsigned int page_widget_height;
 
@@ -301,6 +306,7 @@ render_page(ZathuraPagePrivate* priv)
     gtk_widget_hide(priv->layer.form_fields);
   }
 
-  gtk_widget_set_size_request(priv->layer.drawing_area, page_widget_width, page_widget_height);
+  gint scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(widget));
+  gtk_widget_set_size_request(priv->layer.drawing_area, page_widget_width * scale_factor, page_widget_height * scale_factor);
   gtk_widget_queue_resize(priv->layer.drawing_area);
 }
