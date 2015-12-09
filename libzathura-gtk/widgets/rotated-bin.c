@@ -179,6 +179,9 @@ to_child (ZathuraRotatedBin *bin, double widget_x, double widget_y, double*
   double w = c * child_area.width + s * child_area.height;
   double h = s * child_area.width + c * child_area.height;
 
+  w = fabs(w);
+  h = fabs(h);
+
   double x = widget_x;
   double y = widget_y;
 
@@ -196,6 +199,14 @@ to_child (ZathuraRotatedBin *bin, double widget_x, double widget_y, double*
 
   x += child_area.width / 2;
   y += child_area.height / 2;
+
+  if (x <= 0.0) {
+    x += child_area.width;
+  }
+
+  if (y <= 0.0) {
+    y += child_area.height;
+  }
 
   *x_out = x;
   *y_out = y;
