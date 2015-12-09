@@ -24,23 +24,6 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
   cairo_rectangle(cairo, 0, 0, page_width, page_height);
   cairo_fill(cairo);
 
-  /* Rotate */
-  switch (priv->settings.rotation) {
-    case 90:
-      cairo_translate(cairo, page_width, 0);
-      break;
-    case 180:
-      cairo_translate(cairo, page_width, page_height);
-      break;
-    case 270:
-      cairo_translate(cairo, 0, page_height);
-      break;
-  }
-
-  if (priv->settings.rotation != 0) {
-    cairo_rotate(cairo, priv->settings.rotation * G_PI / 180.0);
-  }
-
   /* Scale */
   gdouble device_scale_x = 1.0;
   gdouble device_scale_y = 1.0;
