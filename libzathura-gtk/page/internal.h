@@ -12,6 +12,7 @@
 
 struct _ZathuraPagePrivate {
   zathura_page_t* page;
+  GtkWidget* rotated_bin;
   GtkWidget* overlay;
 
   struct {
