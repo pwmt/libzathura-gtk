@@ -24,57 +24,27 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
   cairo_rectangle(cairo, 0, 0, page_width, page_height);
   cairo_fill(cairo);
 
-  /* Calculate scale level */
+  /* Scale */
   gdouble device_scale_x = 1.0;
   gdouble device_scale_y = 1.0;
 
 #ifdef HAVE_HIDPI_SUPPORT
-  cairo_surface_t* device_surface = cairo_get_target(cairo);
-  cairo_surface_get_device_scale(device_surface, &device_scale_x, &device_scale_y);
+  cairo_surface_t* surface = cairo_get_target(cairo);
+  cairo_surface_get_device_scale(surface, &device_scale_x, &device_scale_y);
 #endif
 
   double scale_x = priv->settings.scale * device_scale_x;
   double scale_y = priv->settings.scale * device_scale_y;
 
-  /* Crate image surface */
-  unsigned int width  = page_width;
-  unsigned int height = page_height;
-
-  cairo_surface_t* image_surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, width, height);
-  if (image_surface == NULL) {
-    return FALSE;
-  }
-
-  cairo_t* image_cairo = cairo_create(image_surface);
-  if (image_cairo == NULL) {
-    cairo_surface_destroy(image_surface);
-    return FALSE;
-  }
-
-  /* Fill white */
-  cairo_set_source_rgb(image_cairo, 1, 1, 1);
-  cairo_rectangle(image_cairo, 0, 0, width, height);
-  cairo_fill(image_cairo);
-
-  /* Scale */
-  cairo_scale(image_cairo, scale_x, scale_y);
-
-  cairo_save(cairo);
+  cairo_scale(cairo, scale_x, scale_y);
 
   /* Render page */
-  if (zathura_page_render_cairo(priv->page, image_cairo, scale_x, 0, 0) != ZATHURA_ERROR_OK) {
+  if (zathura_page_render_cairo(priv->page, cairo, scale_x, 0, 0) != ZATHURA_ERROR_OK) {
     return FALSE;
   }
 
-  cairo_restore(cairo);
-
-  /* Paint to device surface */
-  cairo_set_source_surface(cairo, image_surface, 0, 0);
+  cairo_set_operator(cairo, CAIRO_OPERATOR_DEST_OVER);
   cairo_paint(cairo);
-
-  /* Clean-up */
-  cairo_destroy(image_cairo);
-  cairo_surface_destroy(image_surface);
   cairo_restore(cairo);
 
   return TRUE;

@@ -1,6 +1,7 @@
  /* See LICENSE file for license and copyright information */
 
 #include "annotation-squiggly.h"
+#include "utils.h"
 #include "../../macros.h"
 
 struct _ZathuraAnnotationSquigglyPrivate {
@@ -58,65 +59,81 @@ cb_zathura_gtk_annotation_squiggly_draw(GtkWidget* widget, cairo_t *cairo, gpoin
 {
   ZathuraAnnotationSquigglyPrivate* priv = ZATHURA_ANNOTATION_SQUIGGLY_GET_PRIVATE(data);
 
-  const unsigned int height = gtk_widget_get_allocated_height(widget);
-  const unsigned int width  = gtk_widget_get_allocated_width(widget);
+  zathura_list_t* quad_points = NULL;
+  if (zathura_annotation_squiggly_get_quad_points(priv->annotation, &quad_points) != ZATHURA_ERROR_OK || quad_points == NULL) {
+    return FALSE;
+  }
 
-  double square_height = 2.5;
-  double square        = height / square_height;
-  double unit_width    = (square_height - 1) * square;
+  double scale;
+  g_object_get(G_OBJECT(data), "scale", &scale, NULL);
+  gint scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(widget));
+  scale *= scale_factor;
 
-  int width_units = (width + unit_width / 2) / unit_width;
+  zathura_quad_point_t* quad_point;
+  ZATHURA_LIST_FOREACH(quad_point, quad_points) {
 
-  double x        = (width - width_units * unit_width) / 2;
-  double y_top    = 0;
-  double y_bottom = height;
+    unsigned int area_height = (quad_point->p3.y - quad_point->p1.y) * scale;
+    unsigned int area_width  = (quad_point->p2.x - quad_point->p1.x) * scale;
+    double offset_x = quad_point->p1.x * scale;
+    double offset_y = quad_point->p3.x * scale;
 
-  double x_middle = x + unit_width;
-  double x_right  = x + 2*unit_width;
+    unsigned int height = 3.0 * scale;
+    unsigned int width = area_width;
 
-  cairo_save(cairo);
-  cairo_move_to(cairo, x - square/2, y_top + square/2);
+    double square_height = 1.5 * scale;
+    double square        = height / square_height;
+    double unit_width    = (square_height - 1) * square;
 
-  int i = 0;
-  for (i = 0; i < width_units - 2; i+= 2) {
+    int width_units = (width + unit_width / 2) / unit_width;
+
+    double x        = offset_x + (width - width_units * unit_width) / 2;
+    double y_top    = area_height - height;
+    double y_bottom = area_height;
+
+    double x_middle = x + unit_width;
+    double x_right  = x + 2*unit_width;
+
+    cairo_save(cairo);
+    cairo_move_to(cairo, x - square/2, y_top + square/2);
+
+    int i = 0;
+    for (i = 0; i < width_units - 2; i+= 2) {
+      cairo_line_to(cairo, x_middle, y_bottom);
+      cairo_line_to(cairo, x_right, y_top + square);
+
+      x_middle += 2*unit_width;
+      x_right  += 2*unit_width;
+    }
+
     cairo_line_to(cairo, x_middle, y_bottom);
-    cairo_line_to(cairo, x_right, y_top + square);
 
-    x_middle += 2*unit_width;
-    x_right  += 2*unit_width;
+    if (i + 1 == width_units) {
+      cairo_line_to(cairo, x_middle + square/2, y_bottom - square / 2);
+    } else {
+      cairo_line_to(cairo, x_right + square/2, y_top + square / 2);
+      cairo_line_to(cairo, x_right, y_top);
+    }
+
+    double x_left = x_middle - unit_width;
+
+    for (i = i; i >= 0; i -= 2) {
+      cairo_line_to(cairo, x_middle, y_bottom - square);
+      cairo_line_to(cairo, x_left, y_top);
+
+      x_left   -= 2*unit_width;
+      x_middle -= 2*unit_width;
+    }
+
+    zathura_annotation_color_t color;
+    if (zathura_annotation_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {
+      zathura_gtk_annotation_set_cairo_color(cairo, color);
+    } else {
+      cairo_set_source_rgb(cairo, 0, 0, 0);
+    }
+
+    cairo_fill(cairo);
+    cairo_restore(cairo);
   }
-
-  cairo_line_to(cairo, x_middle, y_bottom);
-
-  if (i + 1 == width_units) {
-    cairo_line_to(cairo, x_middle + square/2, y_bottom - square / 2);
-  } else {
-    cairo_line_to(cairo, x_right + square/2, y_top + square / 2);
-    cairo_line_to(cairo, x_right, y_top);
-  }
-
-  double x_left = x_middle - unit_width;
-
-  for (i = i; i >= 0; i -= 2) {
-    cairo_line_to(cairo, x_middle, y_bottom - square);
-    cairo_line_to(cairo, x_left, y_top);
-
-    x_left   -= 2*unit_width;
-    x_middle -= 2*unit_width;
-  }
-
-  zathura_annotation_color_t color;
-  if (zathura_annotation_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {
-    cairo_set_source_rgb(cairo, 
-        color.values[0] / 65535, 
-        color.values[1] / 65535, 
-        color.values[2] / 65535);
-  } else {
-    cairo_set_source_rgb(cairo, 0, 0, 0);
-  }
-
-  cairo_fill(cairo);
-  cairo_restore(cairo);
 
   return TRUE;
 }
