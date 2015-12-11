@@ -58,24 +58,42 @@ cb_zathura_gtk_annotation_underline_draw(GtkWidget* widget, cairo_t *cairo, gpoi
 {
   ZathuraAnnotationUnderlinePrivate* priv = ZATHURA_ANNOTATION_UNDERLINE_GET_PRIVATE(data);
 
-  const unsigned int page_height = gtk_widget_get_allocated_height(widget);
-  const unsigned int page_width  = gtk_widget_get_allocated_width(widget);
-
-  cairo_save(cairo);
-  cairo_rectangle(cairo, 0, 0, page_width, page_height);
-
-  zathura_annotation_color_t color;
-  if (zathura_annotation_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {
-    cairo_set_source_rgb(cairo, 
-        color.values[0] / 65535, 
-        color.values[1] / 65535, 
-        color.values[2] / 65535);
-  } else {
-    cairo_set_source_rgb(cairo, 0, 0, 0);
+  zathura_list_t* quad_points = NULL;
+  if (zathura_annotation_underline_get_quad_points(priv->annotation, &quad_points) != ZATHURA_ERROR_OK || quad_points == NULL) {
+    return FALSE;
   }
 
-  cairo_fill(cairo);
-  cairo_restore(cairo);
+  double scale;
+  g_object_get(G_OBJECT(data), "scale", &scale, NULL);
+
+  zathura_quad_point_t* quad_point;
+  ZATHURA_LIST_FOREACH(quad_point, quad_points) {
+    cairo_save(cairo);
+
+    /* Draw underline rectangle */
+    cairo_new_path(cairo);
+    cairo_move_to(cairo, quad_point->p1.x * scale, quad_point->p1.y * scale);
+    cairo_line_to(cairo, quad_point->p2.x * scale, quad_point->p2.y * scale);
+    cairo_line_to(cairo, quad_point->p4.x * scale, quad_point->p4.y * scale);
+    cairo_line_to(cairo, quad_point->p3.x * scale, quad_point->p3.y * scale);
+    cairo_close_path(cairo);
+
+    /* Set opacity */
+    double opacity = 1.0;
+    if (zathura_annotation_markup_get_opacity(priv->annotation, &opacity) != ZATHURA_ERROR_OK) {
+    }
+
+    /* Set color */
+    zathura_annotation_color_t color;
+    if (zathura_annotation_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {
+      zathura_gtk_annotation_set_cairo_color(cairo, color, opacity);
+    } else {
+      cairo_set_source_rgba(cairo, 0, 0, 0, opacity);
+    }
+
+    cairo_fill(cairo);
+    cairo_restore(cairo);
+  }
 
   return TRUE;
 }

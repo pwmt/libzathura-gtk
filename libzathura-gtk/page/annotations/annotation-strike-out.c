@@ -70,14 +70,17 @@ cb_zathura_gtk_annotation_strike_out_draw(GtkWidget* widget, cairo_t *cairo, gpo
 
   cairo_set_operator(cairo, CAIRO_OPERATOR_MULTIPLY);
 
+  /* Set opacity */
+  double opacity = 1.0;
+  if (zathura_annotation_markup_get_opacity(priv->annotation, &opacity) != ZATHURA_ERROR_OK) {
+  }
+
+  /* Set color */
   zathura_annotation_color_t color;
   if (zathura_annotation_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {
-    cairo_set_source_rgb(cairo, 
-        color.values[0] / 65535, 
-        color.values[1] / 65535, 
-        color.values[2] / 65535);
+    zathura_gtk_annotation_set_cairo_color(cairo, color, opacity);
   } else {
-    cairo_set_source_rgb(cairo, 0, 0, 0);
+    cairo_set_source_rgba(cairo, 0, 0, 0, opacity);
   }
 
   zathura_quad_point_t* quad_point;

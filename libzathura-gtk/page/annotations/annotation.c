@@ -52,7 +52,7 @@ zathura_gtk_annotation_init(ZathuraAnnotation* widget)
 {
   ZathuraAnnotationPrivate* priv = ZATHURA_ANNOTATION_GET_PRIVATE(widget);
 
-  priv->settings.scale = 1.0;
+  priv->settings.scale = 1.0 * gtk_widget_get_scale_factor(GTK_WIDGET(widget));
 }
 
 static void zathura_gtk_annotation_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec)
@@ -64,8 +64,10 @@ static void zathura_gtk_annotation_set_property(GObject* object, guint prop_id, 
     case PROP_SCALE:
       {
         double scale = g_value_get_double(value);
-        if (priv->settings.scale != scale) {
-          priv->settings.scale = scale;
+        gint scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(object));
+        double new_scale = scale * scale_factor;
+        if (priv->settings.scale != new_scale) {
+          priv->settings.scale = new_scale;
         }
       }
       break;

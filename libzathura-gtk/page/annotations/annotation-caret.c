@@ -62,11 +62,24 @@ cb_zathura_gtk_annotation_caret_draw(GtkWidget* widget, cairo_t *cairo, gpointer
 
   cairo_save(cairo);
 
+  /* Set opacity */
+  double opacity = 1.0;
+  if (zathura_annotation_markup_get_opacity(priv->annotation, &opacity) != ZATHURA_ERROR_OK) {
+  }
+
+  /* Set color */
+  zathura_annotation_color_t color;
+  if (zathura_annotation_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {
+    zathura_gtk_annotation_set_cairo_color(cairo, color, opacity);
+  } else {
+    cairo_set_source_rgba(cairo, 0, 0, 0, opacity);
+  }
+
   cairo_select_font_face(cairo, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
   cairo_set_font_size(cairo, widget_height);
 
-  cairo_move_to (cairo, 0, widget_height);
-  cairo_show_text (cairo, "¶");
+  cairo_move_to(cairo, 0, widget_height);
+  cairo_show_text(cairo, "¶");
 
   cairo_restore(cairo);
 

@@ -77,11 +77,7 @@ cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t *cairo, gpointe
   /* Set color */
   zathura_annotation_color_t color;
   if (zathura_annotation_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {
-    cairo_set_source_rgba(cairo,
-        color.values[0] / 65535,
-        color.values[1] / 65535,
-        color.values[2] / 65535,
-        opacity);
+    zathura_gtk_annotation_set_cairo_color(cairo, color);
   } else {
     cairo_set_source_rgb(cairo, 0, 0, 0);
   }

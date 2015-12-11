@@ -65,21 +65,16 @@ cb_zathura_gtk_annotation_line_draw(GtkWidget* widget, cairo_t *cairo, gpointer 
   const unsigned int page_width  = gtk_widget_get_allocated_width(widget);
 
   /* Set opacity */
-  double opacity = 0.5;
+  double opacity = 1.0;
   if (zathura_annotation_markup_get_opacity(priv->annotation, &opacity) != ZATHURA_ERROR_OK) {
-    opacity = 1.0;
   }
 
   /* Set color */
   zathura_annotation_color_t color;
   if (zathura_annotation_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {
-    cairo_set_source_rgba(cairo,
-        color.values[0] / 65535,
-        color.values[1] / 65535,
-        color.values[2] / 65535,
-        opacity);
+    zathura_gtk_annotation_set_cairo_color(cairo, color, opacity);
   } else {
-    cairo_set_source_rgb(cairo, 0, 0, 0);
+    cairo_set_source_rgba(cairo, 0, 0, 0, opacity);
   }
 
   cairo_save(cairo);

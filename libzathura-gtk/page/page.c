@@ -127,7 +127,7 @@ zathura_gtk_page_init(ZathuraPage* widget)
   priv->dimensions.height = 0;
 
   priv->settings.rotation = 0;
-  priv->settings.scale    = 1.0;
+  priv->settings.scale    = 1.0 * gtk_widget_get_scale_factor(GTK_WIDGET(widget));
 
   priv->links.list      = NULL;
   priv->links.retrieved = false;
@@ -156,14 +156,12 @@ zathura_gtk_page_new(zathura_page_t* page)
     return NULL;
   }
 
-  gint scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(widget));
-
   /* Setup drawing area */
   priv->layer.drawing_area = gtk_drawing_area_new();
   gtk_widget_set_halign(priv->layer.drawing_area, GTK_ALIGN_START);
   gtk_widget_set_valign(priv->layer.drawing_area, GTK_ALIGN_START);
   gtk_widget_set_size_request(priv->layer.drawing_area, priv->dimensions.width *
-      scale_factor, priv->dimensions.height * scale_factor);
+      priv->settings.scale, priv->dimensions.height * priv->settings.scale);
   g_signal_connect(G_OBJECT(priv->layer.drawing_area), "draw", G_CALLBACK(cb_page_draw), widget);
 
   /* Setup links layer */
@@ -229,8 +227,10 @@ zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* valu
     case PROP_SCALE:
       {
         double scale = g_value_get_double(value);
-        if (priv->settings.scale != scale) {
-          priv->settings.scale = scale;
+        gint scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(page));
+        double new_scale = scale * scale_factor;
+        if (priv->settings.scale != new_scale) {
+          priv->settings.scale = new_scale;
           render_page(page);
         }
       }
@@ -295,10 +295,8 @@ calculate_widget_size(ZathuraPage* page, unsigned int* widget_width,
 {
   ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(page);
 
-  gint scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(page));
-
-  *widget_width  = round(priv->dimensions.width  * priv->settings.scale * scale_factor);
-  *widget_height = round(priv->dimensions.height * priv->settings.scale * scale_factor);
+  *widget_width  = round(priv->dimensions.width  * priv->settings.scale);
+  *widget_height = round(priv->dimensions.height * priv->settings.scale);
 }
 
 static void

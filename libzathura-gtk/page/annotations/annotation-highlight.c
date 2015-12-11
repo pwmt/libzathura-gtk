@@ -67,32 +67,27 @@ cb_zathura_gtk_annotation_highlight_draw(GtkWidget* widget, cairo_t *cairo, gpoi
   g_object_get(G_OBJECT(data), "scale", &scale, NULL);
 
   cairo_save(cairo);
-  cairo_set_operator(cairo, CAIRO_OPERATOR_MULTIPLY);
+  /* cairo_set_operator(cairo, CAIRO_OPERATOR_MULTIPLY); */
 
   zathura_quad_point_t* quad_point;
   ZATHURA_LIST_FOREACH(quad_point, quad_points) {
     cairo_new_path(cairo);
     cairo_move_to(cairo, quad_point->p1.x * scale, quad_point->p1.y * scale);
-    cairo_line_to(cairo, quad_point->p3.x * scale, quad_point->p3.y * scale);
-    cairo_line_to(cairo, quad_point->p4.x * scale, quad_point->p4.y * scale);
     cairo_line_to(cairo, quad_point->p2.x * scale, quad_point->p2.y * scale);
+    cairo_line_to(cairo, quad_point->p4.x * scale, quad_point->p4.y * scale);
+    cairo_line_to(cairo, quad_point->p3.x * scale, quad_point->p3.y * scale);
     cairo_close_path(cairo);
   }
 
-  double opacity = 0.5;
+  double opacity = 1.0;
   if (zathura_annotation_markup_get_opacity(priv->annotation, &opacity) != ZATHURA_ERROR_OK) {
   }
-  opacity = 1.5;
 
   zathura_annotation_color_t color;
   if (zathura_annotation_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {
-    cairo_set_source_rgba(cairo, 
-        color.values[0] / 65535, 
-        color.values[1] / 65535, 
-        color.values[2] / 65535,
-        opacity);
+    zathura_gtk_annotation_set_cairo_color(cairo, color, opacity);
   } else {
-    cairo_set_source_rgb(cairo, 0, 0, 0);
+    cairo_set_source_rgba(cairo, 0, 0, 0, opacity);
   }
 
   cairo_fill(cairo);

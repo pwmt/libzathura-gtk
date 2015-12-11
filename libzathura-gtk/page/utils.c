@@ -22,8 +22,7 @@ calculate_correct_position(ZathuraPage* page, zathura_rectangle_t position)
   ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(page);
 
   /* Scale rectangle */
-  gint scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(page));
-  zathura_rectangle_t correct_position = scale_rectangle(position, priv->settings.scale * scale_factor);
+  zathura_rectangle_t correct_position = scale_rectangle(position, priv->settings.scale);
 
   return correct_position;
 }

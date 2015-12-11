@@ -3,10 +3,11 @@
 #include "utils.h"
 
 void
-zathura_gtk_annotation_set_cairo_color(cairo_t* cairo, zathura_annotation_color_t color)
+zathura_gtk_annotation_set_cairo_color(cairo_t* cairo, zathura_annotation_color_t color, double opacity)
 {
-  cairo_set_source_rgb(cairo,
+  cairo_set_source_rgba(cairo,
       (double) color.values[0] / 65535.0,
       (double) color.values[1] / 65535.0,
-      (double) color.values[2] / 65535.0);
+      (double) color.values[2] / 65535.0,
+      opacity);
 }

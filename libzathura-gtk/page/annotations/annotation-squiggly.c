@@ -66,16 +66,12 @@ cb_zathura_gtk_annotation_squiggly_draw(GtkWidget* widget, cairo_t *cairo, gpoin
 
   double scale;
   g_object_get(G_OBJECT(data), "scale", &scale, NULL);
-  gint scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(widget));
-  scale *= scale_factor;
 
   zathura_quad_point_t* quad_point;
   ZATHURA_LIST_FOREACH(quad_point, quad_points) {
-
     unsigned int area_height = (quad_point->p3.y - quad_point->p1.y) * scale;
     unsigned int area_width  = (quad_point->p2.x - quad_point->p1.x) * scale;
     double offset_x = quad_point->p1.x * scale;
-    double offset_y = quad_point->p3.x * scale;
 
     unsigned int height = 3.0 * scale;
     unsigned int width = area_width;
@@ -124,11 +120,17 @@ cb_zathura_gtk_annotation_squiggly_draw(GtkWidget* widget, cairo_t *cairo, gpoin
       x_middle -= 2*unit_width;
     }
 
+    /* Set opacity */
+    double opacity = 1.0;
+    if (zathura_annotation_markup_get_opacity(priv->annotation, &opacity) != ZATHURA_ERROR_OK) {
+    }
+
+    /* Set color */
     zathura_annotation_color_t color;
     if (zathura_annotation_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {
-      zathura_gtk_annotation_set_cairo_color(cairo, color);
+      zathura_gtk_annotation_set_cairo_color(cairo, color, opacity);
     } else {
-      cairo_set_source_rgb(cairo, 0, 0, 0);
+      cairo_set_source_rgba(cairo, 0, 0, 0, opacity);
     }
 
     cairo_fill(cairo);
