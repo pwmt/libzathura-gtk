@@ -24,17 +24,34 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
   cairo_rectangle(cairo, 0, 0, page_width, page_height);
   cairo_fill(cairo);
 
-  /* Scale */
-  cairo_scale(cairo, priv->settings.scale, priv->settings.scale);
-
-  /* Render page */
-  if (zathura_page_render_cairo(priv->page, cairo, priv->settings.scale, 0, 0) != ZATHURA_ERROR_OK) {
+  /* Create image surface */
+  cairo_surface_t* image_surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, page_width, page_height);
+  if (image_surface == NULL) {
     return FALSE;
   }
 
-  cairo_set_operator(cairo, CAIRO_OPERATOR_DEST_OVER);
+  cairo_t* image_cairo = cairo_create(image_surface);
+  if (image_cairo == NULL) {
+    cairo_surface_destroy(image_surface);
+    return FALSE;
+  }
+
+  /* Scale */
+  cairo_scale(image_cairo, priv->settings.scale, priv->settings.scale);
+
+  /* Render page */
+  if (zathura_page_render_cairo(priv->page, image_cairo, priv->settings.scale, 0, 0) != ZATHURA_ERROR_OK) {
+    return FALSE;
+  }
+
+  cairo_destroy(image_cairo);
+
+  cairo_set_source_surface(cairo, image_surface, 0, 0);
   cairo_paint(cairo);
   cairo_restore(cairo);
+
+  /* Clean-up */
+  cairo_surface_destroy(image_surface);
 
   return TRUE;
 }
