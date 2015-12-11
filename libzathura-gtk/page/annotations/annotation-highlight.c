@@ -67,7 +67,7 @@ cb_zathura_gtk_annotation_highlight_draw(GtkWidget* widget, cairo_t *cairo, gpoi
   g_object_get(G_OBJECT(data), "scale", &scale, NULL);
 
   cairo_save(cairo);
-  /* cairo_set_operator(cairo, CAIRO_OPERATOR_MULTIPLY); */
+  cairo_set_operator(cairo, CAIRO_OPERATOR_MULTIPLY);
 
   zathura_quad_point_t* quad_point;
   ZATHURA_LIST_FOREACH(quad_point, quad_points) {

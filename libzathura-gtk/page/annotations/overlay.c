@@ -135,6 +135,7 @@ zathura_gtk_annotation_overlay_size_allocate(GtkWidget* widget, GdkRectangle* al
 
   double page_scale;
   g_object_get(G_OBJECT(priv->page), "scale", &page_scale, NULL);
+  page_scale /= gtk_widget_get_scale_factor(GTK_WIDGET(priv->page));
 
   annotation_widget_mapping_t* annotation_mapping;
   ZATHURA_LIST_FOREACH(annotation_mapping, priv->annotations) {
