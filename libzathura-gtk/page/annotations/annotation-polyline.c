@@ -36,7 +36,7 @@ zathura_gtk_annotation_poly_line_new(zathura_annotation_t* annotation)
 {
   g_return_val_if_fail(annotation != NULL, NULL);
 
-  GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_POLY_LINE, NULL);
+  GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_POLY_LINE, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
   ZathuraAnnotationPolyLinePrivate* priv = ZATHURA_ANNOTATION_POLY_LINE_GET_PRIVATE(widget);

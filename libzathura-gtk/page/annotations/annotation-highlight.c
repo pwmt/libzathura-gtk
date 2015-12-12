@@ -36,7 +36,7 @@ zathura_gtk_annotation_highlight_new(zathura_annotation_t* annotation)
 {
   g_return_val_if_fail(annotation != NULL, NULL);
 
-  GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_HIGHLIGHT, NULL);
+  GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_HIGHLIGHT, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
   ZathuraAnnotationHighlightPrivate* priv = ZATHURA_ANNOTATION_HIGHLIGHT_GET_PRIVATE(widget);

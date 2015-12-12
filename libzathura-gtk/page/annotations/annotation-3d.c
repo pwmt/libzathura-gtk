@@ -36,7 +36,7 @@ zathura_gtk_annotation_3d_new(zathura_annotation_t* annotation)
 {
   g_return_val_if_fail(annotation != NULL, NULL);
 
-  GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_3D, NULL);
+  GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_3D, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
   ZathuraAnnotation3DPrivate* priv = ZATHURA_ANNOTATION_3D_GET_PRIVATE(widget);

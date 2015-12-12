@@ -36,7 +36,7 @@ zathura_gtk_annotation_stamp_new(zathura_annotation_t* annotation)
 {
   g_return_val_if_fail(annotation != NULL, NULL);
 
-  GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_STAMP, NULL);
+  GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_STAMP, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
   ZathuraAnnotationStampPrivate* priv = ZATHURA_ANNOTATION_STAMP_GET_PRIVATE(widget);
@@ -59,5 +59,5 @@ cb_zathura_gtk_annotation_stamp_draw(GtkWidget* widget, cairo_t *cairo, gpointer
 
   // TODO: Implement this widget
 
-  return TRUE;
+  return GDK_EVENT_PROPAGATE;
 }

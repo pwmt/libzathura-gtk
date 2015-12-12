@@ -36,7 +36,7 @@ zathura_gtk_annotation_printer_mark_new(zathura_annotation_t* annotation)
 {
   g_return_val_if_fail(annotation != NULL, NULL);
 
-  GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_PRINTER_MARK, NULL);
+  GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_PRINTER_MARK, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
   ZathuraAnnotationPrinterMarkPrivate* priv = ZATHURA_ANNOTATION_PRINTER_MARK_GET_PRIVATE(widget);

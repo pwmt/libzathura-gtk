@@ -40,7 +40,7 @@ zathura_gtk_annotation_circle_new(zathura_annotation_t* annotation)
 {
   g_return_val_if_fail(annotation != NULL, NULL);
 
-  GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_CIRCLE, NULL);
+  GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_CIRCLE, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
   ZathuraAnnotationCirclePrivate* priv = ZATHURA_ANNOTATION_CIRCLE_GET_PRIVATE(widget);
