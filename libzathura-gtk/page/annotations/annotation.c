@@ -132,7 +132,7 @@ zathura_gtk_annotation_draw(GtkWidget* widget, cairo_t* cairo)
   cairo_save(cairo);
 
   /* Create image surface */
-  cairo_surface_t* image_surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, width, height);
+  cairo_surface_t* image_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
   if (image_surface == NULL) {
     goto propagate_event;
   }

@@ -20,7 +20,7 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
   cairo_save(cairo);
 
   /* Fill white */
-  cairo_set_source_rgb(cairo, 255, 255, 255);
+  cairo_set_source_rgb(cairo, RGB_TO_CAIRO(255, 255, 255));
   cairo_rectangle(cairo, 0, 0, page_width, page_height);
   cairo_fill(cairo);
 
