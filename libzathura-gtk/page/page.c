@@ -136,6 +136,8 @@ zathura_gtk_page_init(ZathuraPage* widget)
   priv->form_fields.list      = NULL;
   priv->form_fields.retrieved = false;
   priv->form_fields.edit      = true;
+
+  gtk_widget_add_events(GTK_WIDGET(widget), GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
 }
 
 GtkWidget*
@@ -178,8 +180,8 @@ zathura_gtk_page_new(zathura_page_t* page)
   priv->overlay = gtk_overlay_new();
   gtk_container_add(GTK_CONTAINER(priv->overlay), GTK_WIDGET(priv->layer.drawing_area));
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.links);
-  gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.form_fields);
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.annotations);
+  gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.form_fields);
 
   g_signal_connect(priv->overlay, "realize", G_CALLBACK(cb_page_overlay_realized), widget);
 

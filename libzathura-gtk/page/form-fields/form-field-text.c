@@ -202,7 +202,7 @@ cb_form_field_text_focus_out(GtkWidget* widget, GdkEventFocus* UNUSED(event),
 
   reset_to_drawing_area(form_field_widget);
 
-  return TRUE;
+  return GDK_EVENT_STOP;
 }
 
 static gboolean
@@ -210,7 +210,7 @@ cb_form_field_text_changed(GtkWidget* UNUSED(widget), GtkWidget* form_field_widg
 {
   save_text_single_line(form_field_widget);
 
-  return TRUE;
+  return GDK_EVENT_STOP;
 }
 
 static bool
@@ -240,13 +240,13 @@ static gboolean
 cb_form_field_text_multiline_focus_out(GtkWidget* widget, GdkEventFocus* UNUSED(event),
     GtkWidget* form_field_widget)
 {
-  g_return_val_if_fail(widget != NULL, FALSE);
-  g_return_val_if_fail(form_field_widget != NULL, FALSE);
+  g_return_val_if_fail(widget != NULL, GDK_EVENT_PROPAGATE);
+  g_return_val_if_fail(form_field_widget != NULL, GDK_EVENT_PROPAGATE);
 
   save_text_multi_line(form_field_widget);
   reset_to_drawing_area(form_field_widget);
 
-  return FALSE;
+  return GDK_EVENT_STOP;
 }
 
 static gboolean
@@ -257,7 +257,7 @@ cb_form_field_text_rectangle_button_press_event(GtkWidget* UNUSED(widget),
 
   /* Only allow left clicks */
   if (event_button->button != 1) {
-    return TRUE;
+    return GDK_EVENT_PROPAGATE;
   }
 
   g_object_ref(priv->rectangle);
@@ -280,7 +280,7 @@ cb_form_field_text_rectangle_button_press_event(GtkWidget* UNUSED(widget),
 
   gtk_widget_grab_focus(priv->text_widget);
 
-  return TRUE;
+  return GDK_EVENT_STOP;
 }
 
 static gboolean
@@ -288,5 +288,5 @@ cb_form_field_text_activate(GtkWidget* UNUSED(widget), GtkWidget* form_field_wid
 {
   reset_to_drawing_area(form_field_widget);
 
-  return TRUE;
+  return GDK_EVENT_STOP;
 }

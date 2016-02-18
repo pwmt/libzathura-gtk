@@ -347,7 +347,7 @@ cb_form_field_choice_rectangle_choice_press_event(GtkWidget* UNUSED(widget),
 
   /* Only allow left clicks */
   if (event_button->button != 1) {
-    return TRUE;
+    return GDK_EVENT_PROPAGATE;
   }
 
   g_object_ref(priv->rectangle);
@@ -363,5 +363,5 @@ cb_form_field_choice_rectangle_choice_press_event(GtkWidget* UNUSED(widget),
     priv->previous_focus = gtk_window_get_focus(GTK_WINDOW(top_level));
   }
 
-  return TRUE;
+  return GDK_EVENT_STOP;
 }

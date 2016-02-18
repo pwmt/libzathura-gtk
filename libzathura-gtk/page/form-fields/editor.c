@@ -247,7 +247,7 @@ cb_draw_highlights(GtkWidget* UNUSED(widget), cairo_t* cairo, gpointer data)
 
   /* Draw links if requested */
   if (priv->highlight == false) {
-    return FALSE;
+    return GDK_EVENT_PROPAGATE;
   }
 
   cairo_save(cairo);
@@ -289,7 +289,7 @@ cb_draw_highlights(GtkWidget* UNUSED(widget), cairo_t* cairo, gpointer data)
 
   cairo_restore(cairo);
 
-  return FALSE;
+  return GDK_EVENT_PROPAGATE;
 }
 
 static void

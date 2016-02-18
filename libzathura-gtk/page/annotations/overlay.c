@@ -102,6 +102,8 @@ zathura_gtk_annotation_overlay_init(ZathuraAnnotationOverlay* widget)
   priv->gtk.annotations = NULL;
   priv->page            = NULL;
   priv->settings.show   = false;
+
+  gtk_widget_add_events(GTK_WIDGET(widget), GDK_BUTTON_PRESS_MASK);
 }
 
 GtkWidget*

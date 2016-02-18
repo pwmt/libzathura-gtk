@@ -119,7 +119,7 @@ zathura_gtk_form_field_button_button_press_event(GtkWidget* widget, GdkEventButt
 {
   /* Only allow left clicks */
   if (event_button->button != 1) {
-    return FALSE;
+    return GDK_EVENT_PROPAGATE;
   }
 
   ZathuraFormFieldButtonPrivate* priv = ZATHURA_FORM_FIELD_BUTTON_GET_PRIVATE(widget);
@@ -127,15 +127,15 @@ zathura_gtk_form_field_button_button_press_event(GtkWidget* widget, GdkEventButt
   /* Toggle button state */
   bool button_state;
   if (zathura_form_field_button_get_state(priv->button, &button_state) != ZATHURA_ERROR_OK) {
-    return FALSE;
+    return GDK_EVENT_PROPAGATE;
   }
 
   if (zathura_form_field_button_set_state(priv->button, !button_state) != ZATHURA_ERROR_OK) {
-    return FALSE;
+    return GDK_EVENT_PROPAGATE;
   }
 
   if (zathura_form_field_save(priv->button) != ZATHURA_ERROR_OK) {
-    return FALSE;
+    return GDK_EVENT_PROPAGATE;
   }
 
   g_signal_emit(widget, signals[SIGNAL_CHANGED], 0);
@@ -143,5 +143,5 @@ zathura_gtk_form_field_button_button_press_event(GtkWidget* widget, GdkEventButt
   /* Queue redrawing of the button */
   gtk_widget_queue_draw(widget);
 
-  return TRUE;
+  return GDK_EVENT_STOP;
 }
