@@ -19,11 +19,6 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
 
   cairo_save(cairo);
 
-  /* Fill white */
-  cairo_set_source_rgb(cairo, RGB_TO_CAIRO(255, 255, 255));
-  cairo_rectangle(cairo, 0, 0, page_width, page_height);
-  cairo_fill(cairo);
-
   /* Create image surface */
   cairo_surface_t* image_surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, page_width, page_height);
   if (image_surface == NULL) {
@@ -35,6 +30,11 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
     cairo_surface_destroy(image_surface);
     return FALSE;
   }
+
+  /* Fill white */
+  cairo_set_source_rgb(image_cairo, RGB_TO_CAIRO(255, 255, 255));
+  cairo_rectangle(image_cairo, 0, 0, page_width, page_height);
+  cairo_fill(image_cairo);
 
   /* Scale */
   cairo_scale(image_cairo, priv->settings.scale, priv->settings.scale);
