@@ -124,8 +124,14 @@ zathura_gtk_annotation_draw(GtkWidget* widget, cairo_t* cairo)
     goto propagate_event;
   }
 
+  bool has_appearance_stream = false;
+  if (zathura_annotation_has_appearance_stream(priv->annotation,
+        &has_appearance_stream) != ZATHURA_ERROR_OK || has_appearance_stream ==
+      false) {
+    goto propagate_event;
+  }
+
   /* Try to render appearance stream */
-  /* TODO: We should check if an AP exists */
   const unsigned int width  = gtk_widget_get_allocated_width(widget);
   const unsigned int height = gtk_widget_get_allocated_height(widget);
 
