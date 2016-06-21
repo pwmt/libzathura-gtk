@@ -2,6 +2,7 @@
 
 #include "annotation.h"
 #include "../../macros.h"
+#include "../../utils.h"
 
 static void zathura_gtk_annotation_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_annotation_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
@@ -135,8 +136,6 @@ zathura_gtk_annotation_draw(GtkWidget* widget, cairo_t* cairo)
   const unsigned int width  = gtk_widget_get_allocated_width(widget);
   const unsigned int height = gtk_widget_get_allocated_height(widget);
 
-  cairo_save(cairo);
-
   /* Create image surface */
   cairo_surface_t* image_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
   if (image_surface == NULL) {
@@ -161,8 +160,25 @@ zathura_gtk_annotation_draw(GtkWidget* widget, cairo_t* cairo)
 
   cairo_destroy(image_cairo);
 
+  /* Save cairo */
+  cairo_save(cairo);
+
+  /* Set blend mode */
+  zathura_blend_mode_t blend_mode = ZATHURA_BLEND_MODE_NORMAL;
+  if (zathura_annotation_get_blend_mode(priv->annotation, &blend_mode) != ZATHURA_ERROR_OK) {
+  }
+
+  /* Get opacity */
+  float opacity = 1.0;
+  if (zathura_annotation_get_opacity(priv->annotation, &opacity) != ZATHURA_ERROR_OK) {
+  }
+
+  cairo_operator_t cairo_operator = zathura_blend_mode_to_cairo_operator(blend_mode);
+  cairo_set_operator(cairo, cairo_operator);
+
+  /* Paint */
   cairo_set_source_surface(cairo, image_surface, 0, 0);
-  cairo_paint(cairo);
+  cairo_paint_with_alpha(cairo, opacity);
   cairo_restore(cairo);
 
   /* Clean-up */
