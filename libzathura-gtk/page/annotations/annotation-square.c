@@ -59,5 +59,5 @@ cb_zathura_gtk_annotation_square_draw(GtkWidget* widget, cairo_t *cairo, gpointe
 
   // TODO: Implement this widget
 
-  return TRUE;
+  return GDK_EVENT_PROPAGATE;
 }

@@ -97,5 +97,5 @@ cb_zathura_gtk_annotation_strike_out_draw(GtkWidget* widget, cairo_t *cairo, gpo
 
   cairo_restore(cairo);
 
-  return TRUE;
+  return GDK_EVENT_STOP;
 }

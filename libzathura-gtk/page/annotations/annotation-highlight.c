@@ -60,7 +60,7 @@ cb_zathura_gtk_annotation_highlight_draw(GtkWidget* widget, cairo_t *cairo, gpoi
 
   zathura_list_t* quad_points;
   if (zathura_annotation_highlight_get_quad_points(priv->annotation, &quad_points) != ZATHURA_ERROR_OK) {
-    return FALSE;
+    return GDK_EVENT_PROPAGATE;
   }
 
   double scale;
@@ -93,5 +93,5 @@ cb_zathura_gtk_annotation_highlight_draw(GtkWidget* widget, cairo_t *cairo, gpoi
   cairo_fill(cairo);
   cairo_restore(cairo);
 
-  return TRUE;
+  return GDK_EVENT_STOP;
 }

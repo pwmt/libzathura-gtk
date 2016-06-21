@@ -103,5 +103,5 @@ cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t *cairo, gpointe
   cairo_stroke(cairo);
   cairo_restore(cairo);
 
-  return TRUE;
+  return GDK_EVENT_STOP;
 }

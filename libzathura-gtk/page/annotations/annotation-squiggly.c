@@ -137,5 +137,5 @@ cb_zathura_gtk_annotation_squiggly_draw(GtkWidget* widget, cairo_t *cairo, gpoin
     cairo_restore(cairo);
   }
 
-  return TRUE;
+  return GDK_EVENT_STOP;
 }

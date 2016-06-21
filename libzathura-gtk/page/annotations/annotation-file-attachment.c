@@ -135,5 +135,5 @@ cb_zathura_gtk_annotation_file_attachment_draw(GtkWidget* widget, cairo_t *cairo
 
   cairo_restore(cairo);
 
-  return TRUE;
+  return GDK_EVENT_STOP;
 }

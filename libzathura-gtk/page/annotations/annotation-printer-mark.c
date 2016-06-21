@@ -59,5 +59,5 @@ cb_zathura_gtk_annotation_printer_mark_draw(GtkWidget* widget, cairo_t *cairo, g
 
   // TODO: Implement this widget
 
-  return TRUE;
+  return GDK_EVENT_PROPAGATE;
 }

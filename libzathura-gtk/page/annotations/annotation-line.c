@@ -85,5 +85,5 @@ cb_zathura_gtk_annotation_line_draw(GtkWidget* widget, cairo_t *cairo, gpointer 
 
   cairo_restore(cairo);
 
-  return TRUE;
+  return GDK_EVENT_STOP;
 }

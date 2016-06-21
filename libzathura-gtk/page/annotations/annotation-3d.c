@@ -59,5 +59,5 @@ cb_zathura_gtk_annotation_3d_draw(GtkWidget* widget, cairo_t *cairo, gpointer da
 
   // TODO: Implement this widget
 
-  return TRUE;
+  return GDK_EVENT_PROPAGATE;
 }
