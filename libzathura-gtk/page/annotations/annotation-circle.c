@@ -68,39 +68,57 @@ cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t *cairo, gpointe
   const unsigned int height = gtk_widget_get_allocated_height(widget);
   const unsigned int width  = gtk_widget_get_allocated_width(widget);
 
-  /* Set opacity */
+  /* Get opacity */
   double opacity = 0.5;
   if (zathura_annotation_markup_get_opacity(priv->annotation, &opacity) != ZATHURA_ERROR_OK) {
     opacity = 1.0;
   }
 
-  /* Set color */
-  zathura_annotation_color_t color;
-  if (zathura_annotation_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {
-    zathura_gtk_annotation_set_cairo_color(cairo, color);
-  } else {
-    cairo_set_source_rgb(cairo, 0, 0, 0);
+  /* Get border */
+  zathura_annotation_border_t border;
+  if (zathura_annotation_border_init(&border) != ZATHURA_ERROR_OK) {
+  }
+
+  if (zathura_annotation_circle_get_border(priv->annotation, &border) != ZATHURA_ERROR_OK) {
   }
 
   /* Draw circle */
   cairo_save(cairo);
 
-  /* Define blending-mode */
-  cairo_set_operator(cairo, CAIRO_OPERATOR_MULTIPLY);
+  /* Set color */
+  zathura_annotation_color_t color;
+  if (zathura_annotation_circle_get_color(priv->annotation, &color) == ZATHURA_ERROR_OK) {
+    zathura_gtk_annotation_set_cairo_color(cairo, color, opacity);
+  } else {
+    cairo_set_source_rgb(cairo, 0, 0, 0);
+  }
 
-  double line_width = 1.333334 * scale;
+  /* Get dash */
+  if (border.dash_pattern.dash_array != NULL) {
+    /* Copy dash array to cairo format */
+    unsigned int length = zathura_list_length(border.dash_pattern.dash_array);
+    double dashes[length];
+    for (unsigned int i = 0; i < length; i++) {
+      dashes[i] = (int) zathura_list_nth_data(border.dash_pattern.dash_array, i);
+    }
 
-  double circle_width_half  = (width - 2*line_width) / 2;
-  double circle_height_half = (height - 2*line_width) / 2;
+    cairo_set_dash(cairo, dashes, length, border.dash_pattern.dash_phase);
+  }
 
-  cairo_translate(cairo, line_width + circle_width_half, line_width + circle_height_half);
+  double line_width = border.width * scale;
+
+  double circle_width_half  = (width - 2*line_width) / 2.;
+  double circle_height_half = (height - 2*line_width) / 2.;
+
   cairo_save(cairo);
+  cairo_translate(cairo, width / 2., height / 2.);
   cairo_scale(cairo, circle_width_half, circle_height_half);
-  cairo_arc(cairo, 0., 0., 1, 0., 2 * M_PI);
+  cairo_arc(cairo, 0, 0, 1, 0, 2 * M_PI);
   cairo_restore(cairo);
 
   cairo_set_line_width (cairo, line_width);
   cairo_stroke(cairo);
+
   cairo_restore(cairo);
 
   return GDK_EVENT_STOP;

@@ -151,11 +151,17 @@ zathura_gtk_annotation_draw(GtkWidget* widget, cairo_t* cairo)
   /* Scale */
   cairo_scale(image_cairo, priv->settings.scale, priv->settings.scale);
 
-  /* Render page */
-  if (zathura_annotation_render_cairo(priv->annotation, image_cairo, priv->settings.scale) != ZATHURA_ERROR_OK) {
-    cairo_destroy(image_cairo);
-    cairo_surface_destroy(image_surface);
-    goto propagate_event;
+  /* Render annotation */
+  has_appearance_stream = false; // FIXME
+  if (has_appearance_stream == true) {
+    if (zathura_annotation_render_cairo(priv->annotation, image_cairo,
+          priv->settings.scale) != ZATHURA_ERROR_OK) {
+      cairo_destroy(image_cairo);
+      cairo_surface_destroy(image_surface);
+      goto propagate_event;
+    }
+  } else {
+    gtk_container_propagate_draw(GTK_CONTAINER(widget), gtk_bin_get_child(GTK_BIN(widget)), image_cairo);
   }
 
   cairo_destroy(image_cairo);
@@ -187,8 +193,6 @@ zathura_gtk_annotation_draw(GtkWidget* widget, cairo_t* cairo)
   return GDK_EVENT_STOP;
 
 propagate_event:
-
-  gtk_container_propagate_draw(GTK_CONTAINER(widget), gtk_bin_get_child(GTK_BIN(widget)), cairo);
 
   return GDK_EVENT_PROPAGATE;
 }
