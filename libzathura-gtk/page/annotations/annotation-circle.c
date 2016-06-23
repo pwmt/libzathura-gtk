@@ -1,5 +1,7 @@
  /* See LICENSE file for license and copyright information */
 
+#include <math.h>
+
 #include "annotation-circle.h"
 #include "../../macros.h"
 
@@ -12,7 +14,10 @@ struct _ZathuraAnnotationCirclePrivate {
   zathura_annotation_t* annotation;
 };
 
-static gboolean cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t *cairo, gpointer data);
+static gboolean cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t
+    *cairo, gpointer data);
+static void calculate_cloud_line(cairo_t* cairo, double x, double y, double
+    x_previous, double y_previous, double width, bool switch_axes);
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationCircle, zathura_gtk_annotation_circle, ZATHURA_TYPE_ANNOTATION)
 
@@ -107,19 +112,120 @@ cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t *cairo, gpointe
 
   double line_width = border.width * scale;
 
-  double circle_width_half  = (width - 2*line_width) / 2.;
-  double circle_height_half = (height - 2*line_width) / 2.;
+  if (border.effect == ZATHURA_ANNOTATION_BORDER_EFFECT_CLOUDY) {
+    double cloud_effect_width = 10 * scale;
+    double circle_width_half  = (width  - 2 * line_width - 2 * cloud_effect_width) / 2.0;
+    double circle_height_half = (height - 2 * line_width - 2 * cloud_effect_width) / 2.0;
 
-  cairo_save(cairo);
-  cairo_translate(cairo, width / 2., height / 2.);
-  cairo_scale(cairo, circle_width_half, circle_height_half);
-  cairo_arc(cairo, 0, 0, 1, 0, 2 * M_PI);
-  cairo_restore(cairo);
+    // Determine minor and major radius
+    double a = circle_width_half;
+    double b = circle_height_half;
+    bool switch_axes = false;
 
-  cairo_set_line_width (cairo, line_width);
-  cairo_stroke(cairo);
+    if (a < b) {
+      a = circle_height_half;
+      b = circle_width_half;
+      switch_axes = true;
+    }
+
+    // Hudson approximation of circumference
+    double h = (a - b) * (a - b) / ((a + b) * (a + b));
+    double circumference = 0.25 * M_PI * (a + b) * (3 * (1 + h/4) + 1/(1 - h/4));
+
+    // Pre-calculated values
+    double a2 = pow(a, 2);
+    double b2 = pow(b, 2);
+    double ab = a * b;
+
+    double x_previous = 0;
+    double y_previous = 0;
+    double x_start = 0;
+    double y_start = 0;
+
+    unsigned int points_on_ellipsis = circumference / (10 * border.intensity);
+    for (unsigned int i = 0; i < points_on_ellipsis; i++) {
+      double angle = i * 360.0 / points_on_ellipsis;
+      double phi = i * (2 * M_PI) / points_on_ellipsis;
+
+      double x = (ab) / (sqrt(b2 + a2 * pow(tan(phi), 2)));
+      double y = (ab) / (sqrt(a2 + b2 / pow(tan(phi), 2)));
+
+      if (90 <= angle && angle < 180) {
+        x = -x;
+      } else if (180 <= angle && angle <= 270) {
+        x = -x;
+        y = -y;
+      } else if (270 < angle && angle < 360) {
+        y = -y;
+      }
+
+      if (switch_axes == true) {
+        double tmp = x;
+        x = y;
+        y = tmp;
+      }
+
+      x += width / 2;
+      y += height / 2;
+
+      if (i == 0) {
+        cairo_move_to(cairo, x, y);
+        x_start = x;
+        y_start = y;
+      } else {
+        calculate_cloud_line(cairo, x, y, x_previous, y_previous, cloud_effect_width, switch_axes);
+      }
+
+      x_previous = x;
+      y_previous = y;
+    }
+
+    calculate_cloud_line(cairo, x_start, y_start, x_previous, y_previous, cloud_effect_width, switch_axes);
+    cairo_set_line_width(cairo, line_width);
+    cairo_stroke(cairo);
+  } else {
+    double circle_width_half  = (width  - 2 * line_width) / 2.0;
+    double circle_height_half = (height - 2 * line_width) / 2.0;
+
+    cairo_translate(cairo, width / 2.0, height / 2.0);
+    cairo_save(cairo);
+    cairo_scale(cairo, circle_width_half, circle_height_half);
+    cairo_arc(cairo, 0, 0, 1, 0, 2 * M_PI);
+    cairo_restore(cairo);
+
+    cairo_set_line_width(cairo, line_width);
+    cairo_stroke(cairo);
+  }
 
   cairo_restore(cairo);
 
   return GDK_EVENT_STOP;
+}
+
+static void calculate_cloud_line(cairo_t* cairo, double x, double y, double x_previous,
+    double y_previous, double width, bool switch_axes)
+{
+  /* Normalize orthogonal vector */
+  double normal_vector_x =  (y - y_previous);
+  double normal_vector_y = -(x - x_previous);
+  double length = sqrt(pow(normal_vector_x, 2) + pow(normal_vector_y,2));
+  normal_vector_x /= length;
+  normal_vector_y /= length;
+
+  int direction = 1;
+  if (switch_axes == true) {
+    direction = -1;
+  }
+
+  double cp_1_x = x_previous + (x - x_previous) * 0.25;
+  double cp_1_y = y_previous + (y - y_previous) * 0.25;
+  double cp_2_x = x_previous + (x - x_previous) * 0.75;
+  double cp_2_y = y_previous + (y - y_previous) * 0.75;
+
+  cp_1_x = cp_1_x + direction * normal_vector_x * width;
+  cp_1_y = cp_1_y + direction * normal_vector_y * width;
+  cp_2_x = cp_2_x + direction * normal_vector_x * width;
+  cp_2_y = cp_2_y + direction * normal_vector_y * width;
+
+  cairo_curve_to(cairo, cp_1_x, cp_1_y, cp_2_x, cp_2_y, x, y);
 }
