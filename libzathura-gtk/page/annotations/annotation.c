@@ -149,7 +149,8 @@ zathura_gtk_annotation_draw(GtkWidget* widget, cairo_t* cairo)
   }
 
   /* Scale */
-  cairo_scale(image_cairo, priv->settings.scale, priv->settings.scale);
+  /// XXX: Define how to correctly render in respect to scale and widget size
+  /* cairo_scale(image_cairo, priv->settings.scale, priv->settings.scale); */
 
   /* Render annotation */
   has_appearance_stream = false; // FIXME
