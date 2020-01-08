@@ -7,6 +7,7 @@
 #include <libzathura/libzathura.h>
 
 #include "annotation.h"
+#include "utils.h"
 
 G_BEGIN_DECLS
 

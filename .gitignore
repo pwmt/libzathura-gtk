@@ -12,6 +12,8 @@
 .depend
 gcov/
 doc/_build
+tags
+build/
 
 # binaries
 *.a

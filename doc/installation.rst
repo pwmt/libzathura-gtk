@@ -32,8 +32,9 @@ hand:
 
   tar xfv libzathura-gtk-<version>.tar.gz
   cd libzathura-gtk-<version>
-  make
-  make install
+  mkdir -p build && cd build
+  meson ..
+  ninja install
 
 Developer version
 -----------------
@@ -46,7 +47,6 @@ features, that we are working on, type in the following commands:
   git clone git://pwmt.org/libzathura-gtk.git
   cd libzathura
   git checkout --track -b develop origin/develop
-  make
-  make install
-
-For the installation of a file type plugin check the :ref:`plugins` section.
+  mkdir -p build && cd build
+  meson ..
+  ninja install

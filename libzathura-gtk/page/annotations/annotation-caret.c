@@ -2,6 +2,7 @@
 
 #include "annotation-caret.h"
 #include "../../macros.h"
+#include "utils.h"
 
 struct _ZathuraAnnotationCaretPrivate {
   GtkWidget* drawing_area;

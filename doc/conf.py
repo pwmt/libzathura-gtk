@@ -4,12 +4,13 @@
 # See LICENSE file for license and copyright information
 
 import sphinx_rtd_theme
+import os
 
 # -- General configuration ------------------------------------------------
 
-extensions     = [
+extensions = [
     'sphinx.ext.todo',
-    'breathe'
+    'hawkmoth'
 ]
 source_suffix  = '.rst'
 master_doc     = 'index'
@@ -22,7 +23,7 @@ pygments_style = 'sphinx'
 # -- Project configuration ------------------------------------------------
 
 project   = 'libzathura-gtk'
-copyright = '2014-2015, pwmt.org'
+copyright = '2014-2020, pwmt.org'
 version   = '0.0.0'
 release   = '0.0.0'
 
@@ -32,18 +33,11 @@ release   = '0.0.0'
 html_theme        = 'sphinx_rtd_theme'
 html_theme_path   = [sphinx_rtd_theme.get_html_theme_path()]
 html_static_path  = ['_static']
-htmlhelp_basename = 'zathuradoc'
+htmlhelp_basename = 'libzathuragtkdoc'
 
 
-# -- Options for breathe ---------------------------------------
+# -- Options for hawkmoth -------------------------------------------------
 
-breathe_projects = { "libzathura-gtk": "_build/doxygen/xml" }
-breathe_default_project = "libzathura-gtk"
-breathe_build_directory = "_build"
-breathe_projects_source = {
-    "libzathura-gtk": "../"
-}
-breathe_domain_by_extension = {
-    "h" : "c",
-    "c" : "c"
-}
+cautodoc_root = os.path.abspath('../')
+cautodoc_compat = 'javadoc-basic'
+cautodoc_clang = "-DHAVE_CAIRO"

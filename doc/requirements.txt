@@ -1,7 +1,4 @@
-Jinja2==2.7.2
-MarkupSafe==0.19
-Pygments==1.6
-Sphinx==1.2.2
-breathe==1.2.0
-docutils==0.11
-sphinx-rtd-theme==0.1.6
+Sphinx==2.3.1
+sphinx-rtd-theme==0.4.3
+git+https://github.com/jnikula/hawkmoth@master
+clang==6.0.0.2
