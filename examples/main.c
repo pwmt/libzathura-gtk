@@ -15,6 +15,8 @@
 # endif
 #endif
 
+gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpointer data);
+
 gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpointer data)
 {
   GtkWidget* document = (GtkWidget*) data;
