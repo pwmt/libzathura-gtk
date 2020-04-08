@@ -36,7 +36,7 @@ zathura_gtk_annotation_caret_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_CARET, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationCaretPrivate* priv = zathura_gtk_annotation_caret_get_instance_private(widget);
+  ZathuraAnnotationCaretPrivate* priv = zathura_gtk_annotation_caret_get_instance_private(ZATHURA_ANNOTATION_CARET(widget));
 
   priv->annotation = annotation;
 

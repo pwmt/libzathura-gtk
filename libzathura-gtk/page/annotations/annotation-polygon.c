@@ -35,7 +35,7 @@ zathura_gtk_annotation_polygon_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_POLYGON, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationPolygonPrivate* priv = zathura_gtk_annotation_polygon_get_instance_private(widget);
+  ZathuraAnnotationPolygonPrivate* priv = zathura_gtk_annotation_polygon_get_instance_private(ZATHURA_ANNOTATION_POLYGON(widget));
 
   priv->annotation = annotation;
 

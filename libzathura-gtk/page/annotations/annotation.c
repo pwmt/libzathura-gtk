@@ -115,7 +115,7 @@ static void zathura_gtk_annotation_get_property(GObject* object, guint prop_id, 
 static gboolean
 zathura_gtk_annotation_draw(GtkWidget* widget, cairo_t* cairo)
 {
-  ZathuraAnnotationPrivate* priv = zathura_gtk_annotation_get_instance_private(widget);
+  ZathuraAnnotationPrivate* priv = zathura_gtk_annotation_get_instance_private(ZATHURA_ANNOTATION(widget));
 
   if (priv->annotation == NULL) {
     goto propagate_event;

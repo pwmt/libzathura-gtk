@@ -35,7 +35,7 @@ zathura_gtk_annotation_strike_out_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_STRIKE_OUT, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationStrikeOutPrivate* priv = zathura_gtk_annotation_strike_out_get_instance_private(widget);
+  ZathuraAnnotationStrikeOutPrivate* priv = zathura_gtk_annotation_strike_out_get_instance_private(ZATHURA_ANNOTATION_STRIKE_OUT(widget));
 
   priv->annotation = annotation;
 

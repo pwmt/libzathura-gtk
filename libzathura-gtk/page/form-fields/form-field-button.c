@@ -118,7 +118,7 @@ zathura_gtk_form_field_button_button_press_event(GtkWidget* widget, GdkEventButt
     return GDK_EVENT_PROPAGATE;
   }
 
-  ZathuraFormFieldButtonPrivate* priv = zathura_gtk_form_field_button_get_instance_private(widget);
+  ZathuraFormFieldButtonPrivate* priv = zathura_gtk_form_field_button_get_instance_private(ZATHURA_FORM_FIELD_BUTTON(widget));
 
   /* Toggle button state */
   bool button_state;

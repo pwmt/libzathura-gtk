@@ -39,7 +39,7 @@ zathura_gtk_annotation_3d_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_3d_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotation3DPrivate* priv = zathura_gtk_annotation_3d_get_instance_private(data);
+  /* ZathuraAnnotation3DPrivate* priv = zathura_gtk_annotation_3d_get_instance_private(data); */
 
   // TODO: Implement this widget
 

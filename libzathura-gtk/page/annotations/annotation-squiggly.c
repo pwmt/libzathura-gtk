@@ -36,7 +36,7 @@ zathura_gtk_annotation_squiggly_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_SQUIGGLY, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationSquigglyPrivate* priv = zathura_gtk_annotation_squiggly_get_instance_private(widget);
+  ZathuraAnnotationSquigglyPrivate* priv = zathura_gtk_annotation_squiggly_get_instance_private(ZATHURA_ANNOTATION_SQUIGGLY(widget));
 
   priv->annotation = annotation;
 

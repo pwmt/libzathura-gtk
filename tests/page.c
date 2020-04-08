@@ -11,6 +11,8 @@ zathura_page_t* page;
 zathura_document_t* document;
 zathura_plugin_manager_t* plugin_manager;
 
+Suite* create_suite(void);
+
 static void setup_page(void) {
   fail_unless(zathura_plugin_manager_new(&plugin_manager) == ZATHURA_ERROR_OK);
   fail_unless(plugin_manager != NULL);
@@ -40,7 +42,7 @@ START_TEST(test_page_new) {
   fail_unless(zathura_gtk_page_new(NULL) == NULL);
 
   /* basic invalid arguments */
-  ZathuraPage* widget = zathura_gtk_page_new(page);
+  GtkWidget* widget = zathura_gtk_page_new(page);
   fail_unless(widget != NULL);
 
   zathura_page_t* page_tmp = NULL;

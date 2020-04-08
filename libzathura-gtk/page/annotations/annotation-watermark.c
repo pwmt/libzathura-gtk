@@ -35,7 +35,7 @@ zathura_gtk_annotation_watermark_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_WATERMARK, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationWatermarkPrivate* priv = zathura_gtk_annotation_watermark_get_instance_private(widget);
+  ZathuraAnnotationWatermarkPrivate* priv = zathura_gtk_annotation_watermark_get_instance_private(ZATHURA_ANNOTATION_WATERMARK(widget));
 
   priv->annotation = annotation;
 
@@ -51,7 +51,7 @@ zathura_gtk_annotation_watermark_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_watermark_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationWatermarkPrivate* priv = zathura_gtk_annotation_watermark_get_instance_private(data);
+  /* ZathuraAnnotationWatermarkPrivate* priv = zathura_gtk_annotation_watermark_get_instance_private(data); */
 
   // TODO: Implement this widget
 

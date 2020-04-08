@@ -35,7 +35,7 @@ zathura_gtk_annotation_underline_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_UNDERLINE, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationUnderlinePrivate* priv = zathura_gtk_annotation_underline_get_instance_private(widget);
+  ZathuraAnnotationUnderlinePrivate* priv = zathura_gtk_annotation_underline_get_instance_private(ZATHURA_ANNOTATION_UNDERLINE(widget));
 
   priv->annotation = annotation;
 

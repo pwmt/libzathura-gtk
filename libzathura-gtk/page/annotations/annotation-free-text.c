@@ -35,7 +35,7 @@ zathura_gtk_annotation_free_text_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_FREE_TEXT, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationFreeTextPrivate* priv = zathura_gtk_annotation_free_text_get_instance_private(widget);
+  ZathuraAnnotationFreeTextPrivate* priv = zathura_gtk_annotation_free_text_get_instance_private(ZATHURA_ANNOTATION_FREE_TEXT(widget));
 
   priv->annotation = annotation;
 
@@ -51,7 +51,7 @@ zathura_gtk_annotation_free_text_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_free_text_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationFreeTextPrivate* priv = zathura_gtk_annotation_free_text_get_instance_private(data);
+  /* ZathuraAnnotationFreeTextPrivate* priv = zathura_gtk_annotation_free_text_get_instance_private(data); */
 
   // TODO: Implement this widget
 

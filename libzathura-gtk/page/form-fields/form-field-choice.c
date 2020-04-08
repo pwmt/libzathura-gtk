@@ -49,7 +49,7 @@ zathura_gtk_form_field_choice_new(zathura_form_field_t* form_field)
   GObject* widget = g_object_new(ZATHURA_TYPE_FORM_FIELD_CHOICE, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraFormFieldChoicePrivate* priv = zathura_gtk_form_field_choice_get_instance_private(widget);
+  ZathuraFormFieldChoicePrivate* priv = zathura_gtk_form_field_choice_get_instance_private(ZATHURA_FORM_FIELD_CHOICE(widget));
   priv->form_field = form_field;
 
   zathura_form_field_choice_type_t choice_type;
@@ -88,7 +88,7 @@ zathura_gtk_form_field_choice_new(zathura_form_field_t* form_field)
 static GtkWidget*
 form_field_choice_combo_new(GtkWidget* form_field_widget)
 {
-  ZathuraFormFieldChoicePrivate* priv = zathura_gtk_form_field_choice_get_instance_private(form_field_widget);
+  ZathuraFormFieldChoicePrivate* priv = zathura_gtk_form_field_choice_get_instance_private(ZATHURA_FORM_FIELD_CHOICE(form_field_widget));
   GtkWidget* widget = NULL;
 
   /* Setup combo box with text renderer */
@@ -146,7 +146,7 @@ form_field_choice_combo_new(GtkWidget* form_field_widget)
 static void
 cb_form_field_choice_combo_changed(GtkComboBox* widget, GtkWidget* form_field_widget)
 {
-  ZathuraFormFieldChoicePrivate* priv = zathura_gtk_form_field_choice_get_instance_private(form_field_widget);
+  ZathuraFormFieldChoicePrivate* priv = zathura_gtk_form_field_choice_get_instance_private(ZATHURA_FORM_FIELD_CHOICE(form_field_widget));
   GtkTreeIter iter;
   const char* name = NULL;
 
@@ -197,7 +197,7 @@ cb_form_field_choice_combo_changed(GtkComboBox* widget, GtkWidget* form_field_wi
 static GtkWidget*
 form_field_choice_list_new(GtkWidget* form_field_widget)
 {
-  ZathuraFormFieldChoicePrivate* priv = zathura_gtk_form_field_choice_get_instance_private(form_field_widget);
+  ZathuraFormFieldChoicePrivate* priv = zathura_gtk_form_field_choice_get_instance_private(ZATHURA_FORM_FIELD_CHOICE(form_field_widget));
 
   /* Setup model */
   GtkListStore* list_store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_POINTER);
@@ -304,7 +304,7 @@ cb_form_field_choice_list_destroy(GtkTreeSelection* UNUSED(selection), GtkWidget
 static gboolean
 set_back_to_drawing_area(GtkWidget* widget)
 {
-  ZathuraFormFieldChoicePrivate* priv = zathura_gtk_form_field_choice_get_instance_private(widget);
+  ZathuraFormFieldChoicePrivate* priv = zathura_gtk_form_field_choice_get_instance_private(ZATHURA_FORM_FIELD_CHOICE(widget));
 
   /* Don't reset if current visible widget is the rectangle already */
   GtkWidget* child = gtk_bin_get_child(GTK_BIN(widget));
@@ -339,7 +339,7 @@ static gboolean
 cb_form_field_choice_rectangle_choice_press_event(GtkWidget* UNUSED(widget),
     GdkEventButton* event_button, GtkWidget* form_field_widget)
 {
-  ZathuraFormFieldChoicePrivate* priv = zathura_gtk_form_field_choice_get_instance_private(form_field_widget);
+  ZathuraFormFieldChoicePrivate* priv = zathura_gtk_form_field_choice_get_instance_private(ZATHURA_FORM_FIELD_CHOICE(form_field_widget));
 
   /* Only allow left clicks */
   if (event_button->button != 1) {

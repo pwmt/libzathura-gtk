@@ -272,7 +272,7 @@ zathura_gtk_document_new(zathura_document_t* document)
 
   GObject* widget = g_object_new(ZATHURA_TYPE_DOCUMENT, "document", document, NULL);
 
-  ZathuraDocumentPrivate* priv = zathura_gtk_document_get_instance_private(widget);
+  ZathuraDocumentPrivate* priv = zathura_gtk_document_get_instance_private(ZATHURA_DOCUMENT(widget));
 
   /* Setup scrolled window */
   priv->gtk.scrolled_window = gtk_scrolled_window_new(NULL, NULL);
@@ -284,7 +284,7 @@ zathura_gtk_document_new(zathura_document_t* document)
       "draw",
       G_CALLBACK(cb_grid_draw),
       priv);
-  
+
   GtkAdjustment* horizontal_adjustment = gtk_scrolled_window_get_hadjustment(
       GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window)
       );
@@ -369,7 +369,7 @@ zathura_gtk_document_new(zathura_document_t* document)
 void
 zathura_gtk_document_scroll(GtkWidget* document, zathura_gtk_document_scroll_direction_t direction)
 {
-  ZathuraDocumentPrivate* priv = zathura_gtk_document_get_instance_private(document);
+  ZathuraDocumentPrivate* priv = zathura_gtk_document_get_instance_private(ZATHURA_DOCUMENT(document));
 
   /* Current position */
   gdouble position_x = priv->position.x;

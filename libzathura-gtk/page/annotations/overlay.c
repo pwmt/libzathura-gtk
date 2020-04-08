@@ -64,10 +64,6 @@ static void create_widgets(GtkWidget* overlay);
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationOverlay, zathura_gtk_annotation_overlay, GTK_TYPE_BIN)
 
-#define ZATHURA_ANNOTATION_OVERLAY_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_OVERLAY, \
-                               ZathuraAnnotationOverlayPrivate))
-
 static void
 zathura_gtk_annotation_overlay_class_init(ZathuraAnnotationOverlayClass* class)
 {
@@ -97,7 +93,7 @@ zathura_gtk_annotation_overlay_class_init(ZathuraAnnotationOverlayClass* class)
 static void
 zathura_gtk_annotation_overlay_init(ZathuraAnnotationOverlay* widget)
 {
-  ZathuraAnnotationOverlayPrivate* priv = ZATHURA_ANNOTATION_OVERLAY_GET_PRIVATE(widget);
+  ZathuraAnnotationOverlayPrivate* priv = zathura_gtk_annotation_overlay_get_instance_private(widget);
 
   priv->gtk.annotations = NULL;
   priv->page            = NULL;
@@ -112,7 +108,7 @@ zathura_gtk_annotation_overlay_new(ZathuraPage* page)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_OVERLAY, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationOverlayPrivate* priv = ZATHURA_ANNOTATION_OVERLAY_GET_PRIVATE(widget);
+  ZathuraAnnotationOverlayPrivate* priv = zathura_gtk_annotation_overlay_get_instance_private(ZATHURA_ANNOTATION_OVERLAY(widget));
 
   priv->page = page;
 
@@ -129,7 +125,7 @@ zathura_gtk_annotation_overlay_new(ZathuraPage* page)
 static void
 zathura_gtk_annotation_overlay_size_allocate(GtkWidget* widget, GdkRectangle* allocation)
 {
-  ZathuraAnnotationOverlayPrivate* priv = ZATHURA_ANNOTATION_OVERLAY_GET_PRIVATE(widget);
+  ZathuraAnnotationOverlayPrivate* priv = zathura_gtk_annotation_overlay_get_instance_private(ZATHURA_ANNOTATION_OVERLAY(widget));
 
   if (priv->annotations == NULL) {
     create_widgets(widget);
@@ -158,7 +154,7 @@ static void
 zathura_gtk_annotation_overlay_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec)
 {
   ZathuraAnnotationOverlay* editor      = ZATHURA_ANNOTATION_OVERLAY(object);
-  ZathuraAnnotationOverlayPrivate* priv = ZATHURA_ANNOTATION_OVERLAY_GET_PRIVATE(editor);
+  ZathuraAnnotationOverlayPrivate* priv = zathura_gtk_annotation_overlay_get_instance_private(editor);
 
   switch (prop_id) {
     case PROP_ANNOTATIONS_SHOW:
@@ -176,7 +172,7 @@ static void
 zathura_gtk_annotation_overlay_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec)
 {
   ZathuraAnnotationOverlay* editor      = ZATHURA_ANNOTATION_OVERLAY(object);
-  ZathuraAnnotationOverlayPrivate* priv = ZATHURA_ANNOTATION_OVERLAY_GET_PRIVATE(editor);
+  ZathuraAnnotationOverlayPrivate* priv = zathura_gtk_annotation_overlay_get_instance_private(editor);
 
   switch (prop_id) {
     case PROP_ANNOTATIONS_SHOW:
@@ -190,7 +186,7 @@ zathura_gtk_annotation_overlay_get_property(GObject* object, guint prop_id, GVal
 static void
 create_widgets(GtkWidget* overlay)
 {
-  ZathuraAnnotationOverlayPrivate* priv = ZATHURA_ANNOTATION_OVERLAY_GET_PRIVATE(overlay);
+  ZathuraAnnotationOverlayPrivate* priv = zathura_gtk_annotation_overlay_get_instance_private(ZATHURA_ANNOTATION_OVERLAY(overlay));
   ZathuraPagePrivate* page_priv         = ZATHURA_PAGE_GET_PRIVATE(priv->page);
 
   zathura_list_t* annotations;

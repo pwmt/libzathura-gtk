@@ -94,7 +94,7 @@ zathura_gtk_form_field_editor_new(ZathuraPage* page)
   GObject* widget = g_object_new(ZATHURA_TYPE_FORM_FIELD_EDITOR, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(widget);
+  ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(ZATHURA_FORM_FIELD_EDITOR(widget));
 
   priv->page = page;
 
@@ -123,7 +123,7 @@ zathura_gtk_form_field_editor_new(ZathuraPage* page)
 static void
 create_widgets(GtkWidget* editor)
 {
-  ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(editor);
+  ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(ZATHURA_FORM_FIELD_EDITOR(editor));
   ZathuraPagePrivate* page_priv = ZATHURA_PAGE_GET_PRIVATE(priv->page);
 
   zathura_list_t* form_fields;
@@ -179,7 +179,7 @@ create_widgets(GtkWidget* editor)
 static void
 zathura_gtk_form_field_editor_size_allocate(GtkWidget* widget, GdkRectangle* allocation)
 {
-  ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(widget);
+  ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(ZATHURA_FORM_FIELD_EDITOR(widget));
 
   if (priv->form_fields == NULL) {
     create_widgets(widget);

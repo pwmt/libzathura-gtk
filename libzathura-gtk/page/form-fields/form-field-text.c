@@ -46,7 +46,7 @@ zathura_gtk_form_field_text_new(zathura_form_field_t* form_field)
   GObject* widget = g_object_new(ZATHURA_TYPE_FORM_FIELD_TEXT, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraFormFieldTextPrivate* priv = zathura_gtk_form_field_text_get_instance_private(widget);
+  ZathuraFormFieldTextPrivate* priv = zathura_gtk_form_field_text_get_instance_private(ZATHURA_FORM_FIELD_TEXT(widget));
   priv->form_field = form_field;
 
   /* Get type */
@@ -142,7 +142,7 @@ zathura_gtk_form_field_text_new(zathura_form_field_t* form_field)
 static gboolean
 set_back_to_drawing_area(GtkWidget* widget)
 {
-  ZathuraFormFieldTextPrivate* priv = zathura_gtk_form_field_text_get_instance_private(widget);
+  ZathuraFormFieldTextPrivate* priv = zathura_gtk_form_field_text_get_instance_private(ZATHURA_FORM_FIELD_TEXT(widget));
 
   /* Don't reset if current visible widget is the rectangle already */
   GtkWidget* child = gtk_bin_get_child(GTK_BIN(widget));
@@ -176,7 +176,7 @@ reset_to_drawing_area(GtkWidget* widget)
 static bool
 save_text_single_line(GtkWidget* widget)
 {
-  ZathuraFormFieldTextPrivate* priv = zathura_gtk_form_field_text_get_instance_private(widget);
+  ZathuraFormFieldTextPrivate* priv = zathura_gtk_form_field_text_get_instance_private(ZATHURA_FORM_FIELD_TEXT(widget));
 
   if (zathura_form_field_text_set_text(priv->form_field, gtk_entry_get_text(GTK_ENTRY(priv->text_widget))) != ZATHURA_ERROR_OK) {
     return false;
@@ -212,7 +212,7 @@ cb_form_field_text_changed(GtkWidget* UNUSED(widget), GtkWidget* form_field_widg
 static bool
 save_text_multi_line(GtkWidget* widget)
 {
-  ZathuraFormFieldTextPrivate* priv = zathura_gtk_form_field_text_get_instance_private(widget);
+  ZathuraFormFieldTextPrivate* priv = zathura_gtk_form_field_text_get_instance_private(ZATHURA_FORM_FIELD_TEXT(widget));
 
   GtkTextBuffer* buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->text_widget));
   GtkTextIter start, end;
@@ -249,7 +249,7 @@ static gboolean
 cb_form_field_text_rectangle_button_press_event(GtkWidget* UNUSED(widget),
     GdkEventButton* event_button, GtkWidget* form_field_widget)
 {
-  ZathuraFormFieldTextPrivate* priv = zathura_gtk_form_field_text_get_instance_private(form_field_widget);
+  ZathuraFormFieldTextPrivate* priv = zathura_gtk_form_field_text_get_instance_private(ZATHURA_FORM_FIELD_TEXT(form_field_widget));
 
   /* Only allow left clicks */
   if (event_button->button != 1) {

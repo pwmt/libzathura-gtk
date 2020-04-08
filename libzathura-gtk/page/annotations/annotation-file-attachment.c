@@ -39,7 +39,7 @@ zathura_gtk_annotation_file_attachment_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_FILE_ATTACHMENT, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationFileAttachmentPrivate* priv = zathura_gtk_annotation_file_attachment_get_instance_private(widget);
+  ZathuraAnnotationFileAttachmentPrivate* priv = zathura_gtk_annotation_file_attachment_get_instance_private(ZATHURA_ANNOTATION_FILE_ATTACHMENT(widget));
 
   priv->annotation = annotation;
 
