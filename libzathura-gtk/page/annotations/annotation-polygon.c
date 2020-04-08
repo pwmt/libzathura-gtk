@@ -93,10 +93,10 @@ cb_zathura_gtk_annotation_polygon_draw(GtkWidget* widget, cairo_t *cairo, gpoint
   if (border.dash_pattern.dash_array != NULL) {
     /* Copy dash array to cairo format */
     unsigned int length = zathura_list_length(border.dash_pattern.dash_array);
-    double* dashes = calloc(length, sizeof(double));
+    double* dashes = calloc(length, sizeof(size_t));
     if (dashes != NULL) {
       for (unsigned int i = 0; i < length; i++) {
-        dashes[i] = (int) zathura_list_nth_data(border.dash_pattern.dash_array, i);
+        dashes[i] = (size_t) zathura_list_nth_data(border.dash_pattern.dash_array, i);
       }
 
       cairo_set_dash(cairo, dashes, length, border.dash_pattern.dash_phase);

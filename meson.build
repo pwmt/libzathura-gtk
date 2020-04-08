@@ -38,7 +38,7 @@ localedir = get_option('localedir')
 # required dependencies
 libm = cc.find_library('m', required: false)
 libzathura = dependency('libzathura', version: '>=0.0.1', fallback: ['libzathura', 'libzathura_dependency'])
-glib = dependency('glib-2.0', version: '>=2.32.4')
+glib = dependency('glib-2.0', version: '>=2.38')
 gtk3 = dependency('gtk+-3.0', version: '>=3.20')
 rsvg = dependency('librsvg-2.0')
 
@@ -62,7 +62,6 @@ flags = [
   '-Wall',
   '-Wextra',
   '-pedantic',
-  '-Wmissing-declarations',
   '-Werror=implicit-function-declaration',
   '-Wno-unused-variable',
   '-Wno-unused-parameter',

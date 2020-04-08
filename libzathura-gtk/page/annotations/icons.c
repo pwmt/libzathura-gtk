@@ -55,7 +55,7 @@ zathura_gtk_annotation_icon_cache_free()
 {
   for (unsigned int i = 0; i < ZATHURA_GTK_ANNOTATION_ICON_N; i++) {
     if (icons[i] != NULL) {
-      rsvg_handle_close(icons[i], NULL);
+      g_object_unref(icons[i]);
     }
   }
 }

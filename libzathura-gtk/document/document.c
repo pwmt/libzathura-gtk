@@ -335,8 +335,7 @@ zathura_gtk_document_new(zathura_document_t* document)
       g_object_unref(priv->gtk.scrolled_window);
       g_object_unref(priv->gtk.viewport);
       g_object_unref(widget);
-      g_list_foreach(priv->document.pages, (GFunc) g_object_unref, NULL);
-      g_list_foreach(priv->document.pages, (GFunc) g_free, NULL);
+      g_list_free_full(priv->document.pages, g_object_unref);
       return NULL;
     }
 
@@ -579,6 +578,7 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
             );
         }
       }
+      break;
     case PROP_FORM_FIELDS_EDIT:
       {
         gboolean edit = g_value_get_boolean(value);
