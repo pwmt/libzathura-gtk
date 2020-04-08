@@ -12,10 +12,6 @@ static gboolean cb_zathura_gtk_annotation_poly_line_draw(GtkWidget* widget, cair
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationPolyLine, zathura_gtk_annotation_poly_line, ZATHURA_TYPE_ANNOTATION)
 
-#define ZATHURA_ANNOTATION_POLY_LINE_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_POLY_LINE, \
-                               ZathuraAnnotationPolyLinePrivate))
-
 static void
 zathura_gtk_annotation_poly_line_class_init(ZathuraAnnotationPolyLineClass* class)
 {
@@ -25,7 +21,7 @@ zathura_gtk_annotation_poly_line_class_init(ZathuraAnnotationPolyLineClass* clas
 static void
 zathura_gtk_annotation_poly_line_init(ZathuraAnnotationPolyLine* widget)
 {
-  ZathuraAnnotationPolyLinePrivate* priv = ZATHURA_ANNOTATION_POLY_LINE_GET_PRIVATE(widget);
+  ZathuraAnnotationPolyLinePrivate* priv = zathura_gtk_annotation_poly_line_get_instance_private(widget);
 
   priv->drawing_area = NULL;
   priv->annotation   = NULL;
@@ -39,7 +35,7 @@ zathura_gtk_annotation_poly_line_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_POLY_LINE, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationPolyLinePrivate* priv = ZATHURA_ANNOTATION_POLY_LINE_GET_PRIVATE(widget);
+  ZathuraAnnotationPolyLinePrivate* priv = zathura_gtk_annotation_poly_line_get_instance_private(widget);
 
   priv->annotation = annotation;
 
@@ -55,7 +51,7 @@ zathura_gtk_annotation_poly_line_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_poly_line_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationPolyLinePrivate* priv = ZATHURA_ANNOTATION_POLY_LINE_GET_PRIVATE(data);
+  ZathuraAnnotationPolyLinePrivate* priv = zathura_gtk_annotation_poly_line_get_instance_private(data);
 
   // TODO: Implement this widget
 

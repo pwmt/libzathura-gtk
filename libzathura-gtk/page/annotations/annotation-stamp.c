@@ -12,10 +12,6 @@ static gboolean cb_zathura_gtk_annotation_stamp_draw(GtkWidget* widget, cairo_t 
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationStamp, zathura_gtk_annotation_stamp, ZATHURA_TYPE_ANNOTATION)
 
-#define ZATHURA_ANNOTATION_STAMP_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_STAMP, \
-                               ZathuraAnnotationStampPrivate))
-
 static void
 zathura_gtk_annotation_stamp_class_init(ZathuraAnnotationStampClass* class)
 {
@@ -25,7 +21,7 @@ zathura_gtk_annotation_stamp_class_init(ZathuraAnnotationStampClass* class)
 static void
 zathura_gtk_annotation_stamp_init(ZathuraAnnotationStamp* widget)
 {
-  ZathuraAnnotationStampPrivate* priv = ZATHURA_ANNOTATION_STAMP_GET_PRIVATE(widget);
+  ZathuraAnnotationStampPrivate* priv = zathura_gtk_annotation_stamp_get_instance_private(widget);
 
   priv->drawing_area = NULL;
   priv->annotation   = NULL;
@@ -39,7 +35,7 @@ zathura_gtk_annotation_stamp_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_STAMP, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationStampPrivate* priv = ZATHURA_ANNOTATION_STAMP_GET_PRIVATE(widget);
+  ZathuraAnnotationStampPrivate* priv = zathura_gtk_annotation_stamp_get_instance_private(widget);
 
   priv->annotation = annotation;
 
@@ -55,7 +51,7 @@ zathura_gtk_annotation_stamp_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_stamp_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationStampPrivate* priv = ZATHURA_ANNOTATION_STAMP_GET_PRIVATE(data);
+  ZathuraAnnotationStampPrivate* priv = zathura_gtk_annotation_stamp_get_instance_private(data);
 
   // TODO: Implement this widget
 

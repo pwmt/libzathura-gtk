@@ -49,10 +49,6 @@ static void create_widgets(GtkWidget* editor);
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraFormFieldEditor, zathura_gtk_form_field_editor, GTK_TYPE_BIN)
 
-#define ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_FORM_FIELD_EDITOR, \
-                               ZathuraFormFieldEditorPrivate))
-
 static void
 zathura_gtk_form_field_editor_class_init(ZathuraFormFieldEditorClass* class)
 {
@@ -82,7 +78,7 @@ zathura_gtk_form_field_editor_class_init(ZathuraFormFieldEditorClass* class)
 static void
 zathura_gtk_form_field_editor_init(ZathuraFormFieldEditor* widget)
 {
-  ZathuraFormFieldEditorPrivate* priv = ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(widget);
+  ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(widget);
 
   priv->overlay            = NULL;
   priv->layer.drawing_area = NULL;
@@ -98,7 +94,7 @@ zathura_gtk_form_field_editor_new(ZathuraPage* page)
   GObject* widget = g_object_new(ZATHURA_TYPE_FORM_FIELD_EDITOR, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraFormFieldEditorPrivate* priv = ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(widget);
+  ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(widget);
 
   priv->page = page;
 
@@ -127,7 +123,7 @@ zathura_gtk_form_field_editor_new(ZathuraPage* page)
 static void
 create_widgets(GtkWidget* editor)
 {
-  ZathuraFormFieldEditorPrivate* priv = ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(editor);
+  ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(editor);
   ZathuraPagePrivate* page_priv = ZATHURA_PAGE_GET_PRIVATE(priv->page);
 
   zathura_list_t* form_fields;
@@ -183,7 +179,7 @@ create_widgets(GtkWidget* editor)
 static void
 zathura_gtk_form_field_editor_size_allocate(GtkWidget* widget, GdkRectangle* allocation)
 {
-  ZathuraFormFieldEditorPrivate* priv = ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(widget);
+  ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(widget);
 
   if (priv->form_fields == NULL) {
     create_widgets(widget);
@@ -211,7 +207,7 @@ static void
 zathura_gtk_form_field_editor_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec)
 {
   ZathuraFormFieldEditor* editor      = ZATHURA_FORM_FIELD_EDITOR(object);
-  ZathuraFormFieldEditorPrivate* priv = ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(editor);
+  ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(editor);
 
   switch (prop_id) {
     case PROP_FORM_FIELDS_HIGHLIGHT:
@@ -229,7 +225,7 @@ static void
 zathura_gtk_form_field_editor_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec)
 {
   ZathuraFormFieldEditor* editor      = ZATHURA_FORM_FIELD_EDITOR(object);
-  ZathuraFormFieldEditorPrivate* priv = ZATHURA_FORM_FIELD_EDITOR_GET_PRIVATE(editor);
+  ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(editor);
 
   switch (prop_id) {
     case PROP_FORM_FIELDS_HIGHLIGHT:

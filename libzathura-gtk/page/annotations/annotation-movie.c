@@ -12,10 +12,6 @@ static gboolean cb_zathura_gtk_annotation_movie_draw(GtkWidget* widget, cairo_t 
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationMovie, zathura_gtk_annotation_movie, ZATHURA_TYPE_ANNOTATION)
 
-#define ZATHURA_ANNOTATION_MOVIE_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_MOVIE, \
-                               ZathuraAnnotationMoviePrivate))
-
 static void
 zathura_gtk_annotation_movie_class_init(ZathuraAnnotationMovieClass* class)
 {
@@ -25,7 +21,7 @@ zathura_gtk_annotation_movie_class_init(ZathuraAnnotationMovieClass* class)
 static void
 zathura_gtk_annotation_movie_init(ZathuraAnnotationMovie* widget)
 {
-  ZathuraAnnotationMoviePrivate* priv = ZATHURA_ANNOTATION_MOVIE_GET_PRIVATE(widget);
+  ZathuraAnnotationMoviePrivate* priv = zathura_gtk_annotation_movie_get_instance_private(widget);
 
   priv->drawing_area = NULL;
   priv->annotation   = NULL;
@@ -39,7 +35,7 @@ zathura_gtk_annotation_movie_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_MOVIE, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationMoviePrivate* priv = ZATHURA_ANNOTATION_MOVIE_GET_PRIVATE(widget);
+  ZathuraAnnotationMoviePrivate* priv = zathura_gtk_annotation_movie_get_instance_private(widget);
 
   priv->annotation = annotation;
 
@@ -55,7 +51,7 @@ zathura_gtk_annotation_movie_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_movie_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationMoviePrivate* priv = ZATHURA_ANNOTATION_MOVIE_GET_PRIVATE(data);
+  ZathuraAnnotationMoviePrivate* priv = zathura_gtk_annotation_movie_get_instance_private(data);
 
   // TODO: Implement this widget
 

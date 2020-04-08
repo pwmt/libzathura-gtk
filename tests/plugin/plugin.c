@@ -4,8 +4,8 @@
 #include <cairo.h>
 #endif
 
-#include "libzathura/plugin-api.h"
-#include "libzathura/macros.h"
+#include <libzathura/plugin-api.h>
+#include <libzathura/macros.h>
 
 #include <stdio.h>
 

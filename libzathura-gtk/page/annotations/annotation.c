@@ -24,10 +24,6 @@ struct _ZathuraAnnotationPrivate {
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotation, zathura_gtk_annotation, GTK_TYPE_BIN)
 
-#define ZATHURA_ANNOTATION_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION, \
-                               ZathuraAnnotationPrivate))
-
 static void
 zathura_gtk_annotation_class_init(ZathuraAnnotationClass* class)
 {
@@ -70,7 +66,7 @@ zathura_gtk_annotation_class_init(ZathuraAnnotationClass* class)
 static void
 zathura_gtk_annotation_init(ZathuraAnnotation* widget)
 {
-  ZathuraAnnotationPrivate* priv = ZATHURA_ANNOTATION_GET_PRIVATE(widget);
+  ZathuraAnnotationPrivate* priv = zathura_gtk_annotation_get_instance_private(widget);
 
   priv->settings.scale = 1.0 * gtk_widget_get_scale_factor(GTK_WIDGET(widget));
 }
@@ -78,7 +74,7 @@ zathura_gtk_annotation_init(ZathuraAnnotation* widget)
 static void zathura_gtk_annotation_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec)
 {
   ZathuraAnnotation* page        = ZATHURA_ANNOTATION(object);
-  ZathuraAnnotationPrivate* priv = ZATHURA_ANNOTATION_GET_PRIVATE(page);
+  ZathuraAnnotationPrivate* priv = zathura_gtk_annotation_get_instance_private(page);
 
   switch (prop_id) {
     case PROP_ANNOTATION:
@@ -102,7 +98,7 @@ static void zathura_gtk_annotation_set_property(GObject* object, guint prop_id, 
 static void zathura_gtk_annotation_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec)
 {
   ZathuraAnnotation* page        = ZATHURA_ANNOTATION(object);
-  ZathuraAnnotationPrivate* priv = ZATHURA_ANNOTATION_GET_PRIVATE(page);
+  ZathuraAnnotationPrivate* priv = zathura_gtk_annotation_get_instance_private(page);
 
   switch (prop_id) {
     case PROP_ANNOTATION:
@@ -119,7 +115,7 @@ static void zathura_gtk_annotation_get_property(GObject* object, guint prop_id, 
 static gboolean
 zathura_gtk_annotation_draw(GtkWidget* widget, cairo_t* cairo)
 {
-  ZathuraAnnotationPrivate* priv = ZATHURA_ANNOTATION_GET_PRIVATE(widget);
+  ZathuraAnnotationPrivate* priv = zathura_gtk_annotation_get_instance_private(widget);
 
   if (priv->annotation == NULL) {
     goto propagate_event;

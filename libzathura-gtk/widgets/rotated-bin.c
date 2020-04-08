@@ -29,10 +29,6 @@ static void zathura_gtk_rotated_bin_forall(GtkContainer* container, gboolean
     include_internals, GtkCallback callback, gpointer callback_data);
 static GType zathura_gtk_rotated_bin_child_type(GtkContainer* container);
 
-#define ZATHURA_ROTATED_BIN_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ROTATED_BIN, \
-                               ZathuraRotatedBinPrivate))
-
 struct _ZathuraRotatedBinPrivate {
   GtkWidget* child;
   GdkWindow* offscreen_window;
@@ -98,7 +94,7 @@ zathura_gtk_rotated_bin_class_init(ZathuraRotatedBinClass* class)
 static void
 zathura_gtk_rotated_bin_init(ZathuraRotatedBin* widget)
 {
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(widget);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(widget);
 
   priv->child            = NULL;
   priv->offscreen_window = NULL;
@@ -118,7 +114,7 @@ void
 zathura_gtk_rotated_bin_set_angle(ZathuraRotatedBin* bin, gdouble angle)
 {
   g_return_if_fail (ZATHURA_IS_ROTATED_BIN(bin));
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(bin);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
   priv->settings.angle = angle * ((double) G_PI / 180.0);
 
@@ -130,7 +126,7 @@ static void
 zathura_gtk_rotated_bin_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec)
 {
   ZathuraRotatedBin* bin        = ZATHURA_ROTATED_BIN(object);
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(bin);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
   switch (prop_id) {
     case PROP_ANGLE:
@@ -153,7 +149,7 @@ static void
 zathura_gtk_rotated_bin_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec)
 {
   ZathuraRotatedBin* page        = ZATHURA_ROTATED_BIN(object);
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(page);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(page);
 
   switch (prop_id) {
     case PROP_ANGLE:
@@ -168,7 +164,7 @@ static void
 to_child (ZathuraRotatedBin *bin, double widget_x, double widget_y, double*
     x_out, double* y_out)
 {
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(bin);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
   double s = sin(priv->settings.angle);
   double c = cos(priv->settings.angle);
@@ -216,7 +212,7 @@ static void
 to_parent (ZathuraRotatedBin *bin, double offscreen_x, double offscreen_y,
     double* x_out, double* y_out)
 {
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(bin);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
   double s = sin(priv->settings.angle);
   double c = cos(priv->settings.angle);
@@ -254,7 +250,7 @@ pick_offscreen_child(GdkWindow* UNUSED(offscreen_window), double widget_x,
     double widget_y, ZathuraRotatedBin* bin)
 {
   GtkAllocation child_area;
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(bin);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
   if (priv->child != NULL && gtk_widget_get_visible(priv->child) == TRUE) {
     double x, y;
@@ -289,7 +285,7 @@ static void
 zathura_gtk_rotated_bin_realize(GtkWidget* widget)
 {
   ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(widget);
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(widget);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
   gtk_widget_set_realized (widget, TRUE);
 
@@ -360,7 +356,7 @@ static void
 zathura_gtk_rotated_bin_unrealize(GtkWidget* widget)
 {
   ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(widget);
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(bin);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
   gdk_window_set_user_data(priv->offscreen_window, NULL);
   gdk_window_destroy(priv->offscreen_window);
@@ -374,7 +370,7 @@ zathura_gtk_rotated_bin_size_request(GtkWidget* widget, GtkRequisition*
     requisition)
 {
   ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(widget);
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(bin);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
   GtkRequisition child_requisition;
   child_requisition.width = 0;
@@ -419,7 +415,7 @@ zathura_gtk_rotated_bin_size_allocate(GtkWidget* widget, GtkAllocation*
     allocation)
 {
   ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(widget);
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(bin);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
   gtk_widget_set_allocation(widget, allocation);
 
@@ -486,7 +482,7 @@ static gboolean
 zathura_gtk_rotated_bin_draw(GtkWidget* widget, cairo_t* cairo)
 {
   ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(widget);
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(bin);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
   GdkWindow* window = gtk_widget_get_window(widget);
   if (gtk_cairo_should_draw_window (cairo, window)) {
@@ -535,7 +531,7 @@ static void
 zathura_gtk_rotated_bin_add(GtkContainer* container, GtkWidget* child)
 {
   ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(container);
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(bin);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
   if (priv->child == NULL) {
     gtk_widget_set_parent_window(child, priv->offscreen_window);
@@ -550,7 +546,7 @@ static void
 zathura_gtk_rotated_bin_remove(GtkContainer* container, GtkWidget* widget)
 {
   ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(container);
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(bin);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
   gboolean was_visible = gtk_widget_get_visible(widget);
 
@@ -569,7 +565,7 @@ zathura_gtk_rotated_bin_forall(GtkContainer* container, gboolean
     UNUSED(include_internals), GtkCallback callback, gpointer callback_data)
 {
   ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(container);
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(bin);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
   g_return_if_fail(callback != NULL);
 
@@ -582,7 +578,7 @@ static GType
 zathura_gtk_rotated_bin_child_type(GtkContainer* container)
 {
   ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(container);
-  ZathuraRotatedBinPrivate* priv = ZATHURA_ROTATED_BIN_GET_PRIVATE(bin);
+  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
   if (priv->child != NULL) {
     return G_TYPE_NONE;

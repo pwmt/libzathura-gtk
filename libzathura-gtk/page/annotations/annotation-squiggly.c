@@ -13,10 +13,6 @@ static gboolean cb_zathura_gtk_annotation_squiggly_draw(GtkWidget* widget, cairo
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationSquiggly, zathura_gtk_annotation_squiggly, ZATHURA_TYPE_ANNOTATION)
 
-#define ZATHURA_ANNOTATION_SQUIGGLY_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_SQUIGGLY, \
-                               ZathuraAnnotationSquigglyPrivate))
-
 static void
 zathura_gtk_annotation_squiggly_class_init(ZathuraAnnotationSquigglyClass* class)
 {
@@ -26,7 +22,7 @@ zathura_gtk_annotation_squiggly_class_init(ZathuraAnnotationSquigglyClass* class
 static void
 zathura_gtk_annotation_squiggly_init(ZathuraAnnotationSquiggly* widget)
 {
-  ZathuraAnnotationSquigglyPrivate* priv = ZATHURA_ANNOTATION_SQUIGGLY_GET_PRIVATE(widget);
+  ZathuraAnnotationSquigglyPrivate* priv = zathura_gtk_annotation_squiggly_get_instance_private(widget);
 
   priv->drawing_area = NULL;
   priv->annotation   = NULL;
@@ -40,7 +36,7 @@ zathura_gtk_annotation_squiggly_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_SQUIGGLY, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationSquigglyPrivate* priv = ZATHURA_ANNOTATION_SQUIGGLY_GET_PRIVATE(widget);
+  ZathuraAnnotationSquigglyPrivate* priv = zathura_gtk_annotation_squiggly_get_instance_private(widget);
 
   priv->annotation = annotation;
 
@@ -57,7 +53,7 @@ zathura_gtk_annotation_squiggly_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_squiggly_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationSquigglyPrivate* priv = ZATHURA_ANNOTATION_SQUIGGLY_GET_PRIVATE(data);
+  ZathuraAnnotationSquigglyPrivate* priv = zathura_gtk_annotation_squiggly_get_instance_private(data);
 
   zathura_list_t* quad_points = NULL;
   if (zathura_annotation_squiggly_get_quad_points(priv->annotation, &quad_points) != ZATHURA_ERROR_OK || quad_points == NULL) {

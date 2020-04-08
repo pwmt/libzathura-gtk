@@ -16,10 +16,6 @@ static gboolean cb_zathura_gtk_annotation_sound_draw(GtkWidget* widget, cairo_t 
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationSound, zathura_gtk_annotation_sound, ZATHURA_TYPE_ANNOTATION)
 
-#define ZATHURA_ANNOTATION_SOUND_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_SOUND, \
-                               ZathuraAnnotationSoundPrivate))
-
 static void
 zathura_gtk_annotation_sound_class_init(ZathuraAnnotationSoundClass* class)
 {
@@ -29,7 +25,7 @@ zathura_gtk_annotation_sound_class_init(ZathuraAnnotationSoundClass* class)
 static void
 zathura_gtk_annotation_sound_init(ZathuraAnnotationSound* widget)
 {
-  ZathuraAnnotationSoundPrivate* priv = ZATHURA_ANNOTATION_SOUND_GET_PRIVATE(widget);
+  ZathuraAnnotationSoundPrivate* priv = zathura_gtk_annotation_sound_get_instance_private(widget);
 
   priv->drawing_area = NULL;
   priv->annotation   = NULL;
@@ -43,7 +39,7 @@ zathura_gtk_annotation_sound_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_SOUND, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationSoundPrivate* priv = ZATHURA_ANNOTATION_SOUND_GET_PRIVATE(widget);
+  ZathuraAnnotationSoundPrivate* priv = zathura_gtk_annotation_sound_get_instance_private(widget);
 
   priv->annotation = annotation;
 
@@ -60,7 +56,7 @@ zathura_gtk_annotation_sound_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_sound_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationSoundPrivate* priv = ZATHURA_ANNOTATION_SOUND_GET_PRIVATE(data);
+  ZathuraAnnotationSoundPrivate* priv = zathura_gtk_annotation_sound_get_instance_private(data);
 
   const unsigned int page_height = gtk_widget_get_allocated_height(widget);
   const unsigned int page_width  = gtk_widget_get_allocated_width(widget);

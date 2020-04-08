@@ -12,10 +12,6 @@ static gboolean cb_zathura_gtk_annotation_3d_draw(GtkWidget* widget, cairo_t *ca
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotation3D, zathura_gtk_annotation_3d, ZATHURA_TYPE_ANNOTATION)
 
-#define ZATHURA_ANNOTATION_3D_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_3D, \
-                               ZathuraAnnotation3DPrivate))
-
 static void
 zathura_gtk_annotation_3d_class_init(ZathuraAnnotation3DClass* class)
 {
@@ -25,37 +21,25 @@ zathura_gtk_annotation_3d_class_init(ZathuraAnnotation3DClass* class)
 static void
 zathura_gtk_annotation_3d_init(ZathuraAnnotation3D* widget)
 {
-  ZathuraAnnotation3DPrivate* priv = ZATHURA_ANNOTATION_3D_GET_PRIVATE(widget);
-
-  priv->drawing_area = NULL;
-  priv->annotation   = NULL;
-}
-
-GtkWidget*
-zathura_gtk_annotation_3d_new(zathura_annotation_t* annotation)
-{
-  g_return_val_if_fail(annotation != NULL, NULL);
-
-  GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_3D, "annotation", annotation, NULL);
-  g_return_val_if_fail(widget != NULL, NULL);
-
-  ZathuraAnnotation3DPrivate* priv = ZATHURA_ANNOTATION_3D_GET_PRIVATE(widget);
-
-  priv->annotation = annotation;
+  ZathuraAnnotation3DPrivate* priv = zathura_gtk_annotation_3d_get_instance_private(widget);
 
   priv->drawing_area = gtk_drawing_area_new();
   g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_zathura_gtk_annotation_3d_draw), widget);
 
   gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->drawing_area));
   gtk_widget_show_all(GTK_WIDGET(widget));
+}
 
-  return GTK_WIDGET(widget);
+GtkWidget*
+zathura_gtk_annotation_3d_new(zathura_annotation_t* annotation)
+{
+  return g_object_new(ZATHURA_TYPE_ANNOTATION_3D, "annotation", annotation, NULL);
 }
 
 static gboolean
 cb_zathura_gtk_annotation_3d_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotation3DPrivate* priv = ZATHURA_ANNOTATION_3D_GET_PRIVATE(data);
+  ZathuraAnnotation3DPrivate* priv = zathura_gtk_annotation_3d_get_instance_private(data);
 
   // TODO: Implement this widget
 

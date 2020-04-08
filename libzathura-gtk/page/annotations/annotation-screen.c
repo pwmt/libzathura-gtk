@@ -12,10 +12,6 @@ static gboolean cb_zathura_gtk_annotation_screen_draw(GtkWidget* widget, cairo_t
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationScreen, zathura_gtk_annotation_screen, ZATHURA_TYPE_ANNOTATION)
 
-#define ZATHURA_ANNOTATION_SCREEN_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_SCREEN, \
-                               ZathuraAnnotationScreenPrivate))
-
 static void
 zathura_gtk_annotation_screen_class_init(ZathuraAnnotationScreenClass* class)
 {
@@ -25,7 +21,7 @@ zathura_gtk_annotation_screen_class_init(ZathuraAnnotationScreenClass* class)
 static void
 zathura_gtk_annotation_screen_init(ZathuraAnnotationScreen* widget)
 {
-  ZathuraAnnotationScreenPrivate* priv = ZATHURA_ANNOTATION_SCREEN_GET_PRIVATE(widget);
+  ZathuraAnnotationScreenPrivate* priv = zathura_gtk_annotation_screen_get_instance_private(widget);
 
   priv->drawing_area = NULL;
   priv->annotation   = NULL;
@@ -39,7 +35,7 @@ zathura_gtk_annotation_screen_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_SCREEN, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationScreenPrivate* priv = ZATHURA_ANNOTATION_SCREEN_GET_PRIVATE(widget);
+  ZathuraAnnotationScreenPrivate* priv = zathura_gtk_annotation_screen_get_instance_private(widget);
 
   priv->annotation = annotation;
 
@@ -55,7 +51,7 @@ zathura_gtk_annotation_screen_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_screen_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationScreenPrivate* priv = ZATHURA_ANNOTATION_SCREEN_GET_PRIVATE(data);
+  ZathuraAnnotationScreenPrivate* priv = zathura_gtk_annotation_screen_get_instance_private(data);
 
   // TODO: Implement this widget
 

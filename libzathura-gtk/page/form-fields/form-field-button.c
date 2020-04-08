@@ -24,10 +24,6 @@ static guint signals[N_SIGNALS];
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraFormFieldButton, zathura_gtk_form_field_button, GTK_TYPE_DRAWING_AREA)
 
-#define ZATHURA_FORM_FIELD_BUTTON_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_FORM_FIELD_BUTTON, \
-                               ZathuraFormFieldButtonPrivate))
-
 static void
 zathura_gtk_form_field_button_class_init(ZathuraFormFieldButtonClass* class)
 {
@@ -66,7 +62,7 @@ zathura_gtk_form_field_button_class_init(ZathuraFormFieldButtonClass* class)
 static void
 zathura_gtk_form_field_button_init(ZathuraFormFieldButton* widget)
 {
-  ZathuraFormFieldButtonPrivate* priv = ZATHURA_FORM_FIELD_BUTTON_GET_PRIVATE(widget);
+  ZathuraFormFieldButtonPrivate* priv = zathura_gtk_form_field_button_get_instance_private(widget);
 
   priv->button = NULL;
 
@@ -88,7 +84,7 @@ static void
 zathura_gtk_form_field_button_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec)
 {
   ZathuraFormFieldButton* button      = ZATHURA_FORM_FIELD_BUTTON(object);
-  ZathuraFormFieldButtonPrivate* priv = ZATHURA_FORM_FIELD_BUTTON_GET_PRIVATE(button);
+  ZathuraFormFieldButtonPrivate* priv = zathura_gtk_form_field_button_get_instance_private(button);
 
   switch (prop_id) {
     case PROP_FORM_FIELD:
@@ -103,7 +99,7 @@ static void
 zathura_gtk_form_field_button_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec)
 {
   ZathuraFormFieldButton* button        = ZATHURA_FORM_FIELD_BUTTON(object);
-  ZathuraFormFieldButtonPrivate* priv = ZATHURA_FORM_FIELD_BUTTON_GET_PRIVATE(button);
+  ZathuraFormFieldButtonPrivate* priv = zathura_gtk_form_field_button_get_instance_private(button);
 
   switch (prop_id) {
     case PROP_FORM_FIELD:
@@ -122,7 +118,7 @@ zathura_gtk_form_field_button_button_press_event(GtkWidget* widget, GdkEventButt
     return GDK_EVENT_PROPAGATE;
   }
 
-  ZathuraFormFieldButtonPrivate* priv = ZATHURA_FORM_FIELD_BUTTON_GET_PRIVATE(widget);
+  ZathuraFormFieldButtonPrivate* priv = zathura_gtk_form_field_button_get_instance_private(widget);
 
   /* Toggle button state */
   bool button_state;

@@ -39,10 +39,6 @@ enum {
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraDocument, zathura_gtk_document, GTK_TYPE_BIN)
 
-#define ZATHURA_DOCUMENT_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_DOCUMENT, \
-                               ZathuraDocumentPrivate))
-
 static void
 zathura_gtk_document_class_init(ZathuraDocumentClass* class)
 {
@@ -238,7 +234,7 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
 static void
 zathura_gtk_document_init(ZathuraDocument* widget)
 {
-  ZathuraDocumentPrivate* priv = ZATHURA_DOCUMENT_GET_PRIVATE(widget);
+  ZathuraDocumentPrivate* priv = zathura_gtk_document_get_instance_private(widget);
 
   priv->document.document        = NULL;
   priv->document.pages           = NULL;
@@ -276,7 +272,7 @@ zathura_gtk_document_new(zathura_document_t* document)
 
   GObject* widget = g_object_new(ZATHURA_TYPE_DOCUMENT, "document", document, NULL);
 
-  ZathuraDocumentPrivate* priv = ZATHURA_DOCUMENT_GET_PRIVATE(widget);
+  ZathuraDocumentPrivate* priv = zathura_gtk_document_get_instance_private(widget);
 
   /* Setup scrolled window */
   priv->gtk.scrolled_window = gtk_scrolled_window_new(NULL, NULL);
@@ -373,7 +369,7 @@ zathura_gtk_document_new(zathura_document_t* document)
 void
 zathura_gtk_document_scroll(GtkWidget* document, zathura_gtk_document_scroll_direction_t direction)
 {
-  ZathuraDocumentPrivate* priv = ZATHURA_DOCUMENT_GET_PRIVATE(document);
+  ZathuraDocumentPrivate* priv = zathura_gtk_document_get_instance_private(document);
 
   /* Current position */
   gdouble position_x = priv->position.x;
@@ -513,7 +509,7 @@ static void
 zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec)
 {
   ZathuraDocument* document    = ZATHURA_DOCUMENT(object);
-  ZathuraDocumentPrivate* priv = ZATHURA_DOCUMENT_GET_PRIVATE(document);
+  ZathuraDocumentPrivate* priv = zathura_gtk_document_get_instance_private(document);
 
   switch (prop_id) {
     case PROP_DOCUMENT:
@@ -616,7 +612,7 @@ static void
 zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec)
 {
   ZathuraDocument* document    = ZATHURA_DOCUMENT(object);
-  ZathuraDocumentPrivate* priv = ZATHURA_DOCUMENT_GET_PRIVATE(document);
+  ZathuraDocumentPrivate* priv = zathura_gtk_document_get_instance_private(document);
 
   switch (prop_id) {
     case PROP_DOCUMENT:

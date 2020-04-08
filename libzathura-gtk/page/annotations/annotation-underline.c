@@ -12,10 +12,6 @@ static gboolean cb_zathura_gtk_annotation_underline_draw(GtkWidget* widget, cair
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationUnderline, zathura_gtk_annotation_underline, ZATHURA_TYPE_ANNOTATION)
 
-#define ZATHURA_ANNOTATION_UNDERLINE_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_UNDERLINE, \
-                               ZathuraAnnotationUnderlinePrivate))
-
 static void
 zathura_gtk_annotation_underline_class_init(ZathuraAnnotationUnderlineClass* class)
 {
@@ -25,7 +21,7 @@ zathura_gtk_annotation_underline_class_init(ZathuraAnnotationUnderlineClass* cla
 static void
 zathura_gtk_annotation_underline_init(ZathuraAnnotationUnderline* widget)
 {
-  ZathuraAnnotationUnderlinePrivate* priv = ZATHURA_ANNOTATION_UNDERLINE_GET_PRIVATE(widget);
+  ZathuraAnnotationUnderlinePrivate* priv = zathura_gtk_annotation_underline_get_instance_private(widget);
 
   priv->drawing_area = NULL;
   priv->annotation   = NULL;
@@ -39,7 +35,7 @@ zathura_gtk_annotation_underline_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_UNDERLINE, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationUnderlinePrivate* priv = ZATHURA_ANNOTATION_UNDERLINE_GET_PRIVATE(widget);
+  ZathuraAnnotationUnderlinePrivate* priv = zathura_gtk_annotation_underline_get_instance_private(widget);
 
   priv->annotation = annotation;
 
@@ -56,7 +52,7 @@ zathura_gtk_annotation_underline_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_underline_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationUnderlinePrivate* priv = ZATHURA_ANNOTATION_UNDERLINE_GET_PRIVATE(data);
+  ZathuraAnnotationUnderlinePrivate* priv = zathura_gtk_annotation_underline_get_instance_private(data);
 
   zathura_list_t* quad_points = NULL;
   if (zathura_annotation_underline_get_quad_points(priv->annotation, &quad_points) != ZATHURA_ERROR_OK || quad_points == NULL) {

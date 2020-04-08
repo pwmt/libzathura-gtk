@@ -12,10 +12,6 @@ static gboolean cb_zathura_gtk_annotation_polygon_draw(GtkWidget* widget, cairo_
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationPolygon, zathura_gtk_annotation_polygon, ZATHURA_TYPE_ANNOTATION)
 
-#define ZATHURA_ANNOTATION_POLYGON_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_POLYGON, \
-                               ZathuraAnnotationPolygonPrivate))
-
 static void
 zathura_gtk_annotation_polygon_class_init(ZathuraAnnotationPolygonClass* class)
 {
@@ -25,7 +21,7 @@ zathura_gtk_annotation_polygon_class_init(ZathuraAnnotationPolygonClass* class)
 static void
 zathura_gtk_annotation_polygon_init(ZathuraAnnotationPolygon* widget)
 {
-  ZathuraAnnotationPolygonPrivate* priv = ZATHURA_ANNOTATION_POLYGON_GET_PRIVATE(widget);
+  ZathuraAnnotationPolygonPrivate* priv = zathura_gtk_annotation_polygon_get_instance_private(widget);
 
   priv->drawing_area = NULL;
   priv->annotation   = NULL;
@@ -39,7 +35,7 @@ zathura_gtk_annotation_polygon_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_POLYGON, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationPolygonPrivate* priv = ZATHURA_ANNOTATION_POLYGON_GET_PRIVATE(widget);
+  ZathuraAnnotationPolygonPrivate* priv = zathura_gtk_annotation_polygon_get_instance_private(widget);
 
   priv->annotation = annotation;
 
@@ -55,7 +51,7 @@ zathura_gtk_annotation_polygon_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_polygon_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationPolygonPrivate* priv = ZATHURA_ANNOTATION_POLYGON_GET_PRIVATE(data);
+  ZathuraAnnotationPolygonPrivate* priv = zathura_gtk_annotation_polygon_get_instance_private(data);
 
   double scale = 1.0;
   g_object_get(G_OBJECT(data), "scale", &scale, NULL);

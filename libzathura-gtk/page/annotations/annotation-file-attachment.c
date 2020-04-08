@@ -16,10 +16,6 @@ static gboolean cb_zathura_gtk_annotation_file_attachment_draw(GtkWidget* widget
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationFileAttachment, zathura_gtk_annotation_file_attachment, ZATHURA_TYPE_ANNOTATION)
 
-#define ZATHURA_ANNOTATION_FILE_ATTACHMENT_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_FILE_ATTACHMENT, \
-                               ZathuraAnnotationFileAttachmentPrivate))
-
 static void
 zathura_gtk_annotation_file_attachment_class_init(ZathuraAnnotationFileAttachmentClass* class)
 {
@@ -29,7 +25,7 @@ zathura_gtk_annotation_file_attachment_class_init(ZathuraAnnotationFileAttachmen
 static void
 zathura_gtk_annotation_file_attachment_init(ZathuraAnnotationFileAttachment* widget)
 {
-  ZathuraAnnotationFileAttachmentPrivate* priv = ZATHURA_ANNOTATION_FILE_ATTACHMENT_GET_PRIVATE(widget);
+  ZathuraAnnotationFileAttachmentPrivate* priv = zathura_gtk_annotation_file_attachment_get_instance_private(widget);
 
   priv->drawing_area = NULL;
   priv->annotation   = NULL;
@@ -43,7 +39,7 @@ zathura_gtk_annotation_file_attachment_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_FILE_ATTACHMENT, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationFileAttachmentPrivate* priv = ZATHURA_ANNOTATION_FILE_ATTACHMENT_GET_PRIVATE(widget);
+  ZathuraAnnotationFileAttachmentPrivate* priv = zathura_gtk_annotation_file_attachment_get_instance_private(widget);
 
   priv->annotation = annotation;
 
@@ -59,7 +55,7 @@ zathura_gtk_annotation_file_attachment_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_file_attachment_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationFileAttachmentPrivate* priv = ZATHURA_ANNOTATION_FILE_ATTACHMENT_GET_PRIVATE(data);
+  ZathuraAnnotationFileAttachmentPrivate* priv = zathura_gtk_annotation_file_attachment_get_instance_private(data);
 
   const unsigned int page_height = gtk_widget_get_allocated_height(widget);
   const unsigned int page_width  = gtk_widget_get_allocated_width(widget);

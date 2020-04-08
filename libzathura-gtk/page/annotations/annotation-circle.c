@@ -21,10 +21,6 @@ static void calculate_cloud_line(cairo_t* cairo, double x, double y, double
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationCircle, zathura_gtk_annotation_circle, ZATHURA_TYPE_ANNOTATION)
 
-#define ZATHURA_ANNOTATION_CIRCLE_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_CIRCLE, \
-                               ZathuraAnnotationCirclePrivate))
-
 static void
 zathura_gtk_annotation_circle_class_init(ZathuraAnnotationCircleClass* class)
 {
@@ -34,7 +30,7 @@ zathura_gtk_annotation_circle_class_init(ZathuraAnnotationCircleClass* class)
 static void
 zathura_gtk_annotation_circle_init(ZathuraAnnotationCircle* widget)
 {
-  ZathuraAnnotationCirclePrivate* priv = ZATHURA_ANNOTATION_CIRCLE_GET_PRIVATE(widget);
+  ZathuraAnnotationCirclePrivate* priv = zathura_gtk_annotation_circle_get_instance_private(widget);
 
   priv->drawing_area = NULL;
   priv->annotation   = NULL;
@@ -48,7 +44,7 @@ zathura_gtk_annotation_circle_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_CIRCLE, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationCirclePrivate* priv = ZATHURA_ANNOTATION_CIRCLE_GET_PRIVATE(widget);
+  ZathuraAnnotationCirclePrivate* priv = zathura_gtk_annotation_circle_get_instance_private(widget);
 
   priv->annotation = annotation;
 
@@ -65,7 +61,7 @@ zathura_gtk_annotation_circle_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationCirclePrivate* priv = ZATHURA_ANNOTATION_CIRCLE_GET_PRIVATE(data);
+  ZathuraAnnotationCirclePrivate* priv = zathura_gtk_annotation_circle_get_instance_private(data);
 
   double scale = 1.0;
   g_object_get(G_OBJECT(data), "scale", &scale, NULL);

@@ -12,10 +12,6 @@ static gboolean cb_zathura_gtk_annotation_line_draw(GtkWidget* widget, cairo_t *
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationLine, zathura_gtk_annotation_line, ZATHURA_TYPE_ANNOTATION)
 
-#define ZATHURA_ANNOTATION_LINE_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_LINE, \
-                               ZathuraAnnotationLinePrivate))
-
 static void
 zathura_gtk_annotation_line_class_init(ZathuraAnnotationLineClass* class)
 {
@@ -25,7 +21,7 @@ zathura_gtk_annotation_line_class_init(ZathuraAnnotationLineClass* class)
 static void
 zathura_gtk_annotation_line_init(ZathuraAnnotationLine* widget)
 {
-  ZathuraAnnotationLinePrivate* priv = ZATHURA_ANNOTATION_LINE_GET_PRIVATE(widget);
+  ZathuraAnnotationLinePrivate* priv = zathura_gtk_annotation_line_get_instance_private(widget);
 
   priv->drawing_area = NULL;
   priv->annotation   = NULL;
@@ -39,7 +35,7 @@ zathura_gtk_annotation_line_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_LINE, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationLinePrivate* priv = ZATHURA_ANNOTATION_LINE_GET_PRIVATE(widget);
+  ZathuraAnnotationLinePrivate* priv = zathura_gtk_annotation_line_get_instance_private(widget);
 
   priv->annotation = annotation;
 
@@ -56,7 +52,7 @@ zathura_gtk_annotation_line_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_line_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationLinePrivate* priv = ZATHURA_ANNOTATION_LINE_GET_PRIVATE(data);
+  ZathuraAnnotationLinePrivate* priv = zathura_gtk_annotation_line_get_instance_private(data);
 
   double scale = 1.0;
   g_object_get(G_OBJECT(data), "scale", &scale, NULL);

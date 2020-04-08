@@ -12,10 +12,6 @@ static gboolean cb_zathura_gtk_annotation_strike_out_draw(GtkWidget* widget, cai
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationStrikeOut, zathura_gtk_annotation_strike_out, ZATHURA_TYPE_ANNOTATION)
 
-#define ZATHURA_ANNOTATION_STRIKE_OUT_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_STRIKE_OUT, \
-                               ZathuraAnnotationStrikeOutPrivate))
-
 static void
 zathura_gtk_annotation_strike_out_class_init(ZathuraAnnotationStrikeOutClass* class)
 {
@@ -25,7 +21,7 @@ zathura_gtk_annotation_strike_out_class_init(ZathuraAnnotationStrikeOutClass* cl
 static void
 zathura_gtk_annotation_strike_out_init(ZathuraAnnotationStrikeOut* widget)
 {
-  ZathuraAnnotationStrikeOutPrivate* priv = ZATHURA_ANNOTATION_STRIKE_OUT_GET_PRIVATE(widget);
+  ZathuraAnnotationStrikeOutPrivate* priv = zathura_gtk_annotation_strike_out_get_instance_private(widget);
 
   priv->drawing_area = NULL;
   priv->annotation   = NULL;
@@ -39,7 +35,7 @@ zathura_gtk_annotation_strike_out_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_STRIKE_OUT, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationStrikeOutPrivate* priv = ZATHURA_ANNOTATION_STRIKE_OUT_GET_PRIVATE(widget);
+  ZathuraAnnotationStrikeOutPrivate* priv = zathura_gtk_annotation_strike_out_get_instance_private(widget);
 
   priv->annotation = annotation;
 
@@ -56,7 +52,7 @@ zathura_gtk_annotation_strike_out_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_strike_out_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationStrikeOutPrivate* priv = ZATHURA_ANNOTATION_STRIKE_OUT_GET_PRIVATE(data);
+  ZathuraAnnotationStrikeOutPrivate* priv = zathura_gtk_annotation_strike_out_get_instance_private(data);
 
   zathura_list_t* quad_points;
   if (zathura_annotation_highlight_get_quad_points(priv->annotation, &quad_points) != ZATHURA_ERROR_OK) {

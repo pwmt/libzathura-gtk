@@ -113,7 +113,7 @@ zathura_gtk_page_class_init(ZathuraPageClass* class)
 static void
 zathura_gtk_page_init(ZathuraPage* widget)
 {
-  ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(widget);
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(widget);
 
   priv->page               = NULL;
   priv->rotated_bin        = NULL;
@@ -147,8 +147,8 @@ zathura_gtk_page_new(zathura_page_t* page)
     return NULL;
   }
 
-  GObject* widget = g_object_new(ZATHURA_TYPE_PAGE, "page", page, NULL);
-  ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(widget);
+  ZathuraPage* widget = g_object_new(ZATHURA_TYPE_PAGE, "page", page, NULL);
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(widget);
 
   if (zathura_page_get_width(page, &(priv->dimensions.width)) != ZATHURA_ERROR_OK) {
     return NULL;
@@ -201,7 +201,7 @@ static void
 zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec)
 {
   ZathuraPage* page        = ZATHURA_PAGE(object);
-  ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(page);
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(page);
 
   switch (prop_id) {
     case PROP_PAGE:
@@ -261,7 +261,7 @@ static void
 zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec)
 {
   ZathuraPage* page        = ZATHURA_PAGE(object);
-  ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(page);
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(page);
 
   switch (prop_id) {
     case PROP_PAGE:
@@ -295,7 +295,7 @@ static void
 calculate_widget_size(ZathuraPage* page, unsigned int* widget_width,
     unsigned int* widget_height)
 {
-  ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(page);
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(page);
 
   *widget_width  = round(priv->dimensions.width  * priv->settings.scale);
   *widget_height = round(priv->dimensions.height * priv->settings.scale);
@@ -304,7 +304,7 @@ calculate_widget_size(ZathuraPage* page, unsigned int* widget_width,
 static void
 render_page(ZathuraPage* widget)
 {
-  ZathuraPagePrivate* priv = ZATHURA_PAGE_GET_PRIVATE(widget);
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(widget);
 
   unsigned int page_widget_width;
   unsigned int page_widget_height;

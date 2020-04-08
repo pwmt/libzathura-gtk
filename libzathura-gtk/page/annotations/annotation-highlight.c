@@ -12,10 +12,6 @@ static gboolean cb_zathura_gtk_annotation_highlight_draw(GtkWidget* widget, cair
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationHighlight, zathura_gtk_annotation_highlight, ZATHURA_TYPE_ANNOTATION)
 
-#define ZATHURA_ANNOTATION_HIGHLIGHT_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((obj), ZATHURA_TYPE_ANNOTATION_HIGHLIGHT, \
-                               ZathuraAnnotationHighlightPrivate))
-
 static void
 zathura_gtk_annotation_highlight_class_init(ZathuraAnnotationHighlightClass* class)
 {
@@ -25,7 +21,7 @@ zathura_gtk_annotation_highlight_class_init(ZathuraAnnotationHighlightClass* cla
 static void
 zathura_gtk_annotation_highlight_init(ZathuraAnnotationHighlight* widget)
 {
-  ZathuraAnnotationHighlightPrivate* priv = ZATHURA_ANNOTATION_HIGHLIGHT_GET_PRIVATE(widget);
+  ZathuraAnnotationHighlightPrivate* priv = zathura_gtk_annotation_highlight_get_instance_private(widget);
 
   priv->drawing_area = NULL;
   priv->annotation   = NULL;
@@ -39,7 +35,7 @@ zathura_gtk_annotation_highlight_new(zathura_annotation_t* annotation)
   GObject* widget = g_object_new(ZATHURA_TYPE_ANNOTATION_HIGHLIGHT, "annotation", annotation, NULL);
   g_return_val_if_fail(widget != NULL, NULL);
 
-  ZathuraAnnotationHighlightPrivate* priv = ZATHURA_ANNOTATION_HIGHLIGHT_GET_PRIVATE(widget);
+  ZathuraAnnotationHighlightPrivate* priv = zathura_gtk_annotation_highlight_get_instance_private(widget);
 
   priv->annotation = annotation;
 
@@ -56,7 +52,7 @@ zathura_gtk_annotation_highlight_new(zathura_annotation_t* annotation)
 static gboolean
 cb_zathura_gtk_annotation_highlight_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
 {
-  ZathuraAnnotationHighlightPrivate* priv = ZATHURA_ANNOTATION_HIGHLIGHT_GET_PRIVATE(data);
+  ZathuraAnnotationHighlightPrivate* priv = zathura_gtk_annotation_highlight_get_instance_private(data);
 
   zathura_list_t* quad_points;
   if (zathura_annotation_highlight_get_quad_points(priv->annotation, &quad_points) != ZATHURA_ERROR_OK) {

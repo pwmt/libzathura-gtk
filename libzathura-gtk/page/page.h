@@ -29,7 +29,6 @@ struct _ZathuraPageClass {
   GtkBinClass parent_class;
 };
 
-
 GType zathura_gtk_page_get_type(void);
 
 GtkWidget* zathura_gtk_page_new(zathura_page_t* page);

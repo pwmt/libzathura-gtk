@@ -9,6 +9,7 @@
 
 zathura_document_t* document;
 zathura_plugin_manager_t* plugin_manager;
+Suite* create_suite(void);
 
 static void setup_document(void) {
   fail_unless(zathura_plugin_manager_new(&plugin_manager) == ZATHURA_ERROR_OK);
@@ -36,7 +37,7 @@ START_TEST(test_document_new) {
   fail_unless(zathura_gtk_document_new(NULL) == NULL);
 
   /* basic invalid arguments */
-  ZathuraDocument* widget = zathura_gtk_document_new(document);
+  GtkWidget* widget = zathura_gtk_document_new(document);
   fail_unless(widget != NULL);
 
   zathura_document_t* document_tmp = NULL;
