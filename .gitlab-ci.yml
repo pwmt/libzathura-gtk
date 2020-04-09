@@ -79,36 +79,6 @@ test:debian-buster:
   except:
     - tags
 
-# Ubuntu 16.04 LTS (Xenial Xerus)
-build:ubuntu-xenial:
-  tags:
-    - pwmt
-  stage: build
-  image: registry.pwmt.org/pwmt/gitlab-runner-images/ubuntu:xenial
-  script:
-    - mkdir -p build && cd build
-    - meson ..
-    - ninja
-  artifacts:
-    expire_in: 1 day
-    paths:
-      - build
-  except:
-    - tags
-
-test:ubuntu-xenial:
-  tags:
-    - pwmt
-  stage: test
-  image: registry.pwmt.org/pwmt/gitlab-runner-images/ubuntu:xenial
-  script:
-    - cd build
-    - xvfb-run ninja test
-  dependencies:
-    - build:ubuntu-xenial
-  except:
-    - tags
-
 # Ubuntu 18.04 LTS (Bionic Beaver)
 build:ubuntu-bionic:
   tags:
