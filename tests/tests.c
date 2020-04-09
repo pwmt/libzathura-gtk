@@ -15,7 +15,7 @@ main(int argc, char* argv[])
 #endif
 
   /* Initialize GTK */
-  gtk_init(&argc, &argv);
+  gtk_test_init(&argc, &argv);
 
   /* setup test suite */
   SRunner* suite_runner = srunner_create(create_suite());
