@@ -27,7 +27,7 @@ test:archlinux:
   image: registry.pwmt.org/pwmt/gitlab-runner-images/archlinux:latest
   script:
     - cd build
-    - ninja test
+    - xvfb-run ninja test
   dependencies:
     - build:archlinux
   except:
