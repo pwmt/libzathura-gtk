@@ -73,9 +73,39 @@ test:debian-buster:
   image: registry.pwmt.org/pwmt/gitlab-runner-images/debian:buster
   script:
     - cd build
-    - ninja test
+    - xvfb-run ninja test
   dependencies:
     - build:debian-buster
+  except:
+    - tags
+
+# Ubuntu 16.04 LTS (Xenial Xerus)
+build:ubuntu-xenial:
+  tags:
+    - pwmt
+  stage: build
+  image: registry.pwmt.org/pwmt/gitlab-runner-images/ubuntu:xenial
+  script:
+    - mkdir -p build && cd build
+    - meson ..
+    - ninja
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - build
+  except:
+    - tags
+
+test:ubuntu-xenial:
+  tags:
+    - pwmt
+  stage: test
+  image: registry.pwmt.org/pwmt/gitlab-runner-images/ubuntu:xenial
+  script:
+    - cd build
+    - xvfb-run ninja test
+  dependencies:
+    - build:ubuntu-xenial
   except:
     - tags
 
@@ -103,7 +133,7 @@ test:ubuntu-bionic:
   image: registry.pwmt.org/pwmt/gitlab-runner-images/ubuntu:bionic
   script:
     - cd build
-    - ninja test
+    - xvfb-run ninja test
   dependencies:
     - build:ubuntu-bionic
   except:
@@ -133,8 +163,38 @@ test:ubuntu-eoan:
   image: registry.pwmt.org/pwmt/gitlab-runner-images/ubuntu:eoan
   script:
     - cd build
-    - ninja test
+    - xvfb-run ninja test
   dependencies:
     - build:ubuntu-eoan
+  except:
+    - tags
+
+# Ubuntu 20.04 (Focal Fossa)
+build:ubuntu-focal:
+  tags:
+    - pwmt
+  stage: build
+  image: registry.pwmt.org/pwmt/gitlab-runner-images/ubuntu:focal
+  script:
+    - mkdir -p build && cd build
+    - meson ..
+    - ninja
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - build
+  except:
+    - tags
+
+test:ubuntu-focal:
+  tags:
+    - pwmt
+  stage: test
+  image: registry.pwmt.org/pwmt/gitlab-runner-images/ubuntu:focal
+  script:
+    - cd build
+    - xvfb-run ninja test
+  dependencies:
+    - build:ubuntu-focal
   except:
     - tags
