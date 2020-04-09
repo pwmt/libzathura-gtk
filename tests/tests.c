@@ -2,6 +2,7 @@
 
 #include <check.h>
 #include <fiu.h>
+#include <gtk/gtk.h>
 
 extern Suite* create_suite(void);
 
@@ -12,6 +13,9 @@ main(int argc, char* argv[])
 #ifdef WITH_LIBFIU
   fiu_init(0);
 #endif
+
+  /* Initialize GTK */
+  gtk_init(&argc, &argv);
 
   /* setup test suite */
   SRunner* suite_runner = srunner_create(create_suite());

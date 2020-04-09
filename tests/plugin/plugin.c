@@ -4,6 +4,7 @@
 #include <cairo.h>
 #endif
 
+#include <libzathura/version.h>
 #include <libzathura/plugin-api.h>
 #include <libzathura/macros.h>
 
