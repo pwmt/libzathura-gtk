@@ -34,3 +34,16 @@ zathura_blend_mode_to_cairo_operator(zathura_blend_mode_t blend_mode)
 
   return CAIRO_OPERATOR_OVER;
 }
+
+zathura_rectangle_t
+zathura_rectangle_scale(zathura_rectangle_t rectangle, double scale)
+{
+  zathura_rectangle_t scaled_rectangle;
+
+  scaled_rectangle.p1.x = rectangle.p1.x * scale;
+  scaled_rectangle.p1.y = rectangle.p1.y * scale;
+  scaled_rectangle.p2.x = rectangle.p2.x * scale;
+  scaled_rectangle.p2.y = rectangle.p2.y * scale;
+
+  return scaled_rectangle;
+}

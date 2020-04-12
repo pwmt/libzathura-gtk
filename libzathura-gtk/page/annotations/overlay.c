@@ -5,7 +5,7 @@
 
 #include "overlay.h"
 #include "../internal.h"
-#include "../utils.h"
+#include "../../utils.h"
 #include "../../macros.h"
 
 
@@ -81,9 +81,9 @@ zathura_gtk_annotation_overlay_class_init(ZathuraAnnotationOverlayClass* class)
     object_class,
     PROP_ANNOTATIONS_SHOW,
     g_param_spec_boolean(
-      "show-form-fields",
-      "show-form-fields",
-      "show form-fields by drawing rectangles around them",
+      "show-annotations",
+      "show-annotations",
+      "Display annotations",
       FALSE,
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
@@ -133,11 +133,10 @@ zathura_gtk_annotation_overlay_size_allocate(GtkWidget* widget, GdkRectangle* al
 
   double page_scale;
   g_object_get(G_OBJECT(priv->page), "scale", &page_scale, NULL);
-  page_scale /= gtk_widget_get_scale_factor(GTK_WIDGET(priv->page));
 
   annotation_widget_mapping_t* annotation_mapping;
   ZATHURA_LIST_FOREACH(annotation_mapping, priv->annotations) {
-      zathura_rectangle_t position = calculate_correct_position(priv->page, annotation_mapping->position);
+      zathura_rectangle_t position = zathura_rectangle_scale(annotation_mapping->position, page_scale);
       const unsigned int width  = ceil(position.p2.x) - floor(position.p1.x);
       const unsigned int height = ceil(position.p2.y) - floor(position.p1.y);
 
@@ -189,7 +188,8 @@ create_widgets(GtkWidget* overlay)
   ZathuraAnnotationOverlayPrivate* priv = zathura_gtk_annotation_overlay_get_instance_private(ZATHURA_ANNOTATION_OVERLAY(overlay));
 
   zathura_page_t* page = NULL;
-  g_object_get(G_OBJECT(priv->page), "page", &page, NULL);
+  double scale = 1.0;
+  g_object_get(G_OBJECT(priv->page), "page", &page, "scale", &scale, NULL);
 
   zathura_list_t* annotations;
   if (zathura_page_get_annotations(page, &annotations) != ZATHURA_ERROR_OK) {
@@ -294,7 +294,7 @@ create_widgets(GtkWidget* overlay)
       priv->annotations = zathura_list_append(priv->annotations, mapping);
 
       /* Setup initial position of widgets */
-      position = calculate_correct_position(priv->page, position);
+      position = zathura_rectangle_scale(position, scale);
       const unsigned int width  = ceil(position.p2.x) - floor(position.p1.x);
       const unsigned int height = ceil(position.p2.y) - floor(position.p1.y);
 

@@ -4,7 +4,7 @@
 
 #include "editor.h"
 #include "../internal.h"
-#include "../utils.h"
+#include "../../utils.h"
 #include "../../macros.h"
 
 #include "form-field-button.h"
@@ -126,7 +126,8 @@ create_widgets(GtkWidget* editor)
   ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(ZATHURA_FORM_FIELD_EDITOR(editor));
 
   zathura_page_t* page = NULL;
-  g_object_get(G_OBJECT(priv->page), "page", &page, NULL);
+  double scale = 1.0;
+  g_object_get(G_OBJECT(priv->page), "page", &page, "scale", &scale, NULL);
 
   zathura_list_t* form_fields;
   if (zathura_page_get_form_fields(page, &form_fields) != ZATHURA_ERROR_OK) {
@@ -167,7 +168,7 @@ create_widgets(GtkWidget* editor)
       priv->form_fields = zathura_list_append(priv->form_fields, mapping);
 
       /* Setup initial position of widgets */
-      zathura_rectangle_t position = calculate_correct_position(priv->page, form_field_mapping->position);
+      zathura_rectangle_t position = zathura_rectangle_scale(form_field_mapping->position, scale);
       const unsigned int width  = ceil(position.p2.x) - floor(position.p1.x);
       const unsigned int height = ceil(position.p2.y) - floor(position.p1.y);
 
@@ -187,6 +188,9 @@ zathura_gtk_form_field_editor_size_allocate(GtkWidget* widget, GdkRectangle* all
     create_widgets(widget);
   }
 
+  double scale = 1.0;
+  g_object_get(G_OBJECT(priv->page), "scale", &scale, NULL);
+
   if (priv->highlight == true) {
     gtk_widget_set_size_request(priv->layer.drawing_area, allocation->width, allocation->height);
     gtk_widget_queue_resize(priv->layer.drawing_area);
@@ -194,7 +198,7 @@ zathura_gtk_form_field_editor_size_allocate(GtkWidget* widget, GdkRectangle* all
 
   form_field_widget_mapping_t* form_field_mapping;
   ZATHURA_LIST_FOREACH(form_field_mapping, priv->form_fields) {
-      zathura_rectangle_t position = calculate_correct_position(priv->page, form_field_mapping->position);
+      zathura_rectangle_t position = zathura_rectangle_scale(form_field_mapping->position, scale);
       const unsigned int width  = ceil(position.p2.x) - floor(position.p1.x);
       const unsigned int height = ceil(position.p2.y) - floor(position.p1.y);
 
@@ -250,9 +254,13 @@ cb_draw_highlights(GtkWidget* UNUSED(widget), cairo_t* cairo, gpointer data)
 
   cairo_save(cairo);
 
+  /* Get scale */
+  double scale = 1.0;
+  g_object_get(G_OBJECT(priv->page), "scale", &scale, NULL);
+
   form_field_widget_mapping_t* form_field_mapping;
   ZATHURA_LIST_FOREACH(form_field_mapping, priv->form_fields) {
-    zathura_rectangle_t position = calculate_correct_position(priv->page, form_field_mapping->position);
+    zathura_rectangle_t position = zathura_rectangle_scale(form_field_mapping->position, scale);
     const unsigned int width  = ceil(position.p2.x) - floor(position.p1.x);
     const unsigned int height = ceil(position.p2.y) - floor(position.p1.y);
 

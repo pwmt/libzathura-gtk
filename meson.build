@@ -132,13 +132,11 @@ sources = files(
   'libzathura-gtk/page/annotations/icons.c',
   'libzathura-gtk/page/annotations/overlay.c',
   'libzathura-gtk/page/annotations/utils.c',
-  'libzathura-gtk/page/callbacks.c',
   'libzathura-gtk/page/form-fields/editor.c',
   'libzathura-gtk/page/form-fields/form-field-button.c',
   'libzathura-gtk/page/form-fields/form-field-choice.c',
   'libzathura-gtk/page/form-fields/form-field-text.c',
   'libzathura-gtk/page/page.c',
-  'libzathura-gtk/page/utils.c',
   'libzathura-gtk/widgets/rotated-bin.c',
 )
 
@@ -157,10 +155,8 @@ headers = {
     'libzathura-gtk/document/grid.h'
   ),
   'libzathura/page': files(
-    'libzathura-gtk/page/callbacks.h',
     'libzathura-gtk/page/internal.h',
     'libzathura-gtk/page/page.h',
-    'libzathura-gtk/page/utils.h'
   ),
   'libzathura/page/annotations': files(
     'libzathura-gtk/page/annotations/annotation.h',
