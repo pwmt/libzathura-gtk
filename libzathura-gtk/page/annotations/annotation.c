@@ -122,7 +122,7 @@ zathura_gtk_annotation_draw(GtkWidget* widget, cairo_t* cairo)
   }
 
   bool has_appearance_stream = false;
-  if (zathura_annotation_has_appearance_stream(priv->annotation, &has_appearance_stream) != ZATHURA_ERROR_OK) {
+  if ((zathura_annotation_has_appearance_stream(priv->annotation, &has_appearance_stream) != ZATHURA_ERROR_OK)) {
   /* } || has_appearance_stream == */
   /*     false) { */
     goto propagate_event;

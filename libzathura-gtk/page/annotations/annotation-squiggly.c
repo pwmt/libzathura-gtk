@@ -108,7 +108,7 @@ cb_zathura_gtk_annotation_squiggly_draw(GtkWidget* widget, cairo_t *cairo, gpoin
 
     double x_left = x_middle - unit_width;
 
-    for (i = i; i >= 0; i -= 2) {
+    for (; i >= 0; i -= 2) {
       cairo_line_to(cairo, x_middle, y_bottom - square);
       cairo_line_to(cairo, x_left, y_top);
 
