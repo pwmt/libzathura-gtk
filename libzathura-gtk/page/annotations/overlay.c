@@ -187,10 +187,12 @@ static void
 create_widgets(GtkWidget* overlay)
 {
   ZathuraAnnotationOverlayPrivate* priv = zathura_gtk_annotation_overlay_get_instance_private(ZATHURA_ANNOTATION_OVERLAY(overlay));
-  ZathuraPagePrivate* page_priv         = ZATHURA_PAGE_GET_PRIVATE(priv->page);
+
+  zathura_page_t* page = NULL;
+  g_object_get(G_OBJECT(priv->page), "page", &page, NULL);
 
   zathura_list_t* annotations;
-  if (zathura_page_get_annotations(page_priv->page, &annotations) != ZATHURA_ERROR_OK) {
+  if (zathura_page_get_annotations(page, &annotations) != ZATHURA_ERROR_OK) {
     return;
   }
 

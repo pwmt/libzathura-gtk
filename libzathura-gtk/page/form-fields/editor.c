@@ -124,10 +124,12 @@ static void
 create_widgets(GtkWidget* editor)
 {
   ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(ZATHURA_FORM_FIELD_EDITOR(editor));
-  ZathuraPagePrivate* page_priv = ZATHURA_PAGE_GET_PRIVATE(priv->page);
+
+  zathura_page_t* page = NULL;
+  g_object_get(G_OBJECT(priv->page), "page", &page, NULL);
 
   zathura_list_t* form_fields;
-  if (zathura_page_get_form_fields(page_priv->page, &form_fields) != ZATHURA_ERROR_OK) {
+  if (zathura_page_get_form_fields(page, &form_fields) != ZATHURA_ERROR_OK) {
     return;
   }
 
