@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
   }
 
   /* Load plugin from file */
-  if (zathura_plugin_manager_load_dir(plugin_manager, "/usr/lib/zathura/") != ZATHURA_ERROR_OK) {
+  if (zathura_plugin_manager_load_dir(plugin_manager, "/usr/lib/libzathura/") != ZATHURA_ERROR_OK) {
     zathura_plugin_manager_free(plugin_manager);
     return -1;
   }

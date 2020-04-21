@@ -134,7 +134,7 @@ zathura_gtk_page_init(ZathuraPage* widget)
   priv->dimensions.height = 0;
 
   priv->settings.rotation = 0;
-  priv->settings.scale    = 1.0 * gtk_widget_get_scale_factor(GTK_WIDGET(widget));
+  priv->settings.scale    = 1.0;
 
   priv->links.list      = NULL;
   priv->links.retrieved = false;
@@ -165,12 +165,14 @@ zathura_gtk_page_new(zathura_page_t* page)
     return NULL;
   }
 
+  double scale_factor = priv->settings.scale * gtk_widget_get_scale_factor(GTK_WIDGET(widget));
+
   /* Setup drawing area */
   priv->layer.drawing_area = gtk_drawing_area_new();
   gtk_widget_set_halign(priv->layer.drawing_area, GTK_ALIGN_START);
   gtk_widget_set_valign(priv->layer.drawing_area, GTK_ALIGN_START);
   gtk_widget_set_size_request(priv->layer.drawing_area, priv->dimensions.width *
-      priv->settings.scale, priv->dimensions.height * priv->settings.scale);
+      scale_factor, priv->dimensions.height * scale_factor);
   g_signal_connect(G_OBJECT(priv->layer.drawing_area), "draw", G_CALLBACK(cb_page_draw), widget);
 
   /* Setup links layer */
@@ -236,10 +238,8 @@ zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* valu
     case PROP_SCALE:
       {
         double scale = g_value_get_double(value);
-        gint scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(page));
-        double new_scale = scale * scale_factor;
-        if (priv->settings.scale != new_scale) {
-          priv->settings.scale = new_scale;
+        if (priv->settings.scale != scale) {
+          priv->settings.scale = scale;
           render_page(page);
         }
       }
@@ -304,8 +304,10 @@ calculate_widget_size(ZathuraPage* page, unsigned int* widget_width,
 {
   ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(page);
 
-  *widget_width  = round(priv->dimensions.width  * priv->settings.scale);
-  *widget_height = round(priv->dimensions.height * priv->settings.scale);
+  double scale_factor = priv->settings.scale * gtk_widget_get_scale_factor(GTK_WIDGET(page));
+
+  *widget_width  = round(priv->dimensions.width  * scale_factor);
+  *widget_height = round(priv->dimensions.height * scale_factor);
 }
 
 static void
@@ -351,18 +353,23 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
   }
 
   /* Fill white */
+  cairo_save(cairo);
   cairo_set_source_rgb(image_cairo, RGB_TO_CAIRO(255, 255, 255));
-  cairo_rectangle(image_cairo, 0, 0, page_width, page_height);
-  cairo_fill(image_cairo);
+  cairo_paint(cairo);
+  cairo_restore(cairo);
+
+  cairo_save(cairo);
 
   /* Scale */
-  cairo_scale(image_cairo, priv->settings.scale, priv->settings.scale);
+  double scale_factor = priv->settings.scale * gtk_widget_get_scale_factor(GTK_WIDGET(widget));
+  /* cairo_scale(image_cairo, scale_factor, scale_factor); */
 
   /* Render page */
-  if (zathura_page_render_cairo(priv->page, image_cairo, priv->settings.scale, 0, 0) != ZATHURA_ERROR_OK) {
+  if (zathura_page_render_cairo(priv->page, image_cairo, scale_factor, 0, 0) != ZATHURA_ERROR_OK) {
     return FALSE;
   }
 
+  cairo_restore(image_cairo);
   cairo_destroy(image_cairo);
 
   cairo_set_source_surface(cairo, image_surface, 0, 0);
@@ -391,11 +398,12 @@ cb_page_draw_links(GtkWidget* widget, cairo_t *cairo, gpointer data)
     }
 
     cairo_save(cairo);
+    double scale_factor = priv->settings.scale * gtk_widget_get_scale_factor(GTK_WIDGET(widget));
 
     /* Draw each link */
     zathura_link_mapping_t* link_mapping;
     ZATHURA_LIST_FOREACH(link_mapping, priv->links.list) {
-      zathura_rectangle_t position = zathura_rectangle_scale(link_mapping->position, priv->settings.scale);
+      zathura_rectangle_t position = zathura_rectangle_scale(link_mapping->position, scale_factor);
       unsigned int width  = position.p2.x - position.p1.x;
       unsigned int height = position.p2.y - position.p1.y;
 
