@@ -165,14 +165,13 @@ zathura_gtk_page_new(zathura_page_t* page)
     return NULL;
   }
 
-  double scale_factor = priv->settings.scale * gtk_widget_get_scale_factor(GTK_WIDGET(widget));
+  double scale_factor = priv->settings.scale;
 
   /* Setup drawing area */
   priv->layer.drawing_area = gtk_drawing_area_new();
   gtk_widget_set_halign(priv->layer.drawing_area, GTK_ALIGN_START);
   gtk_widget_set_valign(priv->layer.drawing_area, GTK_ALIGN_START);
-  gtk_widget_set_size_request(priv->layer.drawing_area, priv->dimensions.width *
-      scale_factor, priv->dimensions.height * scale_factor);
+  gtk_widget_set_size_request(priv->layer.drawing_area, priv->dimensions.width, priv->dimensions.height);
   g_signal_connect(G_OBJECT(priv->layer.drawing_area), "draw", G_CALLBACK(cb_page_draw), widget);
 
   /* Setup links layer */
@@ -304,7 +303,7 @@ calculate_widget_size(ZathuraPage* page, unsigned int* widget_width,
 {
   ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(page);
 
-  double scale_factor = priv->settings.scale * gtk_widget_get_scale_factor(GTK_WIDGET(page));
+  double scale_factor = priv->settings.scale;
 
   *widget_width  = round(priv->dimensions.width  * scale_factor);
   *widget_height = round(priv->dimensions.height * scale_factor);
@@ -335,16 +334,20 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
 {
   ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(data);
 
+  gint device_scale = gtk_widget_get_scale_factor(widget);
+
   const unsigned int page_width  = gtk_widget_get_allocated_width(widget);
   const unsigned int page_height = gtk_widget_get_allocated_height(widget);
 
   cairo_save(cairo);
 
   /* Create image surface */
-  cairo_surface_t* image_surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, page_width, page_height);
+  cairo_surface_t* image_surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, page_width * device_scale, page_height * device_scale);
   if (image_surface == NULL) {
     return FALSE;
   }
+
+  cairo_surface_set_device_scale(image_surface, device_scale, device_scale);
 
   cairo_t* image_cairo = cairo_create(image_surface);
   if (image_cairo == NULL) {
@@ -353,19 +356,18 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
   }
 
   /* Fill white */
-  cairo_save(cairo);
+  cairo_save(image_cairo);
   cairo_set_source_rgb(image_cairo, RGB_TO_CAIRO(255, 255, 255));
-  cairo_paint(cairo);
-  cairo_restore(cairo);
-
-  cairo_save(cairo);
+  cairo_paint(image_cairo);
+  cairo_restore(image_cairo);
 
   /* Scale */
-  double scale_factor = priv->settings.scale * gtk_widget_get_scale_factor(GTK_WIDGET(widget));
-  /* cairo_scale(image_cairo, scale_factor, scale_factor); */
+  double scale_factor = priv->settings.scale;
+
+  cairo_save(image_cairo);
 
   /* Render page */
-  if (zathura_page_render_cairo(priv->page, image_cairo, scale_factor, 0, 0) != ZATHURA_ERROR_OK) {
+  if (zathura_page_render_cairo(priv->page, image_cairo, scale_factor * device_scale, 0, 0) != ZATHURA_ERROR_OK) {
     return FALSE;
   }
 
