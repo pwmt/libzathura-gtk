@@ -23,12 +23,12 @@ typedef struct _ZathuraFormFieldEditorClass ZathuraFormFieldEditorClass;
 typedef struct _ZathuraFormFieldEditorPrivate ZathuraFormFieldEditorPrivate;
 
 struct _ZathuraFormFieldEditor {
-  GtkBin parent;
+  GtkWidget parent;
   ZathuraFormFieldEditorPrivate* priv;
 };
 
 struct _ZathuraFormFieldEditorClass {
-  GtkBinClass parent_class;
+  GtkWidgetClass parent_class;
 };
 
 

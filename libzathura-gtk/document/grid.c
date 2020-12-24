@@ -57,21 +57,14 @@ zathura_gtk_fill_grid(ZathuraDocumentPrivate* priv)
     /* Attach to grid */
     gtk_grid_attach(GTK_GRID (priv->gtk.grid), page_widget, x, y, 1, 1);
   }
-
-  gtk_widget_show_all(priv->gtk.grid);
-}
-
-void
-cb_zathura_gtk_grid_clear(GtkWidget* widget, gpointer data)
-{
-  g_object_ref(widget);
-  gtk_container_remove(GTK_CONTAINER(data), widget);
 }
 
 void
 zathura_gtk_clear_grid(ZathuraDocumentPrivate* priv)
 {
-  gtk_container_foreach(GTK_CONTAINER(priv->gtk.grid), cb_zathura_gtk_grid_clear, priv->gtk.grid);
+  for (GtkWidget* child = gtk_widget_get_first_child(priv->gtk.grid); child != NULL; child = gtk_widget_get_next_sibling(child)) {
+    gtk_grid_remove(GTK_GRID(priv->gtk.grid), child);
+  }
 }
 
 void
@@ -255,7 +248,7 @@ update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, do
     zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, i);
 
     /* Get widget coordinates relative to the scrolled window */
-    int page_widget_x, page_widget_y;
+    double page_widget_x, page_widget_y;
     if (gtk_widget_translate_coordinates(page_widget, priv->gtk.grid, 0,
         0, &page_widget_x, &page_widget_y) == FALSE) {
       is_visible = false;

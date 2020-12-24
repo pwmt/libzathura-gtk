@@ -39,11 +39,11 @@ localedir = get_option('localedir')
 libm = cc.find_library('m', required: false)
 libzathura = dependency('libzathura', version: '>=0.0.1', fallback: ['libzathura', 'libzathura_dependency'])
 glib = dependency('glib-2.0', version: '>=2.38')
-gtk3 = dependency('gtk+-3.0', version: '>=3.20')
+gtk3 = dependency('gtk4', version: '>=4.0.0')
 rsvg = dependency('librsvg-2.0')
 
 build_dependencies = [libzathura, libm, glib, gtk3, rsvg]
-pc_requires = ['glib-2.0', 'gtk+-3.0', 'libzathura']
+pc_requires = ['glib-2.0', 'gtk4', 'libzathura']
 
 # defines
 defines = [
@@ -105,37 +105,37 @@ sources = files(
   'libzathura-gtk/document/callbacks.c',
   'libzathura-gtk/document/document.c',
   'libzathura-gtk/document/grid.c',
-  'libzathura-gtk/page/annotations/annotation-3d.c',
-  'libzathura-gtk/page/annotations/annotation-caret.c',
-  'libzathura-gtk/page/annotations/annotation-circle.c',
-  'libzathura-gtk/page/annotations/annotation-file-attachment.c',
-  'libzathura-gtk/page/annotations/annotation-free-text.c',
-  'libzathura-gtk/page/annotations/annotation-highlight.c',
-  'libzathura-gtk/page/annotations/annotation-ink.c',
-  'libzathura-gtk/page/annotations/annotation-line.c',
-  'libzathura-gtk/page/annotations/annotation-link.c',
-  'libzathura-gtk/page/annotations/annotation-movie.c',
-  'libzathura-gtk/page/annotations/annotation-polygon.c',
-  'libzathura-gtk/page/annotations/annotation-polyline.c',
-  'libzathura-gtk/page/annotations/annotation-printer-mark.c',
-  'libzathura-gtk/page/annotations/annotation-screen.c',
-  'libzathura-gtk/page/annotations/annotation-sound.c',
-  'libzathura-gtk/page/annotations/annotation-square.c',
-  'libzathura-gtk/page/annotations/annotation-squiggly.c',
-  'libzathura-gtk/page/annotations/annotation-stamp.c',
-  'libzathura-gtk/page/annotations/annotation-strike-out.c',
-  'libzathura-gtk/page/annotations/annotation-text.c',
-  'libzathura-gtk/page/annotations/annotation-underline.c',
-  'libzathura-gtk/page/annotations/annotation-watermark.c',
-  'libzathura-gtk/page/annotations/annotation-widget.c',
-  'libzathura-gtk/page/annotations/annotation.c',
-  'libzathura-gtk/page/annotations/icons.c',
-  'libzathura-gtk/page/annotations/overlay.c',
-  'libzathura-gtk/page/annotations/utils.c',
-  'libzathura-gtk/page/form-fields/editor.c',
-  'libzathura-gtk/page/form-fields/form-field-button.c',
-  'libzathura-gtk/page/form-fields/form-field-choice.c',
-  'libzathura-gtk/page/form-fields/form-field-text.c',
+  # 'libzathura-gtk/page/annotations/annotation-3d.c',
+  # 'libzathura-gtk/page/annotations/annotation-caret.c',
+  # 'libzathura-gtk/page/annotations/annotation-circle.c',
+  # 'libzathura-gtk/page/annotations/annotation-file-attachment.c',
+  # 'libzathura-gtk/page/annotations/annotation-free-text.c',
+  # 'libzathura-gtk/page/annotations/annotation-highlight.c',
+  # 'libzathura-gtk/page/annotations/annotation-ink.c',
+  # 'libzathura-gtk/page/annotations/annotation-line.c',
+  # 'libzathura-gtk/page/annotations/annotation-link.c',
+  # 'libzathura-gtk/page/annotations/annotation-movie.c',
+  # 'libzathura-gtk/page/annotations/annotation-polygon.c',
+  # 'libzathura-gtk/page/annotations/annotation-polyline.c',
+  # 'libzathura-gtk/page/annotations/annotation-printer-mark.c',
+  # 'libzathura-gtk/page/annotations/annotation-screen.c',
+  # 'libzathura-gtk/page/annotations/annotation-sound.c',
+  # 'libzathura-gtk/page/annotations/annotation-square.c',
+  # 'libzathura-gtk/page/annotations/annotation-squiggly.c',
+  # 'libzathura-gtk/page/annotations/annotation-stamp.c',
+  # 'libzathura-gtk/page/annotations/annotation-strike-out.c',
+  # 'libzathura-gtk/page/annotations/annotation-text.c',
+  # 'libzathura-gtk/page/annotations/annotation-underline.c',
+  # 'libzathura-gtk/page/annotations/annotation-watermark.c',
+  # 'libzathura-gtk/page/annotations/annotation-widget.c',
+  # 'libzathura-gtk/page/annotations/annotation.c',
+  # 'libzathura-gtk/page/annotations/icons.c',
+  # 'libzathura-gtk/page/annotations/overlay.c',
+  # 'libzathura-gtk/page/annotations/utils.c',
+  # 'libzathura-gtk/page/form-fields/editor.c',
+  # 'libzathura-gtk/page/form-fields/form-field-button.c',
+  # 'libzathura-gtk/page/form-fields/form-field-choice.c',
+  # 'libzathura-gtk/page/form-fields/form-field-text.c',
   'libzathura-gtk/page/page.c',
   'libzathura-gtk/widgets/rotated-bin.c',
 )

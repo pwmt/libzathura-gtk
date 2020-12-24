@@ -21,12 +21,12 @@ typedef struct _ZathuraFormFieldChoiceClass ZathuraFormFieldChoiceClass;
 typedef struct _ZathuraFormFieldChoicePrivate ZathuraFormFieldChoicePrivate;
 
 struct _ZathuraFormFieldChoice {
-  GtkBin parent;
+  GtkWidget parent;
   ZathuraFormFieldChoicePrivate* priv;
 };
 
 struct _ZathuraFormFieldChoiceClass {
-  GtkBinClass parent_class;
+  GtkWidgetClass parent_class;
 };
 
 

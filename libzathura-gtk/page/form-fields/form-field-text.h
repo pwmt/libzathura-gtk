@@ -21,12 +21,12 @@ typedef struct _ZathuraFormFieldTextClass ZathuraFormFieldTextClass;
 typedef struct _ZathuraFormFieldTextPrivate ZathuraFormFieldTextPrivate;
 
 struct _ZathuraFormFieldText {
-  GtkBin parent;
+  GtkWidget parent;
   ZathuraFormFieldTextPrivate* priv;
 };
 
 struct _ZathuraFormFieldTextClass {
-  GtkBinClass parent_class;
+  GtkWidgetClass parent_class;
 };
 
 

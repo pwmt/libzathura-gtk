@@ -37,7 +37,7 @@ enum {
   PROP_FORM_FIELDS_HIGHLIGHT
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE(ZathuraDocument, zathura_gtk_document, GTK_TYPE_BIN)
+G_DEFINE_TYPE_WITH_PRIVATE(ZathuraDocument, zathura_gtk_document, GTK_TYPE_WIDGET)
 
 static void
 zathura_gtk_document_class_init(ZathuraDocumentClass* class)
@@ -229,6 +229,9 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
+
+  GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(class);
+  gtk_widget_class_set_layout_manager_type(widget_class, GTK_TYPE_BIN_LAYOUT);
 }
 
 static void
@@ -275,15 +278,15 @@ zathura_gtk_document_new(zathura_document_t* document)
   ZathuraDocumentPrivate* priv = zathura_gtk_document_get_instance_private(ZATHURA_DOCUMENT(widget));
 
   /* Setup scrolled window */
-  priv->gtk.scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  priv->gtk.scrolled_window = gtk_scrolled_window_new();
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (priv->gtk.scrolled_window),
       GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
 
-  g_signal_connect(
-      G_OBJECT(priv->gtk.scrolled_window),
-      "draw",
-      G_CALLBACK(cb_grid_draw),
-      priv);
+  /* g_signal_connect( */
+  /*     G_OBJECT(priv->gtk.scrolled_window), */
+  /*     "draw", */
+  /*     G_CALLBACK(cb_grid_draw), */
+  /*     priv); */
 
   GtkAdjustment* horizontal_adjustment = gtk_scrolled_window_get_hadjustment(
       GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window)
@@ -358,9 +361,9 @@ zathura_gtk_document_new(zathura_document_t* document)
   zathura_gtk_setup_grid(priv);
 
   /* Setup container */
-  gtk_container_add(GTK_CONTAINER(priv->gtk.scrolled_window), GTK_WIDGET(priv->gtk.viewport));
-  gtk_container_add(GTK_CONTAINER(priv->gtk.viewport), GTK_WIDGET(priv->gtk.grid));
-  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->gtk.scrolled_window));
+  gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(priv->gtk.scrolled_window), priv->gtk.viewport);
+  gtk_viewport_set_child(GTK_VIEWPORT(priv->gtk.viewport), priv->gtk.grid);
+  gtk_widget_set_parent(priv->gtk.scrolled_window, GTK_WIDGET(widget));
 
   return GTK_WIDGET(widget);
 }
@@ -666,7 +669,7 @@ static void
 zathura_gtk_document_finalize(GObject* object)
 {
   /* Clean-up icon cache */
-  zathura_gtk_annotation_icon_cache_free();
+  /* zathura_gtk_annotation_icon_cache_free(); */
 }
 
 static void
@@ -729,7 +732,7 @@ restore_current_page(ZathuraDocumentPrivate* priv)
   zathura_page_info_t* page_info = g_malloc0(sizeof(zathura_page_info_t));
 
   /* Calculate offset */
-  int page_widget_offset_x, page_widget_offset_y;
+  double page_widget_offset_x, page_widget_offset_y;
   if (gtk_widget_translate_coordinates(page_widget, priv->gtk.viewport, 0,
       0, &page_widget_offset_x, &page_widget_offset_y) == FALSE) {
     return; // Should not happen!

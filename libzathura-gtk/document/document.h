@@ -23,12 +23,12 @@ typedef struct _ZathuraDocumentClass ZathuraDocumentClass;
 typedef struct _ZathuraDocumentPrivate ZathuraDocumentPrivate;
 
 struct _ZathuraDocument {
-  GtkBin parent;
+  GtkWidget parent;
   ZathuraDocumentPrivate* priv;
 };
 
 struct _ZathuraDocumentClass {
-  GtkBinClass parent_class;
+  GtkWidgetClass parent_class;
 };
 
 GType zathura_gtk_document_get_type(void);

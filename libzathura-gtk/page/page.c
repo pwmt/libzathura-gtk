@@ -16,7 +16,7 @@ static void zathura_gtk_page_set_property(GObject* object, guint prop_id, const 
 static void zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
 static void render_page(ZathuraPage* widget);
 
-static gboolean cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data);
+static void cb_page_draw(GtkDrawingArea *area, cairo_t *cairo, int width, int height, gpointer data);
 static gboolean cb_page_draw_links(GtkWidget *widget, cairo_t *cairo, gpointer data);
 static void cb_page_overlay_realized(GtkWidget* overlay, gpointer data);
 
@@ -30,7 +30,7 @@ enum {
   PROP_FORM_FIELDS_HIGHLIGHT
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE(ZathuraPage, zathura_gtk_page, GTK_TYPE_BIN)
+G_DEFINE_TYPE_WITH_PRIVATE(ZathuraPage, zathura_gtk_page, GTK_TYPE_WIDGET)
 
 static void
 zathura_gtk_page_class_init(ZathuraPageClass* class)
@@ -115,6 +115,9 @@ zathura_gtk_page_class_init(ZathuraPageClass* class)
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
   );
+
+  GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(class);
+  gtk_widget_class_set_layout_manager_type(widget_class, GTK_TYPE_BIN_LAYOUT);
 }
 
 static void
@@ -144,7 +147,9 @@ zathura_gtk_page_init(ZathuraPage* widget)
   priv->form_fields.retrieved = false;
   priv->form_fields.edit      = true;
 
-  gtk_widget_add_events(GTK_WIDGET(widget), GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+  /* gtk_widget_init_template(GTK_WIDGET(widget)); */
+
+  /* gtk_widget_add_events(GTK_WIDGET(widget), GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK); */
 }
 
 GtkWidget*
@@ -172,35 +177,36 @@ zathura_gtk_page_new(zathura_page_t* page)
   gtk_widget_set_halign(priv->layer.drawing_area, GTK_ALIGN_START);
   gtk_widget_set_valign(priv->layer.drawing_area, GTK_ALIGN_START);
   gtk_widget_set_size_request(priv->layer.drawing_area, priv->dimensions.width, priv->dimensions.height);
-  g_signal_connect(G_OBJECT(priv->layer.drawing_area), "draw", G_CALLBACK(cb_page_draw), widget);
+  gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(priv->layer.drawing_area), cb_page_draw, widget, NULL);
 
   /* Setup links layer */
   priv->layer.links = gtk_drawing_area_new();
-  g_signal_connect(G_OBJECT(priv->layer.links), "draw", G_CALLBACK(cb_page_draw_links), widget);
+  /* g_signal_connect(G_OBJECT(priv->layer.links), "draw", G_CALLBACK(cb_page_draw_links), widget); */
 
   /* Setup form fields layer */
-  priv->layer.form_fields = zathura_gtk_form_field_editor_new(ZATHURA_PAGE(widget));
+  /* priv->layer.form_fields = zathura_gtk_form_field_editor_new(ZATHURA_PAGE(widget)); */
 
   /* Setup annotation layer */
-  priv->layer.annotations = zathura_gtk_annotation_overlay_new(ZATHURA_PAGE(widget));
+  /* priv->layer.annotations = zathura_gtk_annotation_overlay_new(ZATHURA_PAGE(widget)); */
 
   /* Setup over lay */
   priv->overlay = gtk_overlay_new();
-  gtk_container_add(GTK_CONTAINER(priv->overlay), GTK_WIDGET(priv->layer.drawing_area));
+  gtk_overlay_set_child(GTK_OVERLAY(priv->overlay), GTK_WIDGET(priv->layer.drawing_area));
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.links);
-  gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.annotations);
-  gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.form_fields);
+  /* gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.annotations); */
+  /* gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.form_fields); */
 
-  g_signal_connect(priv->overlay, "realize", G_CALLBACK(cb_page_overlay_realized), widget);
+  /* g_signal_connect(priv->overlay, "realize", G_CALLBACK(cb_page_overlay_realized), widget); */
 
   /* Setup rotated bin container */
   priv->rotated_bin = zathura_gtk_rotated_bin_new();
-  gtk_container_add(GTK_CONTAINER(priv->rotated_bin), GTK_WIDGET(priv->overlay));
+  gtk_widget_set_parent(priv->overlay, GTK_WIDGET(priv->rotated_bin));
+  /* gtk_container_add(GTK_CONTAINER(priv->rotated_bin), GTK_WIDGET(priv->overlay)); */
 
   /* Setup container */
-  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->rotated_bin));
-
-  gtk_widget_show_all(GTK_WIDGET(widget));
+  /* gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->rotated_bin)); */
+  /* gtk_widget_insert_after(priv->overlay, GTK_WIDGET(widget), NULL); */
+  gtk_widget_set_parent(priv->rotated_bin, GTK_WIDGET(widget));
 
   return GTK_WIDGET(widget);
 }
@@ -229,7 +235,7 @@ zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* valu
             }
             break;
           default:
-            // TODO: Pring warning message
+            // TODO: Print warning message
             break;
         }
       }
@@ -329,22 +335,22 @@ render_page(ZathuraPage* widget)
   gtk_widget_queue_resize(priv->layer.drawing_area);
 }
 
-static gboolean
-cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
+static void
+cb_page_draw(GtkDrawingArea *area, cairo_t *cairo, int width, int height, gpointer data)
 {
   ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(data);
 
-  gint device_scale = gtk_widget_get_scale_factor(widget);
+  gint device_scale = gtk_widget_get_scale_factor(GTK_WIDGET(area));
 
-  const unsigned int page_width  = gtk_widget_get_allocated_width(widget);
-  const unsigned int page_height = gtk_widget_get_allocated_height(widget);
+  const unsigned int page_width  = gtk_widget_get_allocated_width(GTK_WIDGET(area));
+  const unsigned int page_height = gtk_widget_get_allocated_height(GTK_WIDGET(area));
 
   cairo_save(cairo);
 
   /* Create image surface */
   cairo_surface_t* image_surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, page_width * device_scale, page_height * device_scale);
   if (image_surface == NULL) {
-    return FALSE;
+    return;
   }
 
   cairo_surface_set_device_scale(image_surface, device_scale, device_scale);
@@ -352,7 +358,7 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
   cairo_t* image_cairo = cairo_create(image_surface);
   if (image_cairo == NULL) {
     cairo_surface_destroy(image_surface);
-    return FALSE;
+    return;
   }
 
   /* Fill white */
@@ -368,7 +374,7 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
 
   /* Render page */
   if (zathura_page_render_cairo(priv->page, image_cairo, scale_factor * device_scale, 0, 0) != ZATHURA_ERROR_OK) {
-    return FALSE;
+    return;
   }
 
   cairo_restore(image_cairo);
@@ -380,8 +386,6 @@ cb_page_draw(GtkWidget *widget, cairo_t *cairo, gpointer data)
 
   /* Clean-up */
   cairo_surface_destroy(image_surface);
-
-  return TRUE;
 }
 
 static gboolean

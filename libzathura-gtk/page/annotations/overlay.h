@@ -23,12 +23,12 @@ typedef struct _ZathuraAnnotationOverlayClass ZathuraAnnotationOverlayClass;
 typedef struct _ZathuraAnnotationOverlayPrivate ZathuraAnnotationOverlayPrivate;
 
 struct _ZathuraAnnotationOverlay {
-  GtkBin parent;
+  GtkWidget parent;
   ZathuraAnnotationOverlayPrivate* priv;
 };
 
 struct _ZathuraAnnotationOverlayClass {
-  GtkBinClass parent_class;
+  GtkWidgetClass parent_class;
 };
 
 

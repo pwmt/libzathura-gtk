@@ -21,12 +21,12 @@ typedef struct _ZathuraRotatedBinClass ZathuraRotatedBinClass;
 typedef struct _ZathuraRotatedBinPrivate ZathuraRotatedBinPrivate;
 
 struct _ZathuraRotatedBin {
-  GtkContainer parent;
+  GtkWidget parent;
   ZathuraRotatedBinPrivate* priv;
 };
 
 struct _ZathuraRotatedBinClass {
-  GtkContainerClass parent_class;
+  GtkWidgetClass parent_class;
 };
 
 GType zathura_gtk_rotated_bin_get_type(void);

@@ -17,21 +17,21 @@ static void zathura_gtk_rotated_bin_get_preferred_width(GtkWidget* widget, gint*
 static void zathura_gtk_rotated_bin_get_preferred_height(GtkWidget* widget,
     gint* minimum, gint* natural);
 static void zathura_gtk_rotated_bin_size_allocate(GtkWidget* widget,
-    GtkAllocation* allocation);
-static gboolean zathura_gtk_rotated_bin_damage(GtkWidget* widget,
-    GdkEventExpose* event);
+    int width, int height, int baseline);
+/* static gboolean zathura_gtk_rotated_bin_damage(GtkWidget* widget, */
+/*     GdkEventExpose* event); */
 static gboolean zathura_gtk_rotated_bin_draw(GtkWidget* widget, cairo_t* cairo);
-static void zathura_gtk_rotated_bin_add(GtkContainer* container, GtkWidget*
-    child);
-static void zathura_gtk_rotated_bin_remove(GtkContainer* container, GtkWidget*
-    widget);
-static void zathura_gtk_rotated_bin_forall(GtkContainer* container, gboolean
-    include_internals, GtkCallback callback, gpointer callback_data);
-static GType zathura_gtk_rotated_bin_child_type(GtkContainer* container);
+/* static void zathura_gtk_rotated_bin_add(GtkWidget* container, GtkWidget* */
+/*     child); */
+/* static void zathura_gtk_rotated_bin_remove(GtkWidget* container, GtkWidget* */
+/*     widget); */
+/* static void zathura_gtk_rotated_bin_forall(GtkWidget* container, gboolean */
+/*     include_internals, GtkCallback callback, gpointer callback_data); */
+/* static GType zathura_gtk_rotated_bin_child_type(GtkWidget* container); */
 
 struct _ZathuraRotatedBinPrivate {
   GtkWidget* child;
-  GdkWindow* offscreen_window;
+  GdkSurface* offscreen_window;
 
   struct {
     gdouble angle;
@@ -43,7 +43,7 @@ enum {
   PROP_ANGLE
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE(ZathuraRotatedBin, zathura_gtk_rotated_bin, GTK_TYPE_CONTAINER)
+G_DEFINE_TYPE_WITH_PRIVATE(ZathuraRotatedBin, zathura_gtk_rotated_bin, GTK_TYPE_WIDGET)
 
 static void
 zathura_gtk_rotated_bin_class_init(ZathuraRotatedBinClass* class)
@@ -70,25 +70,27 @@ zathura_gtk_rotated_bin_class_init(ZathuraRotatedBinClass* class)
 
   /* widget class */
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(class);
-  widget_class->realize              = zathura_gtk_rotated_bin_realize;
-  widget_class->unrealize            = zathura_gtk_rotated_bin_unrealize;
-  widget_class->get_preferred_width  = zathura_gtk_rotated_bin_get_preferred_width;
-  widget_class->get_preferred_height = zathura_gtk_rotated_bin_get_preferred_height;
-  widget_class->size_allocate        = zathura_gtk_rotated_bin_size_allocate;
-  widget_class->draw                 = zathura_gtk_rotated_bin_draw;
+  /* widget_class->realize              = zathura_gtk_rotated_bin_realize; */
+  /* widget_class->unrealize            = zathura_gtk_rotated_bin_unrealize; */
+  /* widget_class->get_preferred_width  = zathura_gtk_rotated_bin_get_preferred_width; */
+  /* widget_class->get_preferred_height = zathura_gtk_rotated_bin_get_preferred_height; */
+  /* widget_class->size_allocate        = zathura_gtk_rotated_bin_size_allocate; */
+  /* widget_class->draw                 = zathura_gtk_rotated_bin_draw; */
 
-  g_signal_override_class_closure(
-      g_signal_lookup("damage-event", GTK_TYPE_WIDGET),
-      ZATHURA_TYPE_ROTATED_BIN,
-      g_cclosure_new(G_CALLBACK(zathura_gtk_rotated_bin_damage), NULL, NULL)
-    );
+  /* g_signal_override_class_closure( */
+  /*     g_signal_lookup("damage-event", GTK_TYPE_WIDGET), */
+  /*     ZATHURA_TYPE_ROTATED_BIN, */
+  /*     g_cclosure_new(G_CALLBACK(zathura_gtk_rotated_bin_damage), NULL, NULL) */
+  /*   ); */
 
   /* container class */
-  GtkContainerClass* container_class = GTK_CONTAINER_CLASS(class);
-  container_class->add        = zathura_gtk_rotated_bin_add;
-  container_class->remove     = zathura_gtk_rotated_bin_remove;
-  container_class->forall     = zathura_gtk_rotated_bin_forall;
-  container_class->child_type = zathura_gtk_rotated_bin_child_type;
+  /* GtkWidgetClass* container_class = GTK_CONTAINER_CLASS(class); */
+  /* container_class->add        = zathura_gtk_rotated_bin_add; */
+  /* container_class->remove     = zathura_gtk_rotated_bin_remove; */
+  /* container_class->forall     = zathura_gtk_rotated_bin_forall; */
+  /* container_class->child_type = zathura_gtk_rotated_bin_child_type; */
+
+  gtk_widget_class_set_layout_manager_type(widget_class, GTK_TYPE_BIN_LAYOUT);
 }
 
 static void
@@ -119,7 +121,7 @@ zathura_gtk_rotated_bin_set_angle(ZathuraRotatedBin* bin, gdouble angle)
   priv->settings.angle = angle * ((double) G_PI / 180.0);
 
   gtk_widget_queue_resize(GTK_WIDGET(bin));
-  gdk_window_geometry_changed(priv->offscreen_window);
+  /* gdk_window_geometry_changed(priv->offscreen_window); */
 }
 
 static void
@@ -135,8 +137,8 @@ zathura_gtk_rotated_bin_set_property(GObject* object, guint prop_id, const GValu
         double new_angle = angle * ((double) G_PI / 180.0);
         if (priv->settings.angle != new_angle) {
           priv->settings.angle = new_angle;
-          gtk_widget_queue_resize(GTK_WIDGET (bin));
-          gdk_window_geometry_changed(priv->offscreen_window);
+          gtk_widget_queue_resize(GTK_WIDGET(bin));
+          /* gdk_window_geometry_changed(priv->offscreen_window); */
         }
       }
       break;
@@ -245,8 +247,8 @@ to_parent (ZathuraRotatedBin *bin, double offscreen_x, double offscreen_y,
   *y_out = y;
 }
 
-static GdkWindow*
-pick_offscreen_child(GdkWindow* UNUSED(offscreen_window), double widget_x,
+static GdkSurface*
+pick_offscreen_child(GdkSurface* UNUSED(offscreen_window), double widget_x,
     double widget_y, ZathuraRotatedBin* bin)
 {
   GtkAllocation child_area;
@@ -267,7 +269,7 @@ pick_offscreen_child(GdkWindow* UNUSED(offscreen_window), double widget_x,
 }
 
 static void
-offscreen_window_to_parent(GdkWindow* UNUSED(offscreen_window), double
+offscreen_window_to_parent(GdkSurface* UNUSED(offscreen_window), double
     offscreen_x, double offscreen_y, double* parent_x, double* parent_y,
     ZathuraRotatedBin* bin)
 {
@@ -275,7 +277,7 @@ offscreen_window_to_parent(GdkWindow* UNUSED(offscreen_window), double
 }
 
 static void
-offscreen_window_from_parent(GdkWindow* UNUSED(window), double parent_x, double
+offscreen_window_from_parent(GdkSurface* UNUSED(window), double parent_x, double
     parent_y, double* offscreen_x, double* offscreen_y, ZathuraRotatedBin* bin)
 {
   to_child(bin, parent_x, parent_y, offscreen_x, offscreen_y);
@@ -287,69 +289,69 @@ zathura_gtk_rotated_bin_realize(GtkWidget* widget)
   ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(widget);
   ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
-  gtk_widget_set_realized (widget, TRUE);
+  /* gtk_widget_set_realized (widget, TRUE); */
 
   GtkAllocation allocation;
   gtk_widget_get_allocation(widget, &allocation);
-  guint border_width = gtk_container_get_border_width(GTK_CONTAINER(widget));
+  guint border_width = 0; //gtk_container_get_border_width(GTK_CONTAINER(widget));
 
-  GdkWindowAttr attributes;
-  attributes.x = allocation.x + border_width;
-  attributes.y = allocation.y + border_width;
-  attributes.width = allocation.width - 2 * border_width;
-  attributes.height = allocation.height - 2 * border_width;
-  attributes.window_type = GDK_WINDOW_CHILD;
-  attributes.event_mask = gtk_widget_get_events(widget)
-                        | GDK_EXPOSURE_MASK
-                        | GDK_POINTER_MOTION_MASK
-                        | GDK_BUTTON_PRESS_MASK
-                        | GDK_BUTTON_RELEASE_MASK
-                        | GDK_SCROLL_MASK
-                        | GDK_ENTER_NOTIFY_MASK
-                        | GDK_LEAVE_NOTIFY_MASK;
-
-  attributes.visual = gtk_widget_get_visual(widget);
-  attributes.wclass = GDK_INPUT_OUTPUT;
-
-  gint attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL;
-
-  GdkWindow *window = gdk_window_new(gtk_widget_get_parent_window(widget), &attributes, attributes_mask);
-  gtk_widget_set_window(widget, window);
-  gdk_window_set_user_data(window, widget);
-  g_signal_connect (window, "pick-embedded-child",
-                    G_CALLBACK (pick_offscreen_child), bin);
-
-  attributes.window_type = GDK_WINDOW_OFFSCREEN;
-
-  GtkRequisition child_requisition;
-  child_requisition.width = child_requisition.height = 0;
-  if (priv->child != NULL && gtk_widget_get_visible(priv->child) == TRUE) {
-    GtkAllocation child_allocation;
-
-    gtk_widget_get_allocation(priv->child, &child_allocation);
-    attributes.width = child_allocation.width;
-    attributes.height = child_allocation.height;
-  }
-
-  priv->offscreen_window =
-    gdk_window_new(gdk_screen_get_root_window(gtk_widget_get_screen(widget)),
-        &attributes, attributes_mask);
-
-  gdk_window_set_user_data(priv->offscreen_window, widget);
-
-  if (priv->child != NULL) {
-    gtk_widget_set_parent_window(priv->child, priv->offscreen_window);
-  }
-
-  gdk_offscreen_window_set_embedder(priv->offscreen_window, window);
-
-  g_signal_connect(priv->offscreen_window, "to-embedder",
-      G_CALLBACK(offscreen_window_to_parent), bin);
-
-  g_signal_connect(priv->offscreen_window, "from-embedder",
-      G_CALLBACK(offscreen_window_from_parent), bin);
-
-  gdk_window_show(priv->offscreen_window);
+  /* GdkSurfaceAttr attributes; */
+  /* attributes.x = allocation.x + border_width; */
+  /* attributes.y = allocation.y + border_width; */
+  /* attributes.width = allocation.width - 2 * border_width; */
+  /* attributes.height = allocation.height - 2 * border_width; */
+  /* attributes.window_type = GDK_WINDOW_CHILD; */
+  /* attributes.event_mask = gtk_widget_get_events(widget) */
+  /*                       | GDK_EXPOSURE_MASK */
+  /*                       | GDK_POINTER_MOTION_MASK */
+  /*                       | GDK_BUTTON_PRESS_MASK */
+  /*                       | GDK_BUTTON_RELEASE_MASK */
+  /*                       | GDK_SCROLL_MASK */
+  /*                       | GDK_ENTER_NOTIFY_MASK */
+  /*                       | GDK_LEAVE_NOTIFY_MASK; */
+  /*  */
+  /* attributes.visual = gtk_widget_get_visual(widget); */
+  /* attributes.wclass = GDK_INPUT_OUTPUT; */
+  /*  */
+  /* gint attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL; */
+  /*  */
+  /* GdkSurface *window = gdk_window_new(gtk_widget_get_parent_window(widget), &attributes, attributes_mask); */
+  /* gtk_widget_set_window(widget, window); */
+  /* gdk_window_set_user_data(window, widget); */
+  /* g_signal_connect (window, "pick-embedded-child", */
+  /*                   G_CALLBACK (pick_offscreen_child), bin); */
+  /*  */
+  /* attributes.window_type = GDK_WINDOW_OFFSCREEN; */
+  /*  */
+  /* GtkRequisition child_requisition; */
+  /* child_requisition.width = child_requisition.height = 0; */
+  /* if (priv->child != NULL && gtk_widget_get_visible(priv->child) == TRUE) { */
+  /*   GtkAllocation child_allocation; */
+  /*  */
+  /*   gtk_widget_get_allocation(priv->child, &child_allocation); */
+  /*   attributes.width = child_allocation.width; */
+  /*   attributes.height = child_allocation.height; */
+  /* } */
+  /*  */
+  /* priv->offscreen_window = */
+  /*   gdk_window_new(gdk_screen_get_root_window(gtk_widget_get_screen(widget)), */
+  /*       &attributes, attributes_mask); */
+  /*  */
+  /* gdk_window_set_user_data(priv->offscreen_window, widget); */
+  /*  */
+  /* if (priv->child != NULL) { */
+  /*   gtk_widget_set_parent_window(priv->child, priv->offscreen_window); */
+  /* } */
+  /*  */
+  /* gdk_offscreen_window_set_embedder(priv->offscreen_window, window); */
+  /*  */
+  /* g_signal_connect(priv->offscreen_window, "to-embedder", */
+  /*     G_CALLBACK(offscreen_window_to_parent), bin); */
+  /*  */
+  /* g_signal_connect(priv->offscreen_window, "from-embedder", */
+  /*     G_CALLBACK(offscreen_window_from_parent), bin); */
+  /*  */
+  /* gdk_window_show(priv->offscreen_window); */
 }
 
 static void
@@ -358,8 +360,8 @@ zathura_gtk_rotated_bin_unrealize(GtkWidget* widget)
   ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(widget);
   ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
-  gdk_window_set_user_data(priv->offscreen_window, NULL);
-  gdk_window_destroy(priv->offscreen_window);
+  /* gdk_window_set_user_data(priv->offscreen_window, NULL); */
+  /* gdk_window_destroy(priv->offscreen_window); */
   priv->offscreen_window = NULL;
 
   GTK_WIDGET_CLASS(zathura_gtk_rotated_bin_parent_class)->unrealize(widget);
@@ -385,9 +387,9 @@ zathura_gtk_rotated_bin_size_request(GtkWidget* widget, GtkRequisition*
   double w = c * child_requisition.width + s * child_requisition.height;
   double h = s * child_requisition.width + c * child_requisition.height;
 
-  guint border_width = gtk_container_get_border_width(GTK_CONTAINER(widget));
-  requisition->width  = border_width * 2 + w;
-  requisition->height = border_width * 2 + h;
+  /* guint border_width = gtk_container_get_border_width(GTK_CONTAINER(widget)); */
+  /* requisition->width  = border_width * 2 + w; */
+  /* requisition->height = border_width * 2 + h; */
 }
 
 static void
@@ -411,24 +413,23 @@ zathura_gtk_rotated_bin_get_preferred_height(GtkWidget* widget, gint* minimum,
 }
 
 static void
-zathura_gtk_rotated_bin_size_allocate(GtkWidget* widget, GtkAllocation*
-    allocation)
+zathura_gtk_rotated_bin_size_allocate(GtkWidget* widget, int width, int height, int baseline)
 {
   ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(widget);
   ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
-  gtk_widget_set_allocation(widget, allocation);
+  /* gtk_widget_set_allocation(widget, allocation); */
 
-  guint border_width = gtk_container_get_border_width(GTK_CONTAINER(widget));
+  /* guint border_width = gtk_container_get_border_width(GTK_CONTAINER(widget)); */
 
-  gint w = allocation->width - border_width * 2;
-  gint h = allocation->height - border_width * 2;
+  gint w = width;// - border_width * 2;
+  gint h = height;// - border_width * 2;
 
   if (gtk_widget_get_realized(widget) == TRUE) {
-    gdk_window_move_resize(gtk_widget_get_window(widget),
-                            allocation->x + border_width,
-                            allocation->y + border_width,
-                            w, h);
+    /* gdk_window_move_resize(gtk_widget_get_window(widget), */
+    /*                         allocation->x + border_width, */
+    /*                         allocation->y + border_width, */
+    /*                         w, h); */
   }
 
   if (priv->child != NULL && gtk_widget_get_visible(priv->child) == TRUE)
@@ -458,25 +459,25 @@ zathura_gtk_rotated_bin_size_allocate(GtkWidget* widget, GtkAllocation*
     child_allocation.height = abs(child_allocation.height);
 
     if (gtk_widget_get_realized(widget) == TRUE) {
-      gdk_window_move_resize(priv->offscreen_window,
-                              child_allocation.x,
-                              child_allocation.y,
-                              child_allocation.width,
-                              child_allocation.height);
+      /* gdk_window_move_resize(priv->offscreen_window, */
+      /*                         child_allocation.x, */
+      /*                         child_allocation.y, */
+      /*                         child_allocation.width, */
+      /*                         child_allocation.height); */
     }
 
     child_allocation.x = child_allocation.y = 0;
-    gtk_widget_size_allocate(priv->child, &child_allocation);
+    /* gtk_widget_size_allocate(priv->child, &child_allocation); */
   }
 }
 
-static gboolean
-zathura_gtk_rotated_bin_damage(GtkWidget* widget, GdkEventExpose* UNUSED(event))
-{
-  gdk_window_invalidate_rect(gtk_widget_get_window(widget), NULL, FALSE);
-
-  return TRUE;
-}
+/* static gboolean */
+/* zathura_gtk_rotated_bin_damage(GtkWidget* widget, GdkEventExpose* UNUSED(event)) */
+/* { */
+/*   gdk_window_invalidate_rect(gtk_widget_get_window(widget), NULL, FALSE); */
+/*  */
+/*   return TRUE; */
+/* } */
 
 static gboolean
 zathura_gtk_rotated_bin_draw(GtkWidget* widget, cairo_t* cairo)
@@ -484,7 +485,8 @@ zathura_gtk_rotated_bin_draw(GtkWidget* widget, cairo_t* cairo)
   ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(widget);
   ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
 
-  GdkWindow* window = gtk_widget_get_window(widget);
+#if 0
+  GdkSurface* window = gtk_widget_get_window(widget);
   if (gtk_cairo_should_draw_window (cairo, window)) {
     if (priv->child != NULL && gtk_widget_get_visible(priv->child) == TRUE) {
       GtkAllocation child_area;
@@ -523,66 +525,7 @@ zathura_gtk_rotated_bin_draw(GtkWidget* widget, cairo_t* cairo)
       gtk_container_propagate_draw(GTK_CONTAINER(widget), priv->child, cairo);
     }
   }
+#endif
 
   return FALSE;
-}
-
-static void
-zathura_gtk_rotated_bin_add(GtkContainer* container, GtkWidget* child)
-{
-  ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(container);
-  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
-
-  if (priv->child == NULL) {
-    gtk_widget_set_parent_window(child, priv->offscreen_window);
-    gtk_widget_set_parent(child, GTK_WIDGET(bin));
-    priv->child = child;
-  } else {
-    g_warning("ZathuraRotatedBin cannot have more than one child\n");
-  }
-}
-
-static void
-zathura_gtk_rotated_bin_remove(GtkContainer* container, GtkWidget* widget)
-{
-  ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(container);
-  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
-
-  gboolean was_visible = gtk_widget_get_visible(widget);
-
-  if (priv->child == widget) {
-    gtk_widget_unparent(widget);
-    priv->child = NULL;
-
-    if (was_visible == TRUE && gtk_widget_get_visible(GTK_WIDGET(container)) == TRUE) {
-      gtk_widget_queue_resize(GTK_WIDGET(container));
-    }
-  }
-}
-
-static void
-zathura_gtk_rotated_bin_forall(GtkContainer* container, gboolean
-    UNUSED(include_internals), GtkCallback callback, gpointer callback_data)
-{
-  ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(container);
-  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
-
-  g_return_if_fail(callback != NULL);
-
-  if (priv->child != NULL) {
-    (*callback)(priv->child, callback_data);
-  }
-}
-
-static GType
-zathura_gtk_rotated_bin_child_type(GtkContainer* container)
-{
-  ZathuraRotatedBin *bin = ZATHURA_ROTATED_BIN(container);
-  ZathuraRotatedBinPrivate* priv = zathura_gtk_rotated_bin_get_instance_private(bin);
-
-  if (priv->child != NULL) {
-    return G_TYPE_NONE;
-  }
-
-  return GTK_TYPE_WIDGET;
 }

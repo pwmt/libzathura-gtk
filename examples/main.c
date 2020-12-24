@@ -15,16 +15,19 @@
 # endif
 #endif
 
-gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpointer data);
-
-gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpointer data)
+gboolean
+cb_key_press_event(GtkEventControllerKey *controller,
+               guint                  keyval,
+               guint                  keycode,
+               GdkModifierType        state,
+               gpointer               user_data)
 {
-  GtkWidget* document = (GtkWidget*) data;
+  GtkWidget *document = (GtkWidget*) user_data;
 
-  if (event->state == 0) {
-    switch(event->keyval) {
+  if (state == 0) {
+    switch(keyval) {
       case GDK_KEY_q:
-        gtk_main_quit();
+        gtk_window_destroy(GTK_WINDOW(gtk_event_controller_get_widget (controller)));
         break;
       case GDK_KEY_c:
         {
@@ -136,8 +139,8 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
       default:
         return FALSE;
     }
-  } else if (event->state == GDK_CONTROL_MASK) {
-    switch(event->keyval) {
+  } else if (state == GDK_CONTROL_MASK) {
+    switch(keyval) {
       case GDK_KEY_f:
         zathura_gtk_document_scroll(document, FULL_DOWN);
         break;
@@ -159,8 +162,8 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
       default:
         return FALSE;
     }
-  } else if (event->state == GDK_SHIFT_MASK) {
-    switch(event->keyval) {
+  } else if (state == GDK_SHIFT_MASK) {
+    switch(keyval) {
       case GDK_KEY_J:
         {
           guint current_page_number;
@@ -204,49 +207,16 @@ gboolean cb_key_press_event(GtkWidget* UNUSED(widget), GdkEventKey* event, gpoin
   return TRUE;
 }
 
-int main(int argc, char* argv[])
+static void
+activate (GtkApplication* app,
+          gpointer        user_data)
 {
-  if (argc != 2) {
-    fprintf(stderr, "usage: %s <file>\n", argv[0]);
-    return 0;
-  }
-
-  /* Initialize GTK */
-  gtk_init(&argc, &argv);
-
-  /* Setup plugin manager */
-  zathura_plugin_manager_t* plugin_manager;
-  if (zathura_plugin_manager_new(&plugin_manager) != ZATHURA_ERROR_OK) {
-    return -1;
-  }
-
-  /* Load plugin from file */
-  if (zathura_plugin_manager_load_dir(plugin_manager, "/usr/lib/libzathura/") != ZATHURA_ERROR_OK) {
-    zathura_plugin_manager_free(plugin_manager);
-    return -1;
-  }
-
-  /* Get plugin with corresponding mime type */
-  zathura_plugin_t* plugin = NULL;
-  if (zathura_plugin_manager_get_plugin(plugin_manager, &plugin,
-        "application/pdf") != ZATHURA_ERROR_OK) {
-    zathura_plugin_manager_free(plugin_manager);
-    return -1;
-  }
-
-  /* Open document  */
-  zathura_document_t* document;
-  if (zathura_plugin_open_document(plugin, &document, argv[1], NULL) != ZATHURA_ERROR_OK) {
-    zathura_plugin_manager_free(plugin_manager);
-    return -1;
-  }
-
-  /* Create widget from document */
-  GtkWidget* document_widget = zathura_gtk_document_new(document);
-
   /* Setup window and widget */
-  GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW(window), "libzathura-gtk example");
+  GtkWidget* window = gtk_application_window_new(app);
+  /* gtk_window_set_title(GTK_WINDOW(window), "libzathura-gtk example"); */
+  gtk_window_present(GTK_WINDOW(window));
+  /* gtk_widget_show(window); */
+#if 0
   gtk_container_add(GTK_CONTAINER(window), document_widget);
 
   g_signal_connect(G_OBJECT(document_widget), "key-press-event", G_CALLBACK(cb_key_press_event), document_widget);
@@ -258,9 +228,99 @@ int main(int argc, char* argv[])
 
   /* clean-up */
   gtk_widget_destroy(document_widget);
+#endif
 
-  zathura_document_free(document);
-  zathura_plugin_manager_free(plugin_manager);
+  /* zathura_document_free(document); */
+  /* zathura_plugin_manager_free(plugin_manager); */
+}
 
-  return 0;
+static void
+app_window_open(GtkApplication* app, GFile* file) {
+  char* basename = g_file_get_basename(file);
+  char* path = g_file_get_path(file);
+
+  GtkWidget* window = gtk_application_window_new(app);
+  gtk_window_set_title(GTK_WINDOW(window), "libzathura-gtk example");
+  gtk_widget_show(window);
+
+  /* GList* windows = gtk_application_get_windows (GTK_APPLICATION (app)); */
+  /* if (windows) { */
+  /*   window = windows->data; */
+  /* } */
+
+  /* Setup plugin manager */
+  zathura_plugin_manager_t* plugin_manager;
+  if (zathura_plugin_manager_new(&plugin_manager) != ZATHURA_ERROR_OK) {
+    return;
+  }
+
+  /* Load plugin from file */
+  if (zathura_plugin_manager_load_dir(plugin_manager, "/usr/lib/libzathura/") != ZATHURA_ERROR_OK) {
+    zathura_plugin_manager_free(plugin_manager);
+    return;
+  }
+
+  /* Get plugin with corresponding mime type */
+  zathura_plugin_t* plugin = NULL;
+  if (zathura_plugin_manager_get_plugin(plugin_manager, &plugin,
+        "application/pdf") != ZATHURA_ERROR_OK) {
+    zathura_plugin_manager_free(plugin_manager);
+    return;
+  }
+
+  /* Open document  */
+  zathura_document_t* document;
+  if (zathura_plugin_open_document(plugin, &document, path, NULL) != ZATHURA_ERROR_OK) {
+    zathura_plugin_manager_free(plugin_manager);
+    return;
+  }
+
+  /* Create widget from document */
+  GtkWidget* document_widget = zathura_gtk_document_new(document);
+  if (document_widget == NULL) {
+    fprintf(stderr, "failed\n");
+  }
+
+  GtkEventController* key_controller = gtk_event_controller_key_new();
+  g_signal_connect(key_controller, "key-pressed", G_CALLBACK(cb_key_press_event), document_widget);
+  gtk_widget_add_controller(window, key_controller); // FIXME: Document instead of window?
+
+  gtk_window_set_child(GTK_WINDOW(window), document_widget);
+  gtk_widget_show(window);
+
+  gtk_window_present(GTK_WINDOW(window));
+}
+
+static void
+example_app_open (GtkApplication  *app,
+                  GFile        **files,
+                  int            n_files,
+                  const char    *hint)
+{
+  GList *windows;
+  int i;
+
+  for (int i = 0; i < n_files; i++) {
+    app_window_open(app, files[i]);
+  }
+}
+
+int main(int argc, char* argv[])
+{
+  if (argc != 2) {
+    fprintf(stderr, "usage: %s <file>\n", argv[0]);
+    return 0;
+  }
+
+  /* Initialize GTK */
+  GtkApplication* app = gtk_application_new("org.pwmt.Example", G_APPLICATION_HANDLES_OPEN);
+
+  g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
+  /* g_signal_connect(app, "command-line", G_CALLBACK(command_line), NULL); */
+  g_signal_connect(app, "open", G_CALLBACK(example_app_open), NULL);
+
+  int status = g_application_run(G_APPLICATION(app), argc, argv);
+  g_object_unref(app);
+
+  return status;
 }
