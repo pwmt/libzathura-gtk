@@ -16,7 +16,7 @@ static void zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue
 static void render_page(ZathuraPage* widget);
 
 static void cb_page_draw(GtkDrawingArea *area, cairo_t *cairo, int width, int height, gpointer data);
-static gboolean cb_page_draw_links(GtkWidget *widget, cairo_t *cairo, gpointer data);
+static void cb_page_draw_links(GtkDrawingArea *area, cairo_t *cairo, int width, int height, gpointer data);
 static void cb_page_overlay_realized(GtkWidget* overlay, gpointer data);
 
 enum {
@@ -218,7 +218,7 @@ zathura_gtk_page_new(zathura_page_t* page)
 
   /* Setup links layer */
   priv->layer.links = gtk_drawing_area_new();
-  /* g_signal_connect(G_OBJECT(priv->layer.links), "draw", G_CALLBACK(cb_page_draw_links), widget); */
+  gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(priv->layer.links), cb_page_draw_links, widget, NULL);
 
   /* Setup form fields layer */
   /* priv->layer.form_fields = zathura_gtk_form_field_editor_new(ZATHURA_PAGE(widget)); */
@@ -283,7 +283,7 @@ zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* valu
     case PROP_LINKS_HIGHLIGHT:
       {
         priv->links.draw = g_value_get_boolean(value);
-        render_page(page);
+        gtk_widget_queue_draw(priv->layer.links);
       }
       break;
     case PROP_FORM_FIELDS_EDIT:
@@ -414,8 +414,8 @@ cb_page_draw(GtkDrawingArea *area, cairo_t *cairo, int width, int height, gpoint
   cairo_surface_destroy(image_surface);
 }
 
-static gboolean
-cb_page_draw_links(GtkWidget* widget, cairo_t *cairo, gpointer data)
+static void
+cb_page_draw_links(GtkDrawingArea* area, cairo_t *cairo, int width, int height, gpointer data)
 {
   ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(data);
 
@@ -425,17 +425,16 @@ cb_page_draw_links(GtkWidget* widget, cairo_t *cairo, gpointer data)
     if (priv->links.retrieved == false) {
       priv->links.retrieved = true;
       if (zathura_page_get_links(priv->page, &(priv->links.list)) != ZATHURA_ERROR_OK) {
-        return FALSE;
+        return;
       }
     }
 
     cairo_save(cairo);
-    double scale_factor = priv->settings.scale * gtk_widget_get_scale_factor(GTK_WIDGET(widget));
 
     /* Draw each link */
     zathura_link_mapping_t* link_mapping;
     ZATHURA_LIST_FOREACH(link_mapping, priv->links.list) {
-      zathura_rectangle_t position = zathura_rectangle_scale(link_mapping->position, scale_factor);
+      zathura_rectangle_t position = zathura_rectangle_scale(link_mapping->position, priv->settings.scale);
       unsigned int width  = position.p2.x - position.p1.x;
       unsigned int height = position.p2.y - position.p1.y;
 
@@ -448,8 +447,6 @@ cb_page_draw_links(GtkWidget* widget, cairo_t *cairo, gpointer data)
 
     cairo_restore(cairo);
   }
-
-  return FALSE;
 }
 
 static void
