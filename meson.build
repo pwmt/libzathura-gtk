@@ -137,7 +137,6 @@ sources = files(
   # 'libzathura-gtk/page/form-fields/form-field-choice.c',
   # 'libzathura-gtk/page/form-fields/form-field-text.c',
   'libzathura-gtk/page/page.c',
-  'libzathura-gtk/widgets/rotated-bin.c',
 )
 
 # header files to install
@@ -193,9 +192,6 @@ headers = {
     'libzathura-gtk/page/form-fields/form-field-choice.h',
     'libzathura-gtk/page/form-fields/form-field-text.h'
   ),
-  'libzathura/widgets': files(
-    'libzathura-gtk/widgets/rotated-bin.h'
-  )
 }
 
 # libzathura-gtk library
