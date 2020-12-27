@@ -57,12 +57,25 @@ zathura_gtk_snapshot(GtkWidget *widget, GtkSnapshot *snapshot)
 }
 
 static void
+zathura_gtk_dispose(GObject* object)
+{
+  ZathuraPage* page = ZATHURA_PAGE(object);
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(page);
+
+  gtk_widget_unparent(priv->overlay);
+  priv->overlay = NULL;
+
+  G_OBJECT_CLASS(zathura_gtk_page_parent_class)->dispose(object);
+}
+
+static void
 zathura_gtk_page_class_init(ZathuraPageClass* class)
 {
   /* overwrite methods */
   GObjectClass* object_class = G_OBJECT_CLASS(class);
   object_class->set_property = zathura_gtk_page_set_property;
   object_class->get_property = zathura_gtk_page_get_property;
+  object_class->dispose = zathura_gtk_dispose;
 
   /* properties */
   g_object_class_install_property(

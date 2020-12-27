@@ -55,15 +55,17 @@ zathura_gtk_fill_grid(ZathuraDocumentPrivate* priv)
     }
 
     /* Attach to grid */
-    gtk_grid_attach(GTK_GRID (priv->gtk.grid), page_widget, x, y, 1, 1);
+    gtk_grid_attach(GTK_GRID(priv->gtk.grid), page_widget, x, y, 1, 1);
   }
 }
 
 void
 zathura_gtk_clear_grid(ZathuraDocumentPrivate* priv)
 {
-  for (GtkWidget* child = gtk_widget_get_first_child(priv->gtk.grid); child != NULL; child = gtk_widget_get_next_sibling(child)) {
-    gtk_grid_remove(GTK_GRID(priv->gtk.grid), child);
+  for (size_t i = 0; i < priv->document.number_of_pages; i++) {
+    GtkWidget* page_widget = g_list_nth_data(priv->document.pages, i);
+    g_object_ref(page_widget);
+    gtk_grid_remove(GTK_GRID(priv->gtk.grid), page_widget);
   }
 }
 
