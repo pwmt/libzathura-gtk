@@ -21,12 +21,12 @@ typedef struct _ZathuraFormFieldButtonClass ZathuraFormFieldButtonClass;
 typedef struct _ZathuraFormFieldButtonPrivate ZathuraFormFieldButtonPrivate;
 
 struct _ZathuraFormFieldButton {
-  GtkDrawingArea parent;
+  GtkWidget parent;
   ZathuraFormFieldButtonPrivate* priv;
 };
 
 struct _ZathuraFormFieldButtonClass {
-  GtkDrawingAreaClass parent_class;
+  GtkWidgetClass parent_class;
 };
 
 

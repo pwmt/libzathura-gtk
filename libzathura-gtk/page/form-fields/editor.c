@@ -43,23 +43,26 @@ typedef struct form_field_widget_mapping_s {
 static void zathura_gtk_form_field_editor_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_form_field_editor_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_form_field_editor_size_allocate(GtkWidget* widget, GdkRectangle* allocation);
-static gboolean cb_draw_highlights(GtkWidget *widget, cairo_t *cairo, gpointer data);
+static void zathura_gtk_form_field_editor_dispose(GObject* object);
+static void cb_draw_highlights(GtkDrawingArea *area, cairo_t *cairo, int width, int height, gpointer data);
 static void cb_form_field_button_changed(GtkWidget* widget, gpointer data);
 static void create_widgets(GtkWidget* editor);
 
-G_DEFINE_TYPE_WITH_PRIVATE(ZathuraFormFieldEditor, zathura_gtk_form_field_editor, GTK_TYPE_BIN)
+G_DEFINE_TYPE_WITH_PRIVATE(ZathuraFormFieldEditor, zathura_gtk_form_field_editor, GTK_TYPE_WIDGET)
 
 static void
 zathura_gtk_form_field_editor_class_init(ZathuraFormFieldEditorClass* class)
 {
   /* overwrite methods */
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(class);
-  widget_class->size_allocate = zathura_gtk_form_field_editor_size_allocate;
+  /* widget_class->size_allocate = zathura_gtk_form_field_editor_size_allocate; */
+  gtk_widget_class_set_layout_manager_type(widget_class, GTK_TYPE_BIN_LAYOUT);
 
   /* overwrite methods */
   GObjectClass* object_class = G_OBJECT_CLASS(class);
   object_class->set_property = zathura_gtk_form_field_editor_set_property;
   object_class->get_property = zathura_gtk_form_field_editor_get_property;
+  object_class->dispose = zathura_gtk_form_field_editor_dispose;
 
   /* properties */
   g_object_class_install_property(
@@ -102,23 +105,36 @@ zathura_gtk_form_field_editor_new(ZathuraPage* page)
   priv->layer.drawing_area = gtk_drawing_area_new();
   gtk_widget_set_halign(priv->layer.drawing_area, GTK_ALIGN_START);
   gtk_widget_set_valign(priv->layer.drawing_area, GTK_ALIGN_START);
-
-  g_signal_connect(G_OBJECT(priv->layer.drawing_area), "draw", G_CALLBACK(cb_draw_highlights), priv);
+  gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(priv->layer.drawing_area), cb_draw_highlights, widget, NULL);
 
   /* Fixed container for form field widgets */
   priv->layer.form_fields = gtk_fixed_new();
 
   /* Setup over lay*/
   priv->overlay = gtk_overlay_new();
-  gtk_container_add(GTK_CONTAINER(priv->overlay), GTK_WIDGET(priv->layer.drawing_area));
-  gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.form_fields);
+  gtk_overlay_set_child(GTK_OVERLAY(priv->overlay), priv->layer.form_fields);
+  gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.drawing_area);
 
   /* Setup container */
-  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->overlay));
-  gtk_widget_show_all(GTK_WIDGET(widget));
+  gtk_widget_set_parent(priv->overlay, GTK_WIDGET(widget));
+
+  if (priv->form_fields == NULL) {
+    create_widgets(GTK_WIDGET(widget));
+  }
 
   return GTK_WIDGET(widget);
 }
+
+static void
+zathura_gtk_form_field_editor_dispose(GObject* object)
+{
+  ZathuraFormFieldEditor* form_field_editor = ZATHURA_FORM_FIELD_EDITOR(object);
+  ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(form_field_editor);
+
+  gtk_widget_unparent(priv->overlay);
+  priv->overlay = NULL;
+}
+
 
 static void
 create_widgets(GtkWidget* editor)
@@ -145,13 +161,15 @@ create_widgets(GtkWidget* editor)
     switch (form_field_type) {
       case ZATHURA_FORM_FIELD_BUTTON:
         form_field_widget = zathura_gtk_form_field_button_new(form_field_mapping->form_field);
-        g_signal_connect(G_OBJECT(form_field_widget), "changed", G_CALLBACK(cb_form_field_button_changed), priv);
+        /* g_signal_connect(G_OBJECT(form_field_widget), "changed", G_CALLBACK(cb_form_field_button_changed), priv); */
         break;
       case ZATHURA_FORM_FIELD_TEXT:
-        form_field_widget = zathura_gtk_form_field_text_new(form_field_mapping->form_field);
+        /* form_field_widget = gtk_button_new_with_label("foo"); */
+        /* form_field_widget = zathura_gtk_form_field_text_new(form_field_mapping->form_field); */
         break;
       case ZATHURA_FORM_FIELD_CHOICE:
-        form_field_widget = zathura_gtk_form_field_choice_new(form_field_mapping->form_field);
+        /* form_field_widget = gtk_button_new_with_label("foo"); */
+        /* form_field_widget = zathura_gtk_form_field_choice_new(form_field_mapping->form_field); */
         break;
       default:
         break;
@@ -206,7 +224,7 @@ zathura_gtk_form_field_editor_size_allocate(GtkWidget* widget, GdkRectangle* all
       gtk_widget_set_size_request(form_field_mapping->widget, width, height);
   }
 
-  GTK_WIDGET_CLASS(zathura_gtk_form_field_editor_parent_class)->size_allocate(widget, allocation);
+  /* GTK_WIDGET_CLASS(zathura_gtk_form_field_editor_parent_class)->size_allocate(widget, allocation); */
 }
 
 static void
@@ -242,21 +260,22 @@ zathura_gtk_form_field_editor_get_property(GObject* object, guint prop_id, GValu
   }
 }
 
-static gboolean
-cb_draw_highlights(GtkWidget* UNUSED(widget), cairo_t* cairo, gpointer data)
+static void
+cb_draw_highlights(GtkDrawingArea *area, cairo_t *cairo, int width, int height, gpointer data)
 {
-  ZathuraFormFieldEditorPrivate* priv = (ZathuraFormFieldEditorPrivate*) data;
+  ZathuraFormFieldEditorPrivate* priv = zathura_gtk_form_field_editor_get_instance_private(data);
 
   /* Draw links if requested */
-  if (priv->highlight == false) {
-    return GDK_EVENT_PROPAGATE;
-  }
+  /* if (priv->highlight == false) { */
+  /*   return; */
+  /* } */
 
   cairo_save(cairo);
 
   /* Get scale */
   double scale = 1.0;
   g_object_get(G_OBJECT(priv->page), "scale", &scale, NULL);
+    fprintf(stderr, "HELLO: %f\n", scale);
 
   form_field_widget_mapping_t* form_field_mapping;
   ZATHURA_LIST_FOREACH(form_field_mapping, priv->form_fields) {
@@ -294,8 +313,6 @@ cb_draw_highlights(GtkWidget* UNUSED(widget), cairo_t* cairo, gpointer data)
   }
 
   cairo_restore(cairo);
-
-  return GDK_EVENT_PROPAGATE;
 }
 
 static void

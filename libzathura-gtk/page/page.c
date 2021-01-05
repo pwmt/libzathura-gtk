@@ -221,7 +221,7 @@ zathura_gtk_page_new(zathura_page_t* page)
   gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(priv->layer.links), cb_page_draw_links, widget, NULL);
 
   /* Setup form fields layer */
-  /* priv->layer.form_fields = zathura_gtk_form_field_editor_new(ZATHURA_PAGE(widget)); */
+  priv->layer.form_fields = zathura_gtk_form_field_editor_new(ZATHURA_PAGE(widget));
 
   /* Setup annotation layer */
   /* priv->layer.annotations = zathura_gtk_annotation_overlay_new(ZATHURA_PAGE(widget)); */
@@ -232,7 +232,7 @@ zathura_gtk_page_new(zathura_page_t* page)
   gtk_overlay_set_child(GTK_OVERLAY(priv->overlay), GTK_WIDGET(priv->layer.drawing_area));
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.links);
   /* gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.annotations); */
-  /* gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.form_fields); */
+  gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.form_fields);
 
   /* g_signal_connect(priv->overlay, "realize", G_CALLBACK(cb_page_overlay_realized), widget); */
 
@@ -289,6 +289,7 @@ zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* valu
     case PROP_FORM_FIELDS_EDIT:
       {
         priv->form_fields.edit = g_value_get_boolean(value);
+        gtk_widget_queue_draw(priv->layer.form_fields);
         render_page(page);
       }
       break;
@@ -357,9 +358,11 @@ render_page(ZathuraPage* widget)
   calculate_widget_size(widget, &page_widget_width, &page_widget_height);
 
   if (priv->form_fields.edit == true) {
-    /* gtk_widget_show(priv->layer.form_fields); */
+    fprintf(stderr, "show\n");
+    gtk_widget_show(priv->layer.form_fields);
   } else {
-    /* gtk_widget_hide(priv->layer.form_fields); */
+    fprintf(stderr, "hide\n");
+    gtk_widget_hide(priv->layer.form_fields);
   }
 
   gtk_widget_set_size_request(priv->layer.drawing_area, page_widget_width, page_widget_height);
