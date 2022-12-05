@@ -189,8 +189,6 @@ cb_draw_button(GtkDrawingArea *area, cairo_t *cairo, int width, int height, gpoi
   cairo_rectangle(cairo, 0, 0, width, height);
   cairo_fill(cairo);
 
-  fprintf(stderr, "%zu %zu\n", width, height);
-
   cairo_restore(cairo);
 
   gint device_scale = gtk_widget_get_scale_factor(GTK_WIDGET(area));

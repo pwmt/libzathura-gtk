@@ -134,7 +134,7 @@ sources = files(
   # 'libzathura-gtk/page/annotations/utils.c',
   'libzathura-gtk/page/form-fields/editor.c',
   'libzathura-gtk/page/form-fields/form-field-button.c',
-  # 'libzathura-gtk/page/form-fields/form-field-choice.c',
+  'libzathura-gtk/page/form-fields/form-field-choice.c',
   # 'libzathura-gtk/page/form-fields/form-field-text.c',
   'libzathura-gtk/page/page.c',
 )
