@@ -6,7 +6,7 @@
 
 static void zathura_gtk_annotation_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_annotation_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
-static gboolean zathura_gtk_annotation_draw(GtkWidget* widget, cairo_t* cairo);
+static void zathura_gtk_annotation_snapshot(GtkWidget* widget, GtkSnapshot* snapshot);
 
 enum {
   PROP_0,
@@ -22,7 +22,7 @@ struct _ZathuraAnnotationPrivate {
   } settings;
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotation, zathura_gtk_annotation, GTK_TYPE_BIN)
+G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotation, zathura_gtk_annotation, GTK_TYPE_BOX)
 
 static void
 zathura_gtk_annotation_class_init(ZathuraAnnotationClass* class)
@@ -34,7 +34,7 @@ zathura_gtk_annotation_class_init(ZathuraAnnotationClass* class)
 
   /* widget class */
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(class);
-  widget_class->draw = zathura_gtk_annotation_draw;
+  widget_class->snapshot = zathura_gtk_annotation_snapshot;
 
   /* properties */
   g_object_class_install_property(
@@ -112,36 +112,59 @@ static void zathura_gtk_annotation_get_property(GObject* object, guint prop_id, 
   }
 }
 
-static gboolean
-zathura_gtk_annotation_draw(GtkWidget* widget, cairo_t* cairo)
+static void
+zathura_gtk_annotation_snapshot(GtkWidget* widget, GtkSnapshot* snapshot)
 {
   ZathuraAnnotationPrivate* priv = zathura_gtk_annotation_get_instance_private(ZATHURA_ANNOTATION(widget));
+  GtkWidget* child = gtk_widget_get_first_child(widget);
+  const int width  = gtk_widget_get_width(widget);
+  const int height = gtk_widget_get_height(widget);
 
   if (priv->annotation == NULL) {
-    goto propagate_event;
+    if (child != NULL) {
+      gtk_widget_snapshot_child(widget, child, snapshot);
+    }
+    return;
   }
 
   bool has_appearance_stream = false;
   if ((zathura_annotation_has_appearance_stream(priv->annotation, &has_appearance_stream) != ZATHURA_ERROR_OK)) {
   /* } || has_appearance_stream == */
   /*     false) { */
-    goto propagate_event;
+    if (child != NULL) {
+      gtk_widget_snapshot_child(widget, child, snapshot);
+    }
+    return;
+  }
+
+  if (has_appearance_stream == false) {
+    if (child != NULL) {
+      gtk_widget_snapshot_child(widget, child, snapshot);
+    }
+    return;
   }
 
   /* Try to render appearance stream */
-  const unsigned int width  = gtk_widget_get_allocated_width(widget);
-  const unsigned int height = gtk_widget_get_allocated_height(widget);
+  if (width <= 0 || height <= 0) {
+    return;
+  }
+
+  graphene_rect_t bounds = GRAPHENE_RECT_INIT(0, 0, width, height);
+  cairo_t* cairo = gtk_snapshot_append_cairo(snapshot, &bounds);
+  if (cairo == NULL) {
+    return;
+  }
 
   /* Create image surface */
   cairo_surface_t* image_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
   if (image_surface == NULL) {
-    goto propagate_event;
+    return;
   }
 
   cairo_t* image_cairo = cairo_create(image_surface);
   if (image_cairo == NULL) {
     cairo_surface_destroy(image_surface);
-    goto propagate_event;
+    return;
   }
 
   /* Scale */
@@ -155,10 +178,12 @@ zathura_gtk_annotation_draw(GtkWidget* widget, cairo_t* cairo)
           priv->settings.scale) != ZATHURA_ERROR_OK) {
       cairo_destroy(image_cairo);
       cairo_surface_destroy(image_surface);
-      goto propagate_event;
+      return;
     }
   } else {
-    gtk_container_propagate_draw(GTK_CONTAINER(widget), gtk_bin_get_child(GTK_BIN(widget)), image_cairo);
+    if (child != NULL) {
+      gtk_widget_snapshot_child(widget, child, snapshot);
+    }
   }
 
   cairo_destroy(image_cairo);
@@ -186,10 +211,4 @@ zathura_gtk_annotation_draw(GtkWidget* widget, cairo_t* cairo)
 
   /* Clean-up */
   cairo_surface_destroy(image_surface);
-
-  return GDK_EVENT_STOP;
-
-propagate_event:
-
-  return GDK_EVENT_PROPAGATE;
 }

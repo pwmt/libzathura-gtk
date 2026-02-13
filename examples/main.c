@@ -27,7 +27,8 @@ cb_key_press_event(GtkEventControllerKey *controller,
   if (state == 0) {
     switch(keyval) {
       case GDK_KEY_q:
-        gtk_window_destroy(GTK_WINDOW(gtk_event_controller_get_widget (controller)));
+        gtk_window_destroy(GTK_WINDOW(gtk_event_controller_get_widget(
+            GTK_EVENT_CONTROLLER(controller))));
         break;
       case GDK_KEY_c:
         {
@@ -214,14 +215,14 @@ activate (GtkApplication* app,
   /* Setup window and widget */
   GtkWidget* window = gtk_application_window_new(app);
   /* gtk_window_set_title(GTK_WINDOW(window), "libzathura-gtk example"); */
-  gtk_window_present(GTK_WINDOW(window));
+  gtk_widget_set_visible(window, true);
   /* gtk_widget_show(window); */
 #if 0
   gtk_container_add(GTK_CONTAINER(window), document_widget);
 
   g_signal_connect(G_OBJECT(document_widget), "key-press-event", G_CALLBACK(cb_key_press_event), document_widget);
 
-  gtk_widget_show_all(window);
+  gtk_widget_set_visible(window, TRUE);
 
   /* Main loop */
   gtk_main();
@@ -241,7 +242,7 @@ app_window_open(GtkApplication* app, GFile* file) {
 
   GtkWidget* window = gtk_application_window_new(app);
   gtk_window_set_title(GTK_WINDOW(window), "libzathura-gtk example");
-  gtk_widget_show(window);
+  gtk_widget_set_visible(window, true);
 
   /* GList* windows = gtk_application_get_windows (GTK_APPLICATION (app)); */
   /* if (windows) { */
@@ -286,7 +287,6 @@ app_window_open(GtkApplication* app, GFile* file) {
   gtk_widget_add_controller(window, key_controller); // FIXME: Document instead of window?
 
   gtk_window_set_child(GTK_WINDOW(window), document_widget);
-  gtk_widget_show(window);
 
   gtk_window_present(GTK_WINDOW(window));
 }

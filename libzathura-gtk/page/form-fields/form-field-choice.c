@@ -7,25 +7,40 @@
 static GtkWidget *form_field_choice_combo_new(GtkWidget *form_field_widget);
 static void cb_draw_button(GtkDrawingArea *area, cairo_t *cairo, int width,
                            int height, gpointer data);
-static void cb_form_field_choice_combo_changed(GtkComboBox *widget,
+static void cb_form_field_choice_combo_changed(GObject *dropdown,
+                                               GParamSpec *pspec,
                                                GtkWidget *form_field_widget);
 
 static GtkWidget *form_field_choice_list_new(GtkWidget *form_field_widget);
-static void cb_form_field_choice_list_changed(GtkTreeSelection *selection,
-                                              zathura_form_field_t *form_field);
-static void cb_form_field_choice_list_destroy(GtkTreeSelection *selection,
-                                              GtkWidget *widget);
+static void cb_form_field_choice_list_changed(GtkSelectionModel *model,
+                                              guint position, guint n_items,
+                                              GtkWidget *form_field_widget);
+static void cb_form_field_choice_list_item_setup(GtkSignalListItemFactory *factory,
+                                                 GtkListItem *list_item,
+                                                 gpointer data);
+static void cb_form_field_choice_list_item_bind(GtkSignalListItemFactory *factory,
+                                                GtkListItem *list_item,
+                                                gpointer data);
 
 static void cb_form_field_choice_pressed_event(GtkGestureClick *UNUSED(gesture),
                                                guint n_press, double x,
                                                double y,
                                                GtkWidget *form_field_widget);
 static void reset_to_drawing_area(GtkWidget *widget);
+static void zathura_gtk_form_field_choice_set_property(GObject *object,
+                                                        guint prop_id,
+                                                        const GValue *value,
+                                                        GParamSpec *param_spec);
+static void zathura_gtk_form_field_choice_get_property(GObject *object,
+                                                        guint prop_id,
+                                                        GValue *value,
+                                                        GParamSpec *param_spec);
 
 #define RGB_TO_CAIRO(r, g, b) (r) / 255.0, (g) / 255.0, (b) / 255.0
 
 struct _ZathuraFormFieldChoicePrivate {
   zathura_form_field_t *form_field;
+  double scale;
 
   GtkWidget *overlay;
 
@@ -38,10 +53,38 @@ struct _ZathuraFormFieldChoicePrivate {
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraFormFieldChoice,
                            zathura_gtk_form_field_choice, GTK_TYPE_WIDGET)
 
+enum {
+  PROP_0,
+  PROP_SCALE,
+};
+
+static zathura_form_field_choice_item_t *
+choice_item_at(zathura_list_t *list, guint index) {
+  guint i = 0;
+  zathura_form_field_choice_item_t *item;
+  ZATHURA_LIST_FOREACH(item, list) {
+    if (i++ == index) {
+      return item;
+    }
+  }
+  return NULL;
+}
+
 static void
 zathura_gtk_form_field_choice_class_init(ZathuraFormFieldChoiceClass *class) {
+  GObjectClass *object_class = G_OBJECT_CLASS(class);
+  object_class->set_property = zathura_gtk_form_field_choice_set_property;
+  object_class->get_property = zathura_gtk_form_field_choice_get_property;
+
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(class);
   gtk_widget_class_set_layout_manager_type(widget_class, GTK_TYPE_BIN_LAYOUT);
+
+  g_object_class_install_property(
+      object_class, PROP_SCALE,
+      g_param_spec_double("scale", "scale", "The page scale factor", 0.01,
+                          100.0, 1.0,
+                          G_PARAM_WRITABLE | G_PARAM_READABLE |
+                              G_PARAM_STATIC_STRINGS));
 }
 
 static void zathura_gtk_form_field_choice_init(ZathuraFormFieldChoice *widget) {
@@ -49,10 +92,48 @@ static void zathura_gtk_form_field_choice_init(ZathuraFormFieldChoice *widget) {
       zathura_gtk_form_field_choice_get_instance_private(widget);
 
   priv->form_field = NULL;
+  priv->scale = 1.0;
 
   priv->overlay = NULL;
   priv->layer.choice_widget = NULL;
   priv->layer.drawing_area = NULL;
+}
+
+static void
+zathura_gtk_form_field_choice_set_property(GObject *object, guint prop_id,
+                                           const GValue *value,
+                                           GParamSpec *param_spec) {
+  ZathuraFormFieldChoicePrivate *priv =
+      zathura_gtk_form_field_choice_get_instance_private(
+          ZATHURA_FORM_FIELD_CHOICE(object));
+
+  switch (prop_id) {
+  case PROP_SCALE:
+    priv->scale = g_value_get_double(value);
+    if (priv->layer.drawing_area != NULL) {
+      gtk_widget_queue_draw(priv->layer.drawing_area);
+    }
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
+  }
+}
+
+static void
+zathura_gtk_form_field_choice_get_property(GObject *object, guint prop_id,
+                                           GValue *value,
+                                           GParamSpec *param_spec) {
+  ZathuraFormFieldChoicePrivate *priv =
+      zathura_gtk_form_field_choice_get_instance_private(
+          ZATHURA_FORM_FIELD_CHOICE(object));
+
+  switch (prop_id) {
+  case PROP_SCALE:
+    g_value_set_double(value, priv->scale);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
+  }
 }
 
 GtkWidget *zathura_gtk_form_field_choice_new(zathura_form_field_t *form_field) {
@@ -93,7 +174,7 @@ GtkWidget *zathura_gtk_form_field_choice_new(zathura_form_field_t *form_field) {
   GtkGesture *gesture = gtk_gesture_click_new();
   gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gesture), 1);
   g_signal_connect(gesture, "pressed",
-                   G_CALLBACK(cb_form_field_choice_pressed_event), NULL);
+                   G_CALLBACK(cb_form_field_choice_pressed_event), widget);
   gtk_widget_add_controller(priv->layer.drawing_area,
                             GTK_EVENT_CONTROLLER(gesture));
 
@@ -103,7 +184,7 @@ GtkWidget *zathura_gtk_form_field_choice_new(zathura_form_field_t *form_field) {
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay),
                           priv->layer.choice_widget);
 
-  gtk_widget_hide(priv->layer.choice_widget);
+  gtk_widget_set_visible(priv->layer.choice_widget, FALSE);
 
   /* Add widget to container */
   gtk_widget_set_parent(priv->overlay, GTK_WIDGET(widget));
@@ -116,9 +197,7 @@ static GtkWidget *form_field_choice_combo_new(GtkWidget *form_field_widget) {
       zathura_gtk_form_field_choice_get_instance_private(
           ZATHURA_FORM_FIELD_CHOICE(form_field_widget));
   GtkWidget *widget = NULL;
-
-  /* Setup combo box with text renderer */
-  GtkListStore *list_store = gtk_list_store_new(1, G_TYPE_STRING);
+  GtkStringList *list_store = gtk_string_list_new(NULL);
 
   /* If true the box also includes an editable text box */
   bool is_editable;
@@ -126,24 +205,11 @@ static GtkWidget *form_field_choice_combo_new(GtkWidget *form_field_widget) {
       ZATHURA_ERROR_OK) {
     return NULL;
   }
-
-  if (is_editable == true) {
-    widget = gtk_combo_box_new_with_model_and_entry(GTK_TREE_MODEL(list_store));
-  } else {
-    widget = gtk_combo_box_new_with_model(GTK_TREE_MODEL(list_store));
-  }
-
-  g_signal_connect(widget, "changed",
-                   G_CALLBACK(cb_form_field_choice_combo_changed),
-                   form_field_widget);
-
-  GtkCellRenderer *cell = gtk_cell_renderer_text_new();
-  gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(widget), cell, TRUE);
-  gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(widget), cell, "text", 0,
-                                 NULL);
+  (void)is_editable;
 
   /* Add all items */
-  GtkTreeIter iter;
+  guint selected_index = GTK_INVALID_LIST_POSITION;
+  guint index = 0;
   zathura_list_t *choice_items;
   if (zathura_form_field_choice_get_items(priv->form_field, &choice_items) !=
       ZATHURA_ERROR_OK) {
@@ -164,38 +230,35 @@ static GtkWidget *form_field_choice_combo_new(GtkWidget *form_field_widget) {
       continue;
     }
 
-    gtk_list_store_append(list_store, &iter);
-    gtk_list_store_set(list_store, &iter, 0, name, -1);
+    gtk_string_list_append(list_store, name);
 
-    if (is_selected == true) {
-      gtk_combo_box_set_active_iter(GTK_COMBO_BOX(widget), &iter);
+    if (is_selected == true && selected_index == GTK_INVALID_LIST_POSITION) {
+      selected_index = index;
     }
+
+    index++;
+  }
+
+  widget = gtk_drop_down_new(G_LIST_MODEL(list_store), NULL);
+  g_signal_connect(widget, "notify::selected",
+                   G_CALLBACK(cb_form_field_choice_combo_changed),
+                   form_field_widget);
+
+  if (selected_index != GTK_INVALID_LIST_POSITION) {
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(widget), selected_index);
   }
 
   return widget;
 }
 
-static void cb_form_field_choice_combo_changed(GtkComboBox *widget,
+static void cb_form_field_choice_combo_changed(GObject *dropdown,
+                                               GParamSpec *UNUSED(pspec),
                                                GtkWidget *form_field_widget) {
   ZathuraFormFieldChoicePrivate *priv =
       zathura_gtk_form_field_choice_get_instance_private(
           ZATHURA_FORM_FIELD_CHOICE(form_field_widget));
-  GtkTreeIter iter;
-  const char *name = NULL;
-
-  if (gtk_combo_box_get_active_iter(widget, &iter) == true) {
-    GtkTreeModel *model = gtk_combo_box_get_model(widget);
-    gtk_tree_model_get(model, &iter, 0, &name, -1);
-  } else {
-    // /TODO
-    // GtkWidget* entry = gtk_bin_get_child(GTK_BIN(widget));
-    // if (entry != NULL) {
-    // /TODO
-    // name = gtk_entry_get_text(GTK_ENTRY(entry));
-    // }
-  }
-
-  if (name == NULL) {
+  guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(dropdown));
+  if (selected == GTK_INVALID_LIST_POSITION) {
     return;
   }
 
@@ -205,15 +268,133 @@ static void cb_form_field_choice_combo_changed(GtkComboBox *widget,
     return;
   }
 
+  guint index = 0;
   zathura_form_field_choice_item_t *choice_item;
   ZATHURA_LIST_FOREACH(choice_item, choice_items) {
-    char *item_name;
-    if (zathura_form_field_choice_item_get_name(choice_item, &item_name) !=
+    if (index == selected) {
+      if (zathura_form_field_choice_item_select(choice_item) !=
+          ZATHURA_ERROR_OK) {
+        continue;
+      }
+    } else {
+      if (zathura_form_field_choice_item_deselect(choice_item) !=
+          ZATHURA_ERROR_OK) {
+        continue;
+      }
+    }
+    index++;
+  }
+
+  if (zathura_form_field_save(priv->form_field) != ZATHURA_ERROR_OK) {
+    return;
+  }
+
+  reset_to_drawing_area(form_field_widget);
+  gtk_widget_queue_draw(priv->layer.drawing_area);
+  gtk_widget_queue_draw(form_field_widget);
+}
+
+static GtkWidget *form_field_choice_list_new(GtkWidget *form_field_widget) {
+  ZathuraFormFieldChoicePrivate *priv =
+      zathura_gtk_form_field_choice_get_instance_private(
+          ZATHURA_FORM_FIELD_CHOICE(form_field_widget));
+
+  GtkStringList *list_store = gtk_string_list_new(NULL);
+
+  bool is_multiselect;
+  if (zathura_form_field_choice_is_multiselect(
+          priv->form_field, &is_multiselect) != ZATHURA_ERROR_OK) {
+    return NULL;
+  }
+
+  /* Add all items to model */
+  guint index = 0;
+  GArray *selected_indices = g_array_new(FALSE, FALSE, sizeof(guint));
+  zathura_list_t *choice_items;
+  if (zathura_form_field_choice_get_items(priv->form_field, &choice_items) !=
+      ZATHURA_ERROR_OK) {
+    g_array_free(selected_indices, TRUE);
+    return NULL;
+  }
+
+  zathura_form_field_choice_item_t *choice_item;
+  ZATHURA_LIST_FOREACH(choice_item, choice_items) {
+    char *name;
+    if (zathura_form_field_choice_item_get_name(choice_item, &name) !=
         ZATHURA_ERROR_OK) {
       continue;
     }
 
-    if (strcmp(name, item_name) == 0) {
+    bool is_selected;
+    if (zathura_form_field_choice_item_is_selected(choice_item, &is_selected) !=
+        ZATHURA_ERROR_OK) {
+      continue;
+    }
+
+    gtk_string_list_append(list_store, name);
+    if (is_selected == true) {
+      g_array_append_val(selected_indices, index);
+    }
+    index++;
+  }
+
+  GtkSelectionModel *selection = NULL;
+  if (is_multiselect == true) {
+    selection = GTK_SELECTION_MODEL(gtk_multi_selection_new(G_LIST_MODEL(list_store)));
+  } else {
+    selection = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(list_store)));
+  }
+
+  if (selected_indices->len > 0) {
+    if (is_multiselect == true) {
+      for (guint i = 0; i < selected_indices->len; ++i) {
+        guint selected_index = g_array_index(selected_indices, guint, i);
+        gtk_selection_model_select_item(selection, selected_index, FALSE);
+      }
+    } else {
+      guint selected_index = g_array_index(selected_indices, guint, 0);
+      gtk_selection_model_select_item(selection, selected_index, TRUE);
+    }
+  }
+  g_array_free(selected_indices, TRUE);
+
+  GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
+  g_signal_connect(factory, "setup",
+                   G_CALLBACK(cb_form_field_choice_list_item_setup), NULL);
+  g_signal_connect(factory, "bind",
+                   G_CALLBACK(cb_form_field_choice_list_item_bind), NULL);
+
+  g_signal_connect(selection, "selection-changed",
+                   G_CALLBACK(cb_form_field_choice_list_changed),
+                   form_field_widget);
+
+  return gtk_list_view_new(selection, factory);
+}
+
+static void
+cb_form_field_choice_list_changed(GtkSelectionModel *model,
+                                  guint UNUSED(position),
+                                  guint UNUSED(n_items),
+                                  GtkWidget *form_field_widget) {
+  ZathuraFormFieldChoicePrivate *priv =
+      zathura_gtk_form_field_choice_get_instance_private(
+          ZATHURA_FORM_FIELD_CHOICE(form_field_widget));
+
+  zathura_list_t *choice_items;
+  if (zathura_form_field_choice_get_items(priv->form_field, &choice_items) !=
+      ZATHURA_ERROR_OK) {
+    return;
+  }
+
+  guint n = g_list_model_get_n_items(G_LIST_MODEL(model));
+  for (guint i = 0; i < n; ++i) {
+    zathura_form_field_choice_item_t *choice_item =
+        choice_item_at(choice_items, i);
+    if (choice_item == NULL) {
+      continue;
+    }
+
+    if (gtk_selection_model_is_selected(model, i) == TRUE) {
       if (zathura_form_field_choice_item_select(choice_item) !=
           ZATHURA_ERROR_OK) {
         continue;
@@ -231,118 +412,8 @@ static void cb_form_field_choice_combo_changed(GtkComboBox *widget,
   }
 
   reset_to_drawing_area(form_field_widget);
-}
-
-static GtkWidget *form_field_choice_list_new(GtkWidget *form_field_widget) {
-  ZathuraFormFieldChoicePrivate *priv =
-      zathura_gtk_form_field_choice_get_instance_private(
-          ZATHURA_FORM_FIELD_CHOICE(form_field_widget));
-
-  /* Setup model */
-  GtkListStore *list_store =
-      gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_POINTER);
-
-  /* Setup widget */
-  GtkWidget *tree_view =
-      gtk_tree_view_new_with_model(GTK_TREE_MODEL(list_store));
-  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(tree_view), FALSE);
-
-  GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-
-  gtk_tree_view_insert_column_with_attributes(
-      GTK_TREE_VIEW(tree_view), -1, "Name", renderer, "text", 0, NULL);
-
-  GtkTreeSelection *selection =
-      gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
-
-  g_signal_connect(selection, "changed",
-                   G_CALLBACK(cb_form_field_choice_list_changed),
-                   priv->form_field);
-
-  g_signal_connect_after(selection, "changed",
-                         G_CALLBACK(cb_form_field_choice_list_destroy),
-                         form_field_widget);
-
-  bool is_multiselect;
-  if (zathura_form_field_choice_is_multiselect(
-          priv->form_field, &is_multiselect) != ZATHURA_ERROR_OK) {
-    return NULL;
-  }
-
-  if (is_multiselect == true) {
-    gtk_tree_selection_set_mode(selection, GTK_SELECTION_MULTIPLE);
-  } else {
-    gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
-  }
-
-  /* Add all items to model */
-  zathura_list_t *choice_items;
-  if (zathura_form_field_choice_get_items(priv->form_field, &choice_items) !=
-      ZATHURA_ERROR_OK) {
-    return NULL;
-  }
-
-  GtkTreeIter iter;
-  zathura_form_field_choice_item_t *choice_item;
-  ZATHURA_LIST_FOREACH(choice_item, choice_items) {
-    char *name;
-    if (zathura_form_field_choice_item_get_name(choice_item, &name) !=
-        ZATHURA_ERROR_OK) {
-      continue;
-    }
-
-    bool is_selected;
-    if (zathura_form_field_choice_item_is_selected(choice_item, &is_selected) !=
-        ZATHURA_ERROR_OK) {
-      continue;
-    }
-
-    gtk_list_store_append(list_store, &iter);
-    gtk_list_store_set(list_store, &iter, 0, name, 1, choice_item, -1);
-
-    if (is_selected == true) {
-      gtk_tree_selection_select_iter(selection, &iter);
-    }
-  }
-
-  return tree_view;
-}
-
-static void
-cb_form_field_choice_list_changed(GtkTreeSelection *selection,
-                                  zathura_form_field_t *form_field) {
-  GtkTreeView *tree_view = gtk_tree_selection_get_tree_view(selection);
-  GtkTreeModel *tree_model = gtk_tree_view_get_model(tree_view);
-
-  GtkTreeIter iter;
-  gtk_tree_model_get_iter_first(tree_model, &iter);
-
-  do {
-    zathura_form_field_choice_item_t *choice_item;
-    gtk_tree_model_get(tree_model, &iter, 1, &choice_item, -1);
-
-    if (gtk_tree_selection_iter_is_selected(selection, &iter) == TRUE) {
-      if (zathura_form_field_choice_item_select(choice_item) !=
-          ZATHURA_ERROR_OK) {
-        continue;
-      }
-    } else {
-      if (zathura_form_field_choice_item_deselect(choice_item) !=
-          ZATHURA_ERROR_OK) {
-        continue;
-      }
-    }
-  } while (gtk_tree_model_iter_next(tree_model, &iter) == TRUE);
-
-  if (zathura_form_field_save(form_field) != ZATHURA_ERROR_OK) {
-    return;
-  }
-}
-
-static void
-cb_form_field_choice_list_destroy(GtkTreeSelection *UNUSED(selection),
-                                  GtkWidget *widget) {
-  reset_to_drawing_area(widget);
+  gtk_widget_queue_draw(priv->layer.drawing_area);
+  gtk_widget_queue_draw(form_field_widget);
 }
 
 static gboolean set_back_to_drawing_area(GtkWidget *widget) {
@@ -350,18 +421,9 @@ static gboolean set_back_to_drawing_area(GtkWidget *widget) {
       zathura_gtk_form_field_choice_get_instance_private(
           ZATHURA_FORM_FIELD_CHOICE(widget));
 
-  /* Don't reset if current visible widget is the drawing_area already */
-  GtkWidget *child = gtk_widget_get_first_child(widget);
-  if (child == priv->layer.drawing_area) {
-    return FALSE;
+  if (priv->layer.choice_widget != NULL) {
+    gtk_widget_set_visible(priv->layer.choice_widget, FALSE);
   }
-
-  /* Remove child */
-  // g_object_ref(child);
-  // gtk_container_remove(GTK_CONTAINER(widget), child);
-
-  /* Add drawing_area */
-  // gtk_container_add(GTK_CONTAINER(widget), priv->drawing_area);
 
   return FALSE;
 }
@@ -378,7 +440,24 @@ static void cb_form_field_choice_pressed_event(GtkGestureClick *UNUSED(gesture),
       zathura_gtk_form_field_choice_get_instance_private(
           ZATHURA_FORM_FIELD_CHOICE(form_field_widget));
 
-  gtk_widget_show(priv->layer.choice_widget);
+  gtk_widget_set_visible(priv->layer.choice_widget, TRUE);
+}
+
+static void
+cb_form_field_choice_list_item_setup(GtkSignalListItemFactory *UNUSED(factory),
+                                     GtkListItem *list_item,
+                                     gpointer UNUSED(data)) {
+  GtkWidget *label = gtk_label_new(NULL);
+  gtk_list_item_set_child(list_item, label);
+}
+
+static void
+cb_form_field_choice_list_item_bind(GtkSignalListItemFactory *UNUSED(factory),
+                                    GtkListItem *list_item,
+                                    gpointer UNUSED(data)) {
+  GtkWidget *label = gtk_list_item_get_child(list_item);
+  GtkStringObject *item = GTK_STRING_OBJECT(gtk_list_item_get_item(list_item));
+  gtk_label_set_text(GTK_LABEL(label), gtk_string_object_get_string(item));
 }
 
 static void cb_draw_button(GtkDrawingArea *area, cairo_t *cairo, int width,
@@ -396,7 +475,6 @@ static void cb_draw_button(GtkDrawingArea *area, cairo_t *cairo, int width,
   cairo_restore(cairo);
 
   gint device_scale = gtk_widget_get_scale_factor(GTK_WIDGET(area));
-  cairo_save(cairo);
 
   /* Create image surface */
   cairo_surface_t *image_surface = cairo_image_surface_create(
@@ -413,12 +491,11 @@ static void cb_draw_button(GtkDrawingArea *area, cairo_t *cairo, int width,
     return;
   }
 
-  /* Scale */
-  cairo_save(image_cairo);
-
-  /* Render page */
+  /* Render field */
+  cairo_save(cairo);
   if (zathura_form_field_render_cairo(priv->form_field, image_cairo,
-                                      device_scale) != ZATHURA_ERROR_OK) {
+                                      priv->scale * device_scale) !=
+      ZATHURA_ERROR_OK) {
     cairo_restore(image_cairo);
     return;
   }

@@ -230,8 +230,8 @@ update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, do
   double position_y = y;
 
   /* Calculate visible area */
-  int viewport_width  = gtk_widget_get_allocated_width(priv->gtk.viewport);
-  int viewport_height = gtk_widget_get_allocated_height(priv->gtk.viewport);
+  int viewport_width  = gtk_widget_get_width(priv->gtk.viewport);
+  int viewport_height = gtk_widget_get_height(priv->gtk.viewport);
   int viewport_area   = viewport_width * viewport_height;
 
   /* Update pages */
@@ -243,16 +243,16 @@ update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, do
     bool is_visible = false;
 
     /* Get current size of widget */
-    int page_widget_width  = gtk_widget_get_allocated_width(page_widget);
-    int page_widget_height = gtk_widget_get_allocated_height(page_widget);
+    int page_widget_width  = gtk_widget_get_width(page_widget);
+    int page_widget_height = gtk_widget_get_height(page_widget);
 
     /* Get status */
     zathura_gtk_page_widget_status_t* widget_status = g_list_nth_data(priv->document.pages_status, i);
 
     /* Get widget coordinates relative to the scrolled window */
-    double page_widget_x, page_widget_y;
-    if (gtk_widget_translate_coordinates(page_widget, priv->gtk.grid, 0,
-        0, &page_widget_x, &page_widget_y) == FALSE) {
+    graphene_point_t page_widget_point;
+    if (gtk_widget_compute_point(page_widget, priv->gtk.grid,
+        &GRAPHENE_POINT_INIT(0, 0), &page_widget_point) == FALSE) {
       is_visible = false;
 
       if (update == true) {
@@ -264,15 +264,15 @@ update_visible_pages_and_current_page(ZathuraDocumentPrivate* priv, double x, do
 
     /* Save page coordinates and visibility status */
     if (update == true) {
-      widget_status->position.x  = page_widget_x;
-      widget_status->position.y  = page_widget_y;
+      widget_status->position.x  = page_widget_point.x;
+      widget_status->position.y  = page_widget_point.y;
       widget_status->size.width  = page_widget_width;
       widget_status->size.height = page_widget_height;
     }
 
     /* Check if widget is visible */
     GdkRectangle viewport_rectangle = { position_x, position_y, viewport_width, viewport_height };
-    GdkRectangle page_widget_rectangle = { page_widget_x, page_widget_y, page_widget_width, page_widget_height };
+    GdkRectangle page_widget_rectangle = { page_widget_point.x, page_widget_point.y, page_widget_width, page_widget_height };
     GdkRectangle intersecting_area;
 
     is_visible = gdk_rectangle_intersect(&viewport_rectangle, &page_widget_rectangle, &intersecting_area);

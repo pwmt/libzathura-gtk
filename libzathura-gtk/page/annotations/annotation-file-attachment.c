@@ -12,7 +12,7 @@ struct _ZathuraAnnotationFileAttachmentPrivate {
   zathura_annotation_t* annotation;
 };
 
-static gboolean cb_zathura_gtk_annotation_file_attachment_draw(GtkWidget* widget, cairo_t *cairo, gpointer data);
+static void cb_zathura_gtk_annotation_file_attachment_draw(GtkDrawingArea* area, cairo_t* cairo, int allocated_width, int allocated_height, gpointer data);
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationFileAttachment, zathura_gtk_annotation_file_attachment, ZATHURA_TYPE_ANNOTATION)
 
@@ -44,26 +44,32 @@ zathura_gtk_annotation_file_attachment_new(zathura_annotation_t* annotation)
   priv->annotation = annotation;
 
   priv->drawing_area = gtk_drawing_area_new();
-  g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_zathura_gtk_annotation_file_attachment_draw), widget);
+  gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(priv->drawing_area), cb_zathura_gtk_annotation_file_attachment_draw, widget, NULL);
+  gtk_widget_set_hexpand(priv->drawing_area, TRUE);
+  gtk_widget_set_vexpand(priv->drawing_area, TRUE);
+  gtk_widget_set_visible(priv->drawing_area, TRUE);
 
-  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->drawing_area));
-  gtk_widget_show_all(GTK_WIDGET(widget));
+  gtk_box_append(GTK_BOX(widget), GTK_WIDGET(priv->drawing_area));
+  gtk_widget_set_visible(GTK_WIDGET(widget), TRUE);
 
   return GTK_WIDGET(widget);
 }
 
-static gboolean
-cb_zathura_gtk_annotation_file_attachment_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
+static void
+cb_zathura_gtk_annotation_file_attachment_draw(GtkDrawingArea* area, cairo_t* cairo, int allocated_width, int allocated_height, gpointer data)
 {
+  GtkWidget* widget = GTK_WIDGET(area);
+  (void) allocated_width;
+  (void) allocated_height;
   ZathuraAnnotationFileAttachmentPrivate* priv = zathura_gtk_annotation_file_attachment_get_instance_private(data);
 
-  const unsigned int page_height = gtk_widget_get_allocated_height(widget);
-  const unsigned int page_width  = gtk_widget_get_allocated_width(widget);
+  const unsigned int page_height = gtk_widget_get_height(widget);
+  const unsigned int page_width  = gtk_widget_get_width(widget);
 
   char* icon_name;
   if (zathura_annotation_sound_get_icon_name(priv->annotation, &icon_name) !=
       ZATHURA_ERROR_OK) {
-    return FALSE;
+    return;
   }
   cairo_save(cairo);
 
@@ -81,31 +87,16 @@ cb_zathura_gtk_annotation_file_attachment_draw(GtkWidget* widget, cairo_t *cairo
   }
   if (svg_handle == NULL) {
     cairo_restore(cairo);
-    return FALSE;
+    return;
   }
 
-  /* Calculate scale to fit SVG into area */
-  RsvgDimensionData svg_dimension_data;
-  rsvg_handle_get_dimensions(svg_handle, &svg_dimension_data);
+  RsvgRectangle viewport = { 0, 0, page_width, page_height };
+  GError* error = NULL;
 
-  double scale_x = (double) page_width  / svg_dimension_data.width;
-  double scale_y = (double) page_height / svg_dimension_data.height;
-
-  if (scale_x > scale_y) {
-    cairo_scale(cairo, scale_y, scale_y);
-  } else {
-    cairo_scale(cairo, scale_x, scale_x);
-  }
-
-  if (rsvg_handle_render_cairo(svg_handle, cairo) == FALSE) {
+  if (rsvg_handle_render_document(svg_handle, cairo, &viewport, &error) == FALSE) {
+    g_clear_error(&error);
     cairo_restore(cairo);
-    return FALSE;
-  }
-
-  if (scale_x > scale_y) {
-    cairo_scale(cairo, 1/scale_y, 1/scale_y);
-  } else {
-    cairo_scale(cairo, 1/scale_x, 1/scale_x);
+    return;
   }
 
   cairo_restore(cairo);
@@ -131,5 +122,5 @@ cb_zathura_gtk_annotation_file_attachment_draw(GtkWidget* widget, cairo_t *cairo
 
   cairo_restore(cairo);
 
-  return GDK_EVENT_STOP;
+  return;
 }

@@ -8,7 +8,7 @@ struct _ZathuraAnnotationFreeTextPrivate {
   zathura_annotation_t* annotation;
 };
 
-static gboolean cb_zathura_gtk_annotation_free_text_draw(GtkWidget* widget, cairo_t *cairo, gpointer data);
+static void cb_zathura_gtk_annotation_free_text_draw(GtkDrawingArea* area, cairo_t* cairo, int allocated_width, int allocated_height, gpointer data);
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationFreeText, zathura_gtk_annotation_free_text, ZATHURA_TYPE_ANNOTATION)
 
@@ -40,17 +40,23 @@ zathura_gtk_annotation_free_text_new(zathura_annotation_t* annotation)
   priv->annotation = annotation;
 
   priv->drawing_area = gtk_drawing_area_new();
-  g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_zathura_gtk_annotation_free_text_draw), widget);
+  gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(priv->drawing_area), cb_zathura_gtk_annotation_free_text_draw, widget, NULL);
+  gtk_widget_set_hexpand(priv->drawing_area, TRUE);
+  gtk_widget_set_vexpand(priv->drawing_area, TRUE);
+  gtk_widget_set_visible(priv->drawing_area, TRUE);
 
-  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->drawing_area));
-  gtk_widget_show_all(GTK_WIDGET(widget));
+  gtk_box_append(GTK_BOX(widget), GTK_WIDGET(priv->drawing_area));
+  gtk_widget_set_visible(GTK_WIDGET(widget), TRUE);
 
   return GTK_WIDGET(widget);
 }
 
-static gboolean
-cb_zathura_gtk_annotation_free_text_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
+static void
+cb_zathura_gtk_annotation_free_text_draw(GtkDrawingArea* area, cairo_t* cairo, int allocated_width, int allocated_height, gpointer data)
 {
+  GtkWidget* widget = GTK_WIDGET(area);
+  (void) allocated_width;
+  (void) allocated_height;
   ZathuraAnnotationFreeTextPrivate* priv = zathura_gtk_annotation_free_text_get_instance_private(data);
 
   double scale;
@@ -58,51 +64,51 @@ cb_zathura_gtk_annotation_free_text_draw(GtkWidget* widget, cairo_t *cairo, gpoi
 
   char* text;
   if (zathura_annotation_free_text_get_text(priv->annotation, &text) != ZATHURA_ERROR_OK) {
-    return GDK_EVENT_PROPAGATE;
+    return;
   }
 
   zathura_annotation_justification_t justification;
   if (zathura_annotation_free_text_get_justification(priv->annotation, &justification) != ZATHURA_ERROR_OK) {
-    return GDK_EVENT_PROPAGATE;
+    return;
   }
 
   char* rich_text;
   if (zathura_annotation_free_text_get_rich_text(priv->annotation, &rich_text) != ZATHURA_ERROR_OK) {
-    return GDK_EVENT_PROPAGATE;
+    return;
   }
 
   char* style_string;
   if (zathura_annotation_free_text_get_style_string(priv->annotation, &style_string) != ZATHURA_ERROR_OK) {
-    return GDK_EVENT_PROPAGATE;
+    return;
   }
 
   zathura_annotation_callout_line_t callout_line;
   if (zathura_annotation_free_text_get_callout_line(priv->annotation, &callout_line) != ZATHURA_ERROR_OK) {
-    return GDK_EVENT_PROPAGATE;
+    return;
   }
 
   zathura_annotation_border_t border;
   if (zathura_annotation_free_text_get_border(priv->annotation, &border) != ZATHURA_ERROR_OK) {
-    return GDK_EVENT_PROPAGATE;
+    return;
   }
 
   zathura_annotation_markup_intent_t intent;
   if (zathura_annotation_free_text_get_intent(priv->annotation, &intent) != ZATHURA_ERROR_OK) {
-    return GDK_EVENT_PROPAGATE;
+    return;
   }
 
   zathura_annotation_padding_t padding;
   if (zathura_annotation_free_text_get_padding(priv->annotation, &padding) != ZATHURA_ERROR_OK) {
-    return GDK_EVENT_PROPAGATE;
+    return;
   }
 
   zathura_annotation_line_ending_t line_ending[2];
   if (zathura_annotation_free_text_get_line_ending(priv->annotation, line_ending) != ZATHURA_ERROR_OK) {
-    return GDK_EVENT_PROPAGATE;
+    return;
   }
 
-  const unsigned int height = gtk_widget_get_allocated_height(widget);
-  const unsigned int width  = gtk_widget_get_allocated_width(widget);
+  const unsigned int height = gtk_widget_get_height(widget);
+  const unsigned int width  = gtk_widget_get_width(widget);
 
   cairo_save(cairo);
   cairo_set_font_size(cairo, 10 * scale);
@@ -111,5 +117,5 @@ cb_zathura_gtk_annotation_free_text_draw(GtkWidget* widget, cairo_t *cairo, gpoi
   cairo_show_text(cairo, text);
   cairo_restore(cairo);
 
-  return GDK_EVENT_PROPAGATE;
+  return;
 }

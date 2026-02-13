@@ -12,7 +12,7 @@ if check.found()
 
   # Set plugin path for tests
   defines += [
-    '-D_TEST_PLUGIN_DIR_PATH=@0@/@1@'.format(meson.build_root(), libzathura_plugin.outdir()),
+    '-D_TEST_PLUGIN_DIR_PATH=@0@/@1@'.format(meson.current_build_dir(), libzathura_plugin.outdir()),
     '-D_TEST_PLUGIN_FILE_PATH=@0@'.format(libzathura_plugin.full_path()),
     '-D_TEST_FILE_PATH=@0@'.format(meson.current_source_dir() / 'meson.build'),
   ]

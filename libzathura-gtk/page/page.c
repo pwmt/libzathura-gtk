@@ -22,7 +22,6 @@ static void cb_page_draw(GtkDrawingArea *area, cairo_t *cairo, int width,
                          int height, gpointer data);
 static void cb_page_draw_links(GtkDrawingArea *area, cairo_t *cairo, int width,
                                int height, gpointer data);
-static void cb_page_overlay_realized(GtkWidget *overlay, gpointer data);
 
 enum {
   PROP_0,
@@ -190,8 +189,8 @@ GtkWidget *zathura_gtk_page_new(zathura_page_t *page) {
       zathura_gtk_form_field_editor_new(ZATHURA_PAGE(widget));
 
   /* Setup annotation layer */
-  /* priv->layer.annotations =
-   * zathura_gtk_annotation_overlay_new(ZATHURA_PAGE(widget)); */
+  priv->layer.annotations =
+      zathura_gtk_annotation_overlay_new(ZATHURA_PAGE(widget));
 
   /* Setup over lay */
   priv->overlay = gtk_overlay_new();
@@ -199,8 +198,7 @@ GtkWidget *zathura_gtk_page_new(zathura_page_t *page) {
   gtk_overlay_set_child(GTK_OVERLAY(priv->overlay),
                         GTK_WIDGET(priv->layer.drawing_area));
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.links);
-  /* gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay),
-   * priv->layer.annotations); */
+  gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.annotations);
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.form_fields);
 
   /* g_signal_connect(priv->overlay, "realize",
@@ -253,6 +251,7 @@ static void zathura_gtk_page_set_property(GObject *object, guint prop_id,
   case PROP_FORM_FIELDS_EDIT: {
     priv->form_fields.edit = g_value_get_boolean(value);
     gtk_widget_queue_draw(priv->layer.form_fields);
+    gtk_widget_queue_draw(priv->layer.drawing_area);
     render_page(page);
   } break;
   case PROP_FORM_FIELDS_HIGHLIGHT:
@@ -316,13 +315,24 @@ static void render_page(ZathuraPage *widget) {
   calculate_widget_size(widget, &page_widget_width, &page_widget_height);
 
   if (priv->form_fields.edit == true) {
-    gtk_widget_show(priv->layer.form_fields);
+    gtk_widget_set_visible(priv->layer.form_fields, TRUE);
   } else {
-    gtk_widget_hide(priv->layer.form_fields);
+    gtk_widget_set_visible(priv->layer.form_fields, FALSE);
   }
 
   gtk_widget_set_size_request(priv->layer.drawing_area, page_widget_width,
                               page_widget_height);
+  if (priv->layer.annotations != NULL) {
+    gtk_widget_set_size_request(priv->layer.annotations, page_widget_width,
+                                page_widget_height);
+    gtk_widget_queue_resize(priv->layer.annotations);
+    gtk_widget_queue_allocate(priv->layer.annotations);
+    gtk_widget_queue_draw(priv->layer.annotations);
+  }
+  gtk_widget_set_size_request(priv->layer.form_fields, page_widget_width,
+                              page_widget_height);
+  gtk_widget_queue_resize(priv->layer.form_fields);
+  gtk_widget_queue_draw(priv->layer.form_fields);
 
   gtk_widget_queue_allocate(GTK_WIDGET(widget));
 }
@@ -333,17 +343,11 @@ static void cb_page_draw(GtkDrawingArea *area, cairo_t *cairo, int width,
 
   gint device_scale = gtk_widget_get_scale_factor(GTK_WIDGET(area));
 
-  const unsigned int page_width =
-      gtk_widget_get_allocated_width(GTK_WIDGET(area));
-  const unsigned int page_height =
-      gtk_widget_get_allocated_height(GTK_WIDGET(area));
-
   cairo_save(cairo);
 
   /* Create image surface */
-  cairo_surface_t *image_surface =
-      cairo_image_surface_create(CAIRO_FORMAT_RGB24, page_width * device_scale,
-                                 page_height * device_scale);
+  cairo_surface_t *image_surface = cairo_image_surface_create(
+      CAIRO_FORMAT_RGB24, width * device_scale, height * device_scale);
   if (image_surface == NULL) {
     return;
   }
@@ -355,6 +359,10 @@ static void cb_page_draw(GtkDrawingArea *area, cairo_t *cairo, int width,
     cairo_surface_destroy(image_surface);
     return;
   }
+
+  /* Ensure a white background for pages that render with transparency. */
+  cairo_set_source_rgb(image_cairo, 1.0, 1.0, 1.0);
+  cairo_paint(image_cairo);
 
   /* Scale */
   double scale_factor = priv->settings.scale;
@@ -412,15 +420,5 @@ static void cb_page_draw_links(GtkDrawingArea *area, cairo_t *cairo, int width,
     }
 
     cairo_restore(cairo);
-  }
-}
-
-static void cb_page_overlay_realized(GtkWidget *overlay, gpointer data) {
-  ZathuraPagePrivate *priv = zathura_gtk_page_get_instance_private(data);
-
-  if (priv->form_fields.edit == true) {
-    gtk_widget_show(priv->layer.form_fields);
-  } else {
-    gtk_widget_hide(priv->layer.form_fields);
   }
 }

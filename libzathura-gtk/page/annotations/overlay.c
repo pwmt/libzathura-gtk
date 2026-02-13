@@ -1,6 +1,7 @@
 /* See LICENSE file for license and copyright information */
 
 #include <math.h>
+#include <stdio.h>
 #include <libzathura/libzathura.h>
 
 #include "overlay.h"
@@ -59,10 +60,12 @@ typedef struct annotation_widget_mapping_s {
 
 static void zathura_gtk_annotation_overlay_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_annotation_overlay_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
-static void zathura_gtk_annotation_overlay_size_allocate(GtkWidget* widget, GdkRectangle* allocation);
+static void zathura_gtk_annotation_overlay_size_allocate(GtkWidget* widget, int width, int height, int baseline);
 static void create_widgets(GtkWidget* overlay);
+static void update_widget_positions(GtkWidget* overlay);
+static void cb_page_scale_notify(GObject* object, GParamSpec* pspec, gpointer data);
 
-G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationOverlay, zathura_gtk_annotation_overlay, GTK_TYPE_BIN)
+G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotationOverlay, zathura_gtk_annotation_overlay, GTK_TYPE_BOX)
 
 static void
 zathura_gtk_annotation_overlay_class_init(ZathuraAnnotationOverlayClass* class)
@@ -99,7 +102,6 @@ zathura_gtk_annotation_overlay_init(ZathuraAnnotationOverlay* widget)
   priv->page            = NULL;
   priv->settings.show   = false;
 
-  gtk_widget_add_events(GTK_WIDGET(widget), GDK_BUTTON_PRESS_MASK);
 }
 
 GtkWidget*
@@ -116,37 +118,27 @@ zathura_gtk_annotation_overlay_new(ZathuraPage* page)
   priv->gtk.annotations = gtk_fixed_new();
 
   /* Setup container */
-  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->gtk.annotations));
-  gtk_widget_show_all(GTK_WIDGET(widget));
+  gtk_box_append(GTK_BOX(widget), GTK_WIDGET(priv->gtk.annotations));
+  gtk_widget_set_visible(GTK_WIDGET(widget), TRUE);
+  create_widgets(GTK_WIDGET(widget));
+  update_widget_positions(GTK_WIDGET(widget));
+  g_signal_connect(priv->page, "notify::scale", G_CALLBACK(cb_page_scale_notify),
+      widget);
 
   return GTK_WIDGET(widget);
 }
 
 static void
-zathura_gtk_annotation_overlay_size_allocate(GtkWidget* widget, GdkRectangle* allocation)
+zathura_gtk_annotation_overlay_size_allocate(GtkWidget* widget, int width, int height, int baseline)
 {
   ZathuraAnnotationOverlayPrivate* priv = zathura_gtk_annotation_overlay_get_instance_private(ZATHURA_ANNOTATION_OVERLAY(widget));
 
   if (priv->annotations == NULL) {
     create_widgets(widget);
   }
+  update_widget_positions(widget);
 
-  double page_scale;
-  g_object_get(G_OBJECT(priv->page), "scale", &page_scale, NULL);
-
-  annotation_widget_mapping_t* annotation_mapping;
-  ZATHURA_LIST_FOREACH(annotation_mapping, priv->annotations) {
-      zathura_rectangle_t position = zathura_rectangle_scale(annotation_mapping->position, page_scale);
-      const unsigned int width  = ceil(position.p2.x) - floor(position.p1.x);
-      const unsigned int height = ceil(position.p2.y) - floor(position.p1.y);
-
-      g_object_set(G_OBJECT(annotation_mapping->widget), "scale", page_scale, NULL);
-
-      gtk_fixed_move(GTK_FIXED(priv->gtk.annotations), annotation_mapping->widget, position.p1.x, position.p1.y);
-      gtk_widget_set_size_request(annotation_mapping->widget, width, height);
-  }
-
-  GTK_WIDGET_CLASS(zathura_gtk_annotation_overlay_parent_class)->size_allocate(widget, allocation);
+  GTK_WIDGET_CLASS(zathura_gtk_annotation_overlay_parent_class)->size_allocate(widget, width, height, baseline);
 }
 
 static void
@@ -300,7 +292,43 @@ create_widgets(GtkWidget* overlay)
 
       gtk_fixed_put(GTK_FIXED(priv->gtk.annotations), annotation_widget, position.p1.x, position.p1.y);
       gtk_widget_set_size_request(annotation_widget, width, height);
-      gtk_widget_show(annotation_widget);
+      gtk_widget_set_visible(annotation_widget, TRUE);
+    } else {
+      printf("[annotations] no widget created for type=%d\n", annotation_type);
     }
   }
+}
+
+static void
+update_widget_positions(GtkWidget* overlay)
+{
+  ZathuraAnnotationOverlayPrivate* priv = zathura_gtk_annotation_overlay_get_instance_private(
+      ZATHURA_ANNOTATION_OVERLAY(overlay));
+
+  if (priv->annotations == NULL) {
+    return;
+  }
+
+  double page_scale = 1.0;
+  g_object_get(G_OBJECT(priv->page), "scale", &page_scale, NULL);
+
+  annotation_widget_mapping_t* annotation_mapping;
+  ZATHURA_LIST_FOREACH(annotation_mapping, priv->annotations) {
+      zathura_rectangle_t position = zathura_rectangle_scale(annotation_mapping->position, page_scale);
+      const unsigned int width  = ceil(position.p2.x) - floor(position.p1.x);
+      const unsigned int height = ceil(position.p2.y) - floor(position.p1.y);
+
+      g_object_set(G_OBJECT(annotation_mapping->widget), "scale", page_scale, NULL);
+
+      gtk_fixed_move(GTK_FIXED(priv->gtk.annotations), annotation_mapping->widget, position.p1.x, position.p1.y);
+      gtk_widget_set_size_request(annotation_mapping->widget, width, height);
+  }
+}
+
+static void
+cb_page_scale_notify(GObject* UNUSED(object), GParamSpec* UNUSED(pspec), gpointer data)
+{
+  GtkWidget* overlay = GTK_WIDGET(data);
+  update_widget_positions(overlay);
+  gtk_widget_queue_draw(overlay);
 }

@@ -1,8 +1,10 @@
- /* See LICENSE file for license and copyright information */
+/* See LICENSE file for license and copyright information */
 
+#include "../../macros.h"
 #include "form-field-button.h"
 
-/* static gboolean zathura_gtk_form_field_button_button_press_event(GtkWidget* widget, GdkEventButton* event_button); */
+static void cb_form_field_button_pressed(GtkGestureClick* gesture, int n_press,
+                                         double x, double y, gpointer data);
 static void cb_draw_button(GtkDrawingArea *area, cairo_t *cairo, int width, int height, gpointer data);
 static void zathura_gtk_form_field_button_dispose(GObject* object);
 static void zathura_gtk_form_field_button_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
@@ -11,11 +13,13 @@ static void zathura_gtk_form_field_button_get_property(GObject* object, guint pr
 struct _ZathuraFormFieldButtonPrivate {
   zathura_form_field_t* button;
   GtkWidget* drawing_area;
+  double scale;
 };
 
 enum {
   PROP_0,
   PROP_FORM_FIELD,
+  PROP_SCALE,
 };
 
 enum {
@@ -38,8 +42,6 @@ zathura_gtk_form_field_button_class_init(ZathuraFormFieldButtonClass* class)
 
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(class);
   gtk_widget_class_set_layout_manager_type(widget_class, GTK_TYPE_BIN_LAYOUT);
-  /* widget_class->button_press_event = zathura_gtk_form_field_button_button_press_event; */
-
   /* properties */
   g_object_class_install_property(
     object_class,
@@ -49,6 +51,19 @@ zathura_gtk_form_field_button_class_init(ZathuraFormFieldButtonClass* class)
       "form-field",
       "The zathura_form_field_t instance",
       G_PARAM_WRITABLE | G_PARAM_READABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS
+    )
+  );
+  g_object_class_install_property(
+    object_class,
+    PROP_SCALE,
+    g_param_spec_double(
+      "scale",
+      "scale",
+      "The page scale factor",
+      0.01,
+      100.0,
+      1.0,
+      G_PARAM_WRITABLE | G_PARAM_READABLE | G_PARAM_STATIC_STRINGS
     )
   );
 
@@ -71,8 +86,8 @@ zathura_gtk_form_field_button_init(ZathuraFormFieldButton* widget)
 
   priv->button = NULL;
   priv->drawing_area = NULL;
+  priv->scale = 1.0;
 
-  /* gtk_widget_add_events(GTK_WIDGET(widget), GDK_BUTTON_PRESS_MASK); */
 }
 
 static void
@@ -99,6 +114,14 @@ zathura_gtk_form_field_button_new(zathura_form_field_t* button)
   gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(priv->drawing_area), cb_draw_button, widget, NULL);
   gtk_widget_set_parent(priv->drawing_area, GTK_WIDGET(widget));
 
+  GtkGesture* click_gesture = gtk_gesture_click_new();
+  gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click_gesture),
+                                GDK_BUTTON_PRIMARY);
+  g_signal_connect(click_gesture, "pressed",
+                   G_CALLBACK(cb_form_field_button_pressed), widget);
+  gtk_widget_add_controller(priv->drawing_area,
+                            GTK_EVENT_CONTROLLER(click_gesture));
+
   zathura_rectangle_t position;
   if (zathura_form_field_get_position(priv->button, &position) != ZATHURA_ERROR_OK) {
     // TODO: Fix
@@ -122,6 +145,12 @@ zathura_gtk_form_field_button_set_property(GObject* object, guint prop_id, const
     case PROP_FORM_FIELD:
       priv->button = g_value_get_pointer(value);
       break;
+    case PROP_SCALE:
+      priv->scale = g_value_get_double(value);
+      if (priv->drawing_area != NULL) {
+        gtk_widget_queue_draw(priv->drawing_area);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
@@ -137,42 +166,41 @@ zathura_gtk_form_field_button_get_property(GObject* object, guint prop_id, GValu
     case PROP_FORM_FIELD:
       g_value_set_pointer(value, priv->button);
       break;
+    case PROP_SCALE:
+      g_value_set_double(value, priv->scale);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
 }
 
-/* static gboolean */
-/* zathura_gtk_form_field_button_button_press_event(GtkWidget* widget, GdkEventButton* event_button) */
-/* { */
-/*   #<{(| Only allow left clicks |)}># */
-/*   if (event_button->button != 1) { */
-/*     return GDK_EVENT_PROPAGATE; */
-/*   } */
-/*  */
-/*   ZathuraFormFieldButtonPrivate* priv = zathura_gtk_form_field_button_get_instance_private(ZATHURA_FORM_FIELD_BUTTON(widget)); */
-/*  */
-/*   #<{(| Toggle button state |)}># */
-/*   bool button_state; */
-/*   if (zathura_form_field_button_get_state(priv->button, &button_state) != ZATHURA_ERROR_OK) { */
-/*     return GDK_EVENT_PROPAGATE; */
-/*   } */
-/*  */
-/*   if (zathura_form_field_button_set_state(priv->button, !button_state) != ZATHURA_ERROR_OK) { */
-/*     return GDK_EVENT_PROPAGATE; */
-/*   } */
-/*  */
-/*   if (zathura_form_field_save(priv->button) != ZATHURA_ERROR_OK) { */
-/*     return GDK_EVENT_PROPAGATE; */
-/*   } */
-/*  */
-/*   g_signal_emit(widget, signals[SIGNAL_CHANGED], 0); */
-/*  */
-/*   #<{(| Queue redrawing of the button |)}># */
-/*   gtk_widget_queue_draw(widget); */
-/*  */
-/*   return GDK_EVENT_STOP; */
-/* } */
+static void cb_form_field_button_pressed(GtkGestureClick* UNUSED(gesture),
+                                         int UNUSED(n_press), double UNUSED(x),
+                                         double UNUSED(y), gpointer data)
+{
+  GtkWidget* widget = GTK_WIDGET(data);
+  ZathuraFormFieldButtonPrivate* priv = zathura_gtk_form_field_button_get_instance_private(
+      ZATHURA_FORM_FIELD_BUTTON(widget));
+
+  bool button_state;
+  if (zathura_form_field_button_get_state(priv->button, &button_state) !=
+      ZATHURA_ERROR_OK) {
+    return;
+  }
+
+  if (zathura_form_field_button_set_state(priv->button, !button_state) !=
+      ZATHURA_ERROR_OK) {
+    return;
+  }
+
+  if (zathura_form_field_save(priv->button) != ZATHURA_ERROR_OK) {
+    return;
+  }
+
+  g_signal_emit(widget, signals[SIGNAL_CHANGED], 0);
+  gtk_widget_queue_draw(priv->drawing_area);
+  gtk_widget_queue_draw(widget);
+}
 
 #define RGB_TO_CAIRO(r, g, b) \
   (r)/255.0, (g)/255.0, (b)/255.0
@@ -212,7 +240,7 @@ cb_draw_button(GtkDrawingArea *area, cairo_t *cairo, int width, int height, gpoi
   cairo_save(image_cairo);
 
   /* Render page */
-  if (zathura_form_field_render_cairo(priv->button, image_cairo, device_scale) != ZATHURA_ERROR_OK) {
+  if (zathura_form_field_render_cairo(priv->button, image_cairo, priv->scale * device_scale) != ZATHURA_ERROR_OK) {
     return;
   }
 

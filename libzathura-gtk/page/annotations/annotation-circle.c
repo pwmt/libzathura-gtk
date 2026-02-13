@@ -14,8 +14,7 @@ struct _ZathuraAnnotationCirclePrivate {
   zathura_annotation_t* annotation;
 };
 
-static gboolean cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t
-    *cairo, gpointer data);
+static void cb_zathura_gtk_annotation_circle_draw(GtkDrawingArea* area, cairo_t* cairo, int allocated_width, int allocated_height, gpointer data);
 static void calculate_cloud_line(cairo_t* cairo, double x, double y, double
     x_previous, double y_previous, double width, bool switch_axes);
 
@@ -49,25 +48,31 @@ zathura_gtk_annotation_circle_new(zathura_annotation_t* annotation)
   priv->annotation = annotation;
 
   priv->drawing_area = gtk_drawing_area_new();
-  g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_zathura_gtk_annotation_circle_draw), widget);
+  gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(priv->drawing_area), cb_zathura_gtk_annotation_circle_draw, widget, NULL);
+  gtk_widget_set_hexpand(priv->drawing_area, TRUE);
+  gtk_widget_set_vexpand(priv->drawing_area, TRUE);
+  gtk_widget_set_visible(priv->drawing_area, TRUE);
 
-  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->drawing_area));
+  gtk_box_append(GTK_BOX(widget), GTK_WIDGET(priv->drawing_area));
 
-  gtk_widget_show_all(GTK_WIDGET(widget));
+  gtk_widget_set_visible(GTK_WIDGET(widget), TRUE);
 
   return GTK_WIDGET(widget);
 }
 
-static gboolean
-cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
+static void
+cb_zathura_gtk_annotation_circle_draw(GtkDrawingArea* area, cairo_t* cairo, int allocated_width, int allocated_height, gpointer data)
 {
+  GtkWidget* widget = GTK_WIDGET(area);
+  (void) allocated_width;
+  (void) allocated_height;
   ZathuraAnnotationCirclePrivate* priv = zathura_gtk_annotation_circle_get_instance_private(data);
 
   double scale = 1.0;
   g_object_get(G_OBJECT(data), "scale", &scale, NULL);
 
-  const unsigned int height = gtk_widget_get_allocated_height(widget);
-  const unsigned int width  = gtk_widget_get_allocated_width(widget);
+  const unsigned int height = gtk_widget_get_height(widget);
+  const unsigned int width  = gtk_widget_get_width(widget);
 
   /* Get opacity */
   double opacity = 0.5;
@@ -199,7 +204,7 @@ cb_zathura_gtk_annotation_circle_draw(GtkWidget* widget, cairo_t *cairo, gpointe
 
   cairo_restore(cairo);
 
-  return GDK_EVENT_STOP;
+  return;
 }
 
 static void calculate_cloud_line(cairo_t* cairo, double x, double y, double x_previous,

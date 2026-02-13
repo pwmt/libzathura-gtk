@@ -8,7 +8,7 @@ struct _ZathuraAnnotation3DPrivate {
   zathura_annotation_t* annotation;
 };
 
-static gboolean cb_zathura_gtk_annotation_3d_draw(GtkWidget* widget, cairo_t *cairo, gpointer data);
+static void cb_zathura_gtk_annotation_3d_draw(GtkDrawingArea* area, cairo_t* cairo, int allocated_width, int allocated_height, gpointer data);
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraAnnotation3D, zathura_gtk_annotation_3d, ZATHURA_TYPE_ANNOTATION)
 
@@ -24,10 +24,13 @@ zathura_gtk_annotation_3d_init(ZathuraAnnotation3D* widget)
   ZathuraAnnotation3DPrivate* priv = zathura_gtk_annotation_3d_get_instance_private(widget);
 
   priv->drawing_area = gtk_drawing_area_new();
-  g_signal_connect(G_OBJECT(priv->drawing_area), "draw", G_CALLBACK(cb_zathura_gtk_annotation_3d_draw), widget);
+  gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(priv->drawing_area), cb_zathura_gtk_annotation_3d_draw, widget, NULL);
+  gtk_widget_set_hexpand(priv->drawing_area, TRUE);
+  gtk_widget_set_vexpand(priv->drawing_area, TRUE);
+  gtk_widget_set_visible(priv->drawing_area, TRUE);
 
-  gtk_container_add(GTK_CONTAINER(widget), GTK_WIDGET(priv->drawing_area));
-  gtk_widget_show_all(GTK_WIDGET(widget));
+  gtk_box_append(GTK_BOX(widget), GTK_WIDGET(priv->drawing_area));
+  gtk_widget_set_visible(GTK_WIDGET(widget), TRUE);
 }
 
 GtkWidget*
@@ -36,12 +39,15 @@ zathura_gtk_annotation_3d_new(zathura_annotation_t* annotation)
   return g_object_new(ZATHURA_TYPE_ANNOTATION_3D, "annotation", annotation, NULL);
 }
 
-static gboolean
-cb_zathura_gtk_annotation_3d_draw(GtkWidget* widget, cairo_t *cairo, gpointer data)
+static void
+cb_zathura_gtk_annotation_3d_draw(GtkDrawingArea* area, cairo_t* cairo, int allocated_width, int allocated_height, gpointer data)
 {
+  GtkWidget* widget = GTK_WIDGET(area);
+  (void) allocated_width;
+  (void) allocated_height;
   /* ZathuraAnnotation3DPrivate* priv = zathura_gtk_annotation_3d_get_instance_private(data); */
 
   // TODO: Implement this widget
 
-  return GDK_EVENT_PROPAGATE;
+  return;
 }

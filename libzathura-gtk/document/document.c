@@ -387,11 +387,11 @@ zathura_gtk_document_scroll(GtkWidget* document, zathura_gtk_document_scroll_dir
   }
 
   /* Current properties */
-  const double vertical_step   = (double) gtk_widget_get_allocated_width(priv->gtk.viewport);
-  const double horizontal_step = (double) gtk_widget_get_allocated_height(priv->gtk.viewport);
+  const double vertical_step   = (double) gtk_widget_get_width(priv->gtk.viewport);
+  const double horizontal_step = (double) gtk_widget_get_height(priv->gtk.viewport);
 
-  const double grid_width  = (double) gtk_widget_get_allocated_width(priv->gtk.grid);
-  const double grid_height = (double) gtk_widget_get_allocated_height(priv->gtk.grid);
+  const double grid_width  = (double) gtk_widget_get_width(priv->gtk.grid);
+  const double grid_height = (double) gtk_widget_get_height(priv->gtk.grid);
 
   /* Go to top or bottom of current page */
   if (direction == PAGE_TOP || direction == PAGE_BOTTOM) {
@@ -732,16 +732,16 @@ restore_current_page(ZathuraDocumentPrivate* priv)
   zathura_page_info_t* page_info = g_malloc0(sizeof(zathura_page_info_t));
 
   /* Calculate offset */
-  double page_widget_offset_x, page_widget_offset_y;
-  if (gtk_widget_translate_coordinates(page_widget, priv->gtk.viewport, 0,
-      0, &page_widget_offset_x, &page_widget_offset_y) == FALSE) {
+  graphene_point_t page_widget_offset;
+  if (gtk_widget_compute_point(page_widget, priv->gtk.viewport,
+      &GRAPHENE_POINT_INIT(0, 0), &page_widget_offset) == FALSE) {
     return; // Should not happen!
   };
 
   page_info->priv = priv;
   page_info->page_number = priv->document.current_page_number;
-  page_info->offset.x = page_widget_offset_x,
-  page_info->offset.y = page_widget_offset_y;
+  page_info->offset.x = page_widget_offset.x,
+  page_info->offset.y = page_widget_offset.y;
 
   priv->status.restore_position = page_info;
 }
