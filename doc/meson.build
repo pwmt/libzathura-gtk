@@ -8,7 +8,7 @@ if sphinx.found()
 	# Check required modules
 	foreach p : python_required_modules
 		script = 'import importlib.util; import sys; exit(1) if importlib.util.find_spec(\''+ p +'\') is None else exit(0)'
-		if run_command(python, '-c', script).returncode() != 0
+		if run_command(python, '-c', script, check: false).returncode() != 0
 			error('Required Python module \'' + p + '\' not found')
 		endif
 	endforeach
