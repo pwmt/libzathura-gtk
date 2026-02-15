@@ -493,8 +493,7 @@ static void cb_draw_button(GtkDrawingArea *area, cairo_t *cairo, int width,
 
   /* Render field */
   cairo_save(cairo);
-  if (zathura_form_field_render_cairo(priv->form_field, image_cairo,
-                                      priv->scale * device_scale) !=
+  if (zathura_form_field_render_cairo(priv->form_field, image_cairo) !=
       ZATHURA_ERROR_OK) {
     cairo_restore(image_cairo);
     return;

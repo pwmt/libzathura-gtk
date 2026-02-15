@@ -174,8 +174,8 @@ zathura_gtk_annotation_snapshot(GtkWidget* widget, GtkSnapshot* snapshot)
   /* Render annotation */
   has_appearance_stream = false; // FIXME
   if (has_appearance_stream == true) {
-    if (zathura_annotation_render_cairo(priv->annotation, image_cairo,
-          priv->settings.scale) != ZATHURA_ERROR_OK) {
+    if (zathura_annotation_render_cairo(priv->annotation, image_cairo) !=
+        ZATHURA_ERROR_OK) {
       cairo_destroy(image_cairo);
       cairo_surface_destroy(image_surface);
       return;

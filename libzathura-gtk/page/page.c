@@ -10,18 +10,12 @@
 
 #define RGB_TO_CAIRO(r, g, b) (r) / 255.0, (g) / 255.0, (b) / 255.0
 
-static void zathura_gtk_page_set_property(GObject *object, guint prop_id,
-                                          const GValue *value,
-                                          GParamSpec *param_spec);
-static void zathura_gtk_page_get_property(GObject *object, guint prop_id,
-                                          GValue *value,
-                                          GParamSpec *param_spec);
-static void render_page(ZathuraPage *widget);
+static void zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
+static void zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
+static void render_page(ZathuraPage* widget);
 
-static void cb_page_draw(GtkDrawingArea *area, cairo_t *cairo, int width,
-                         int height, gpointer data);
-static void cb_page_draw_links(GtkDrawingArea *area, cairo_t *cairo, int width,
-                               int height, gpointer data);
+static void cb_page_draw(GtkDrawingArea* area, cairo_t* cairo, int width, int height, gpointer data);
+static void cb_page_draw_links(GtkDrawingArea* area, cairo_t* cairo, int width, int height, gpointer data);
 
 enum {
   PROP_0,
@@ -35,15 +29,14 @@ enum {
 
 G_DEFINE_TYPE_WITH_PRIVATE(ZathuraPage, zathura_gtk_page, GTK_TYPE_WIDGET)
 
-void zathura_gtk_snapshot(GtkWidget *widget, GtkSnapshot *snapshot) {
-  ZathuraPagePrivate *priv =
-      zathura_gtk_page_get_instance_private(ZATHURA_PAGE(widget));
+void zathura_gtk_snapshot(GtkWidget* widget, GtkSnapshot* snapshot) {
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(ZATHURA_PAGE(widget));
 
   /* Apply rotation */
-  double width = gtk_widget_get_width(widget);
+  double width  = gtk_widget_get_width(widget);
   double height = gtk_widget_get_height(widget);
-  double x = (width / 2.0);
-  double y = (height / 2.0);
+  double x      = (width / 2.0);
+  double y      = (height / 2.0);
 
   gtk_snapshot_translate(snapshot, &GRAPHENE_POINT_INIT(x, y));
   gtk_snapshot_rotate(snapshot, priv->settings.rotation);
@@ -52,17 +45,16 @@ void zathura_gtk_snapshot(GtkWidget *widget, GtkSnapshot *snapshot) {
   /* Draw background */
   GdkRGBA white;
   gdk_rgba_parse(&white, "white");
-  gtk_snapshot_append_color(snapshot, &white,
-                            &GRAPHENE_RECT_INIT(0, 0, width, height));
+  gtk_snapshot_append_color(snapshot, &white, &GRAPHENE_RECT_INIT(0, 0, width, height));
 
   gtk_snapshot_save(snapshot);
   gtk_widget_snapshot_child(widget, priv->overlay, snapshot);
   gtk_snapshot_restore(snapshot);
 }
 
-static void zathura_gtk_dispose(GObject *object) {
-  ZathuraPage *page = ZATHURA_PAGE(object);
-  ZathuraPagePrivate *priv = zathura_gtk_page_get_instance_private(page);
+static void zathura_gtk_dispose(GObject* object) {
+  ZathuraPage* page        = ZATHURA_PAGE(object);
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(page);
 
   gtk_widget_unparent(priv->overlay);
   priv->overlay = NULL;
@@ -70,79 +62,71 @@ static void zathura_gtk_dispose(GObject *object) {
   G_OBJECT_CLASS(zathura_gtk_page_parent_class)->dispose(object);
 }
 
-static void zathura_gtk_page_class_init(ZathuraPageClass *class) {
+static void zathura_gtk_page_class_init(ZathuraPageClass* class) {
   /* overwrite methods */
-  GObjectClass *object_class = G_OBJECT_CLASS(class);
+  GObjectClass* object_class = G_OBJECT_CLASS(class);
   object_class->set_property = zathura_gtk_page_set_property;
   object_class->get_property = zathura_gtk_page_get_property;
-  object_class->dispose = zathura_gtk_dispose;
+  object_class->dispose      = zathura_gtk_dispose;
 
   /* properties */
   g_object_class_install_property(
       object_class, PROP_PAGE,
       g_param_spec_pointer("page", "Page", "The zathura_page_t instance",
-                           G_PARAM_WRITABLE | G_PARAM_READABLE |
-                               G_PARAM_CONSTRUCT_ONLY |
-                               G_PARAM_STATIC_STRINGS));
+                           G_PARAM_WRITABLE | G_PARAM_READABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property(
-      object_class, PROP_ROTATION,
-      g_param_spec_uint("rotation", "Rotation",
-                        "Defines the degree of rotation (0, 90, 180, 270)", 0,
-                        270, 0, G_PARAM_WRITABLE | G_PARAM_READABLE));
+  g_object_class_install_property(object_class, PROP_ROTATION,
+                                  g_param_spec_uint("rotation", "Rotation",
+                                                    "Defines the degree of rotation (0, 90, 180, 270)", 0, 270, 0,
+                                                    G_PARAM_WRITABLE | G_PARAM_READABLE));
 
   g_object_class_install_property(
       object_class, PROP_SCALE,
-      g_param_spec_double("scale", "Scale", "The scale level", 0.01, 100.0, 1.0,
-                          G_PARAM_WRITABLE | G_PARAM_READABLE));
+      g_param_spec_double("scale", "Scale", "The scale level", 0.01, 100.0, 1.0, G_PARAM_WRITABLE | G_PARAM_READABLE));
 
-  g_object_class_install_property(
-      object_class, PROP_LINKS_HIGHLIGHT,
-      g_param_spec_boolean("highlight-links", "highlight-links",
-                           "Highlight links by drawing rectangles around them",
-                           FALSE, G_PARAM_WRITABLE | G_PARAM_READABLE));
+  g_object_class_install_property(object_class, PROP_LINKS_HIGHLIGHT,
+                                  g_param_spec_boolean("highlight-links", "highlight-links",
+                                                       "Highlight links by drawing rectangles around them", FALSE,
+                                                       G_PARAM_WRITABLE | G_PARAM_READABLE));
 
-  g_object_class_install_property(
-      object_class, PROP_FORM_FIELDS_EDIT,
-      g_param_spec_boolean("edit-form-fields", "edit-form-fields",
-                           "Allow editing of form fields", TRUE,
-                           G_PARAM_WRITABLE | G_PARAM_READABLE));
+  g_object_class_install_property(object_class, PROP_FORM_FIELDS_EDIT,
+                                  g_param_spec_boolean("edit-form-fields", "edit-form-fields",
+                                                       "Allow editing of form fields", TRUE,
+                                                       G_PARAM_WRITABLE | G_PARAM_READABLE));
 
-  g_object_class_install_property(
-      object_class, PROP_FORM_FIELDS_HIGHLIGHT,
-      g_param_spec_boolean(
-          "highlight-form-fields", "highlight-form-fields",
-          "Highlight form-fields by drawing rectangles around them", FALSE,
-          G_PARAM_WRITABLE | G_PARAM_READABLE));
+  g_object_class_install_property(object_class, PROP_FORM_FIELDS_HIGHLIGHT,
+                                  g_param_spec_boolean("highlight-form-fields", "highlight-form-fields",
+                                                       "Highlight form-fields by drawing rectangles around them", FALSE,
+                                                       G_PARAM_WRITABLE | G_PARAM_READABLE));
 
-  GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(class);
-  widget_class->snapshot = zathura_gtk_snapshot;
+  GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(class);
+  widget_class->snapshot       = zathura_gtk_snapshot;
   gtk_widget_class_set_layout_manager_type(widget_class, GTK_TYPE_BIN_LAYOUT);
 }
 
-static void zathura_gtk_page_init(ZathuraPage *widget) {
-  ZathuraPagePrivate *priv = zathura_gtk_page_get_instance_private(widget);
+static void zathura_gtk_page_init(ZathuraPage* widget) {
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(widget);
 
-  priv->page = NULL;
-  priv->overlay = NULL;
+  priv->page               = NULL;
+  priv->overlay            = NULL;
   priv->layer.drawing_area = NULL;
-  priv->layer.links = NULL;
-  priv->layer.form_fields = NULL;
-  priv->layer.annotations = NULL;
+  priv->layer.links        = NULL;
+  priv->layer.form_fields  = NULL;
+  priv->layer.annotations  = NULL;
 
-  priv->dimensions.width = 0;
+  priv->dimensions.width  = 0;
   priv->dimensions.height = 0;
 
   priv->settings.rotation = 0;
-  priv->settings.scale = 1.0;
+  priv->settings.scale    = 1.0;
 
-  priv->links.list = NULL;
+  priv->links.list      = NULL;
   priv->links.retrieved = false;
-  priv->links.draw = false;
+  priv->links.draw      = false;
 
-  priv->form_fields.list = NULL;
+  priv->form_fields.list      = NULL;
   priv->form_fields.retrieved = false;
-  priv->form_fields.edit = true;
+  priv->form_fields.edit      = true;
 
   /* gtk_widget_init_template(GTK_WIDGET(widget)); */
 
@@ -150,21 +134,19 @@ static void zathura_gtk_page_init(ZathuraPage *widget) {
    * GDK_BUTTON_RELEASE_MASK); */
 }
 
-GtkWidget *zathura_gtk_page_new(zathura_page_t *page) {
+GtkWidget* zathura_gtk_page_new(zathura_page_t* page) {
   if (page == NULL) {
     return NULL;
   }
 
-  ZathuraPage *widget = g_object_new(ZATHURA_TYPE_PAGE, "page", page, NULL);
-  ZathuraPagePrivate *priv = zathura_gtk_page_get_instance_private(widget);
+  ZathuraPage* widget      = g_object_new(ZATHURA_TYPE_PAGE, "page", page, NULL);
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(widget);
 
-  if (zathura_page_get_width(page, &(priv->dimensions.width)) !=
-      ZATHURA_ERROR_OK) {
+  if (zathura_page_get_width(page, &(priv->dimensions.width)) != ZATHURA_ERROR_OK) {
     return NULL;
   }
 
-  if (zathura_page_get_height(page, &(priv->dimensions.height)) !=
-      ZATHURA_ERROR_OK) {
+  if (zathura_page_get_height(page, &(priv->dimensions.height)) != ZATHURA_ERROR_OK) {
     return NULL;
   }
 
@@ -174,29 +156,23 @@ GtkWidget *zathura_gtk_page_new(zathura_page_t *page) {
   priv->layer.drawing_area = gtk_drawing_area_new();
   gtk_widget_set_halign(priv->layer.drawing_area, GTK_ALIGN_START);
   gtk_widget_set_valign(priv->layer.drawing_area, GTK_ALIGN_START);
-  gtk_widget_set_size_request(priv->layer.drawing_area, priv->dimensions.width,
-                              priv->dimensions.height);
-  gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(priv->layer.drawing_area),
-                                 cb_page_draw, widget, NULL);
+  gtk_widget_set_size_request(priv->layer.drawing_area, priv->dimensions.width, priv->dimensions.height);
+  gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(priv->layer.drawing_area), cb_page_draw, widget, NULL);
 
   /* Setup links layer */
   priv->layer.links = gtk_drawing_area_new();
-  gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(priv->layer.links),
-                                 cb_page_draw_links, widget, NULL);
+  gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(priv->layer.links), cb_page_draw_links, widget, NULL);
 
   /* Setup form fields layer */
-  priv->layer.form_fields =
-      zathura_gtk_form_field_editor_new(ZATHURA_PAGE(widget));
+  priv->layer.form_fields = zathura_gtk_form_field_editor_new(ZATHURA_PAGE(widget));
 
   /* Setup annotation layer */
-  priv->layer.annotations =
-      zathura_gtk_annotation_overlay_new(ZATHURA_PAGE(widget));
+  priv->layer.annotations = zathura_gtk_annotation_overlay_new(ZATHURA_PAGE(widget));
 
   /* Setup over lay */
   priv->overlay = gtk_overlay_new();
 
-  gtk_overlay_set_child(GTK_OVERLAY(priv->overlay),
-                        GTK_WIDGET(priv->layer.drawing_area));
+  gtk_overlay_set_child(GTK_OVERLAY(priv->overlay), GTK_WIDGET(priv->layer.drawing_area));
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.links);
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.annotations);
   gtk_overlay_add_overlay(GTK_OVERLAY(priv->overlay), priv->layer.form_fields);
@@ -209,11 +185,9 @@ GtkWidget *zathura_gtk_page_new(zathura_page_t *page) {
   return GTK_WIDGET(widget);
 }
 
-static void zathura_gtk_page_set_property(GObject *object, guint prop_id,
-                                          const GValue *value,
-                                          GParamSpec *param_spec) {
-  ZathuraPage *page = ZATHURA_PAGE(object);
-  ZathuraPagePrivate *priv = zathura_gtk_page_get_instance_private(page);
+static void zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec) {
+  ZathuraPage* page        = ZATHURA_PAGE(object);
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(page);
 
   switch (prop_id) {
   case PROP_PAGE:
@@ -255,19 +229,16 @@ static void zathura_gtk_page_set_property(GObject *object, guint prop_id,
     render_page(page);
   } break;
   case PROP_FORM_FIELDS_HIGHLIGHT:
-    g_object_set(priv->layer.form_fields, "highlight-form-fields",
-                 g_value_get_boolean(value), NULL);
+    g_object_set(priv->layer.form_fields, "highlight-form-fields", g_value_get_boolean(value), NULL);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
   }
 }
 
-static void zathura_gtk_page_get_property(GObject *object, guint prop_id,
-                                          GValue *value,
-                                          GParamSpec *param_spec) {
-  ZathuraPage *page = ZATHURA_PAGE(object);
-  ZathuraPagePrivate *priv = zathura_gtk_page_get_instance_private(page);
+static void zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec) {
+  ZathuraPage* page        = ZATHURA_PAGE(object);
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(page);
 
   switch (prop_id) {
   case PROP_PAGE:
@@ -287,8 +258,7 @@ static void zathura_gtk_page_get_property(GObject *object, guint prop_id,
     break;
   case PROP_FORM_FIELDS_HIGHLIGHT: {
     bool highlight_form_fields;
-    g_object_get(priv->layer.form_fields, "highlight-form-fields",
-                 &highlight_form_fields, NULL);
+    g_object_get(priv->layer.form_fields, "highlight-form-fields", &highlight_form_fields, NULL);
     g_value_set_boolean(value, highlight_form_fields);
   } break;
   default:
@@ -296,18 +266,17 @@ static void zathura_gtk_page_get_property(GObject *object, guint prop_id,
   }
 }
 
-static void calculate_widget_size(ZathuraPage *page, unsigned int *widget_width,
-                                  unsigned int *widget_height) {
-  ZathuraPagePrivate *priv = zathura_gtk_page_get_instance_private(page);
+static void calculate_widget_size(ZathuraPage* page, unsigned int* widget_width, unsigned int* widget_height) {
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(page);
 
   double scale_factor = priv->settings.scale;
 
-  *widget_width = round(priv->dimensions.width * scale_factor);
+  *widget_width  = round(priv->dimensions.width * scale_factor);
   *widget_height = round(priv->dimensions.height * scale_factor);
 }
 
-static void render_page(ZathuraPage *widget) {
-  ZathuraPagePrivate *priv = zathura_gtk_page_get_instance_private(widget);
+static void render_page(ZathuraPage* widget) {
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(widget);
 
   unsigned int page_widget_width;
   unsigned int page_widget_height;
@@ -320,59 +289,61 @@ static void render_page(ZathuraPage *widget) {
     gtk_widget_set_visible(priv->layer.form_fields, FALSE);
   }
 
-  gtk_widget_set_size_request(priv->layer.drawing_area, page_widget_width,
-                              page_widget_height);
+  gtk_widget_set_size_request(priv->layer.drawing_area, page_widget_width, page_widget_height);
   if (priv->layer.annotations != NULL) {
-    gtk_widget_set_size_request(priv->layer.annotations, page_widget_width,
-                                page_widget_height);
+    gtk_widget_set_size_request(priv->layer.annotations, page_widget_width, page_widget_height);
     gtk_widget_queue_resize(priv->layer.annotations);
     gtk_widget_queue_allocate(priv->layer.annotations);
     gtk_widget_queue_draw(priv->layer.annotations);
   }
-  gtk_widget_set_size_request(priv->layer.form_fields, page_widget_width,
-                              page_widget_height);
+  gtk_widget_set_size_request(priv->layer.form_fields, page_widget_width, page_widget_height);
   gtk_widget_queue_resize(priv->layer.form_fields);
   gtk_widget_queue_draw(priv->layer.form_fields);
 
   gtk_widget_queue_allocate(GTK_WIDGET(widget));
 }
 
-static void cb_page_draw(GtkDrawingArea *area, cairo_t *cairo, int width,
-                         int height, gpointer data) {
-  ZathuraPagePrivate *priv = zathura_gtk_page_get_instance_private(data);
+static void cb_page_draw(GtkDrawingArea* area, cairo_t* cairo, int width, int height, gpointer data) {
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(data);
 
   gint device_scale = gtk_widget_get_scale_factor(GTK_WIDGET(area));
 
   cairo_save(cairo);
 
   /* Create image surface */
-  cairo_surface_t *image_surface = cairo_image_surface_create(
-      CAIRO_FORMAT_RGB24, width * device_scale, height * device_scale);
+  cairo_surface_t* image_surface =
+      cairo_image_surface_create(CAIRO_FORMAT_RGB24, width * device_scale, height * device_scale);
   if (image_surface == NULL) {
     return;
   }
 
   cairo_surface_set_device_scale(image_surface, device_scale, device_scale);
 
-  cairo_t *image_cairo = cairo_create(image_surface);
+  if (cairo_surface_status(image_surface) != CAIRO_STATUS_SUCCESS) {
+    cairo_surface_destroy(image_surface);
+    return;
+  }
+
+  cairo_t* image_cairo = cairo_create(image_surface);
   if (image_cairo == NULL) {
     cairo_surface_destroy(image_surface);
     return;
   }
 
   /* Ensure a white background for pages that render with transparency. */
+  cairo_save(cairo);
   cairo_set_source_rgb(image_cairo, 1.0, 1.0, 1.0);
   cairo_paint(image_cairo);
 
-  /* Scale */
-  double scale_factor = priv->settings.scale;
-
   cairo_save(image_cairo);
 
+  const double scale_factor = priv->settings.scale;
+  if (fabs(scale_factor - 1.0f) > FLT_EPSILON) {
+    cairo_scale(image_cairo, scale_factor, scale_factor);
+  }
+
   /* Render page */
-  if (zathura_page_render_cairo(priv->page, image_cairo,
-                                scale_factor * device_scale, 0,
-                                0) != ZATHURA_ERROR_OK) {
+  if (zathura_page_render_cairo(priv->page, image_cairo, 0) != ZATHURA_ERROR_OK) {
     return;
   }
 
@@ -387,17 +358,15 @@ static void cb_page_draw(GtkDrawingArea *area, cairo_t *cairo, int width,
   cairo_surface_destroy(image_surface);
 }
 
-static void cb_page_draw_links(GtkDrawingArea *area, cairo_t *cairo, int width,
-                               int height, gpointer data) {
-  ZathuraPagePrivate *priv = zathura_gtk_page_get_instance_private(data);
+static void cb_page_draw_links(GtkDrawingArea* area, cairo_t* cairo, int width, int height, gpointer data) {
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(data);
 
   /* Draw links if requested */
   if (priv->links.draw == true) {
     /* Retrieve links of page */
     if (priv->links.retrieved == false) {
       priv->links.retrieved = true;
-      if (zathura_page_get_links(priv->page, &(priv->links.list)) !=
-          ZATHURA_ERROR_OK) {
+      if (zathura_page_get_links(priv->page, &(priv->links.list)) != ZATHURA_ERROR_OK) {
         return;
       }
     }
@@ -405,12 +374,11 @@ static void cb_page_draw_links(GtkDrawingArea *area, cairo_t *cairo, int width,
     cairo_save(cairo);
 
     /* Draw each link */
-    zathura_link_mapping_t *link_mapping;
+    zathura_link_mapping_t* link_mapping;
     ZATHURA_LIST_FOREACH(link_mapping, priv->links.list) {
-      zathura_rectangle_t position =
-          zathura_rectangle_scale(link_mapping->position, priv->settings.scale);
-      unsigned int width = position.p2.x - position.p1.x;
-      unsigned int height = position.p2.y - position.p1.y;
+      zathura_rectangle_t position = zathura_rectangle_scale(link_mapping->position, priv->settings.scale);
+      unsigned int width           = position.p2.x - position.p1.x;
+      unsigned int height          = position.p2.y - position.p1.y;
 
       cairo_set_line_width(cairo, 1);
       cairo_set_source_rgb(cairo, RGB_TO_CAIRO(84, 208, 237));

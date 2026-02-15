@@ -29,7 +29,7 @@ zathura_error_t page_get_images(zathura_page_t* page, zathura_list_t** images);
 zathura_error_t page_get_annotations(zathura_page_t* page, zathura_list_t** annotations);
 zathura_error_t page_render(zathura_page_t* page, zathura_image_buffer_t** buffer, double scale, int rotation, int flags);
 #ifdef HAVE_CAIRO
-zathura_error_t page_render_cairo(zathura_page_t* page, cairo_t* cairo, double scale, int rotation, int flags);
+zathura_error_t page_render_cairo(zathura_page_t* page, cairo_t* cairo, int flags);
 #endif
 
 /* register plugin */
@@ -219,8 +219,7 @@ page_render(zathura_page_t* UNUSED(page), zathura_image_buffer_t** UNUSED(buffer
 
 #ifdef HAVE_CAIRO
 zathura_error_t
-page_render_cairo(zathura_page_t* page, cairo_t* cairo, double
-    UNUSED(scale), int UNUSED(rotation), int UNUSED(flags))
+page_render_cairo(zathura_page_t* page, cairo_t* cairo, int UNUSED(flags))
 {
   return ZATHURA_ERROR_OK;
 }
