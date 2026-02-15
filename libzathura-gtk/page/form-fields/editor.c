@@ -153,8 +153,9 @@ static void create_widgets(GtkWidget *editor) {
   g_object_get(G_OBJECT(priv->page), "page", &page, NULL);
   double scale = get_page_scale(priv);
 
-  zathura_list_t *form_fields;
-  if (zathura_page_get_form_fields(page, &form_fields) != ZATHURA_ERROR_OK) {
+  zathura_list_t *form_fields = NULL;
+  if (zathura_page_get_form_fields(page, &form_fields) != ZATHURA_ERROR_OK
+    || form_fields == NULL) {
     return;
   }
 

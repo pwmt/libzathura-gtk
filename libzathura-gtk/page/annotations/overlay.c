@@ -183,8 +183,9 @@ create_widgets(GtkWidget* overlay)
   double scale = 1.0;
   g_object_get(G_OBJECT(priv->page), "page", &page, "scale", &scale, NULL);
 
-  zathura_list_t* annotations;
-  if (zathura_page_get_annotations(page, &annotations) != ZATHURA_ERROR_OK) {
+  zathura_list_t* annotations = NULL;
+  if (zathura_page_get_annotations(page, &annotations) != ZATHURA_ERROR_OK
+    || annotations == NULL) {
     return;
   }
 
