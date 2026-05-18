@@ -12,6 +12,7 @@
 
 static void zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
+static void zathura_gtk_document_dispose(GObject* object);
 static void zathura_gtk_document_finalize(GObject* object);
 static void set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable);
 static void set_pages_per_row(ZathuraDocumentPrivate* priv, guint pages_per_row);
@@ -46,6 +47,7 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
   GObjectClass* object_class = G_OBJECT_CLASS(class);
   object_class->set_property = zathura_gtk_document_set_property;
   object_class->get_property = zathura_gtk_document_get_property;
+  object_class->dispose      = zathura_gtk_document_dispose;
   object_class->finalize     = zathura_gtk_document_finalize;
 
   /* properties */
@@ -264,6 +266,19 @@ zathura_gtk_document_init(ZathuraDocument* widget)
   priv->position.y = 0.0;
 
   priv->status.restore_position = FALSE;
+}
+
+static void
+zathura_gtk_document_dispose(GObject* object)
+{
+  ZathuraDocumentPrivate* priv = zathura_gtk_document_get_instance_private(ZATHURA_DOCUMENT(object));
+
+  g_clear_pointer(&priv->status.restore_position, g_free);
+  g_clear_pointer(&priv->gtk.scrolled_window, gtk_widget_unparent);
+  priv->gtk.viewport = NULL;
+  priv->gtk.grid     = NULL;
+
+  G_OBJECT_CLASS(zathura_gtk_document_parent_class)->dispose(object);
 }
 
 GtkWidget*
@@ -668,8 +683,17 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
 static void
 zathura_gtk_document_finalize(GObject* object)
 {
+  ZathuraDocumentPrivate* priv = zathura_gtk_document_get_instance_private(ZATHURA_DOCUMENT(object));
+
+  g_clear_pointer(&priv->document.pages, g_list_free);
+
+  g_list_free_full(priv->document.pages_status, g_free);
+  priv->document.pages_status = NULL;
+
   /* Clean-up icon cache */
   /* zathura_gtk_annotation_icon_cache_free(); */
+
+  G_OBJECT_CLASS(zathura_gtk_document_parent_class)->finalize(object);
 }
 
 static void

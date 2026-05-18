@@ -56,8 +56,7 @@ static void zathura_gtk_dispose(GObject* object) {
   ZathuraPage* page        = ZATHURA_PAGE(object);
   ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(page);
 
-  gtk_widget_unparent(priv->overlay);
-  priv->overlay = NULL;
+  g_clear_pointer(&priv->overlay, gtk_widget_unparent);
 
   G_OBJECT_CLASS(zathura_gtk_page_parent_class)->dispose(object);
 }

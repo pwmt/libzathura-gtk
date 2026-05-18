@@ -60,6 +60,7 @@ typedef struct annotation_widget_mapping_s {
 
 static void zathura_gtk_annotation_overlay_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_annotation_overlay_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
+static void zathura_gtk_annotation_overlay_dispose(GObject* object);
 static void zathura_gtk_annotation_overlay_size_allocate(GtkWidget* widget, int width, int height, int baseline);
 static void create_widgets(GtkWidget* overlay);
 static void update_widget_positions(GtkWidget* overlay);
@@ -78,6 +79,7 @@ zathura_gtk_annotation_overlay_class_init(ZathuraAnnotationOverlayClass* class)
   GObjectClass* object_class = G_OBJECT_CLASS(class);
   object_class->set_property = zathura_gtk_annotation_overlay_set_property;
   object_class->get_property = zathura_gtk_annotation_overlay_get_property;
+  object_class->dispose      = zathura_gtk_annotation_overlay_dispose;
 
   /* properties */
   g_object_class_install_property(
@@ -102,6 +104,23 @@ zathura_gtk_annotation_overlay_init(ZathuraAnnotationOverlay* widget)
   priv->page            = NULL;
   priv->settings.show   = false;
 
+}
+
+static void
+zathura_gtk_annotation_overlay_dispose(GObject* object)
+{
+  ZathuraAnnotationOverlayPrivate* priv = zathura_gtk_annotation_overlay_get_instance_private(
+      ZATHURA_ANNOTATION_OVERLAY(object));
+
+  if (priv->page != NULL) {
+    g_signal_handlers_disconnect_by_data(priv->page, object);
+    priv->page = NULL;
+  }
+
+  zathura_list_free_full(priv->annotations, g_free);
+  priv->annotations = NULL;
+
+  G_OBJECT_CLASS(zathura_gtk_annotation_overlay_parent_class)->dispose(object);
 }
 
 GtkWidget*

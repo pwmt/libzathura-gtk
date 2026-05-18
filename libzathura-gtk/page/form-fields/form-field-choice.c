@@ -35,6 +35,7 @@ static void zathura_gtk_form_field_choice_get_property(GObject *object,
                                                         guint prop_id,
                                                         GValue *value,
                                                         GParamSpec *param_spec);
+static void zathura_gtk_form_field_choice_dispose(GObject *object);
 
 #define RGB_TO_CAIRO(r, g, b) (r) / 255.0, (g) / 255.0, (b) / 255.0
 
@@ -75,6 +76,7 @@ zathura_gtk_form_field_choice_class_init(ZathuraFormFieldChoiceClass *class) {
   GObjectClass *object_class = G_OBJECT_CLASS(class);
   object_class->set_property = zathura_gtk_form_field_choice_set_property;
   object_class->get_property = zathura_gtk_form_field_choice_get_property;
+  object_class->dispose = zathura_gtk_form_field_choice_dispose;
 
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(class);
   gtk_widget_class_set_layout_manager_type(widget_class, GTK_TYPE_BIN_LAYOUT);
@@ -97,6 +99,17 @@ static void zathura_gtk_form_field_choice_init(ZathuraFormFieldChoice *widget) {
   priv->overlay = NULL;
   priv->layer.choice_widget = NULL;
   priv->layer.drawing_area = NULL;
+}
+
+static void
+zathura_gtk_form_field_choice_dispose(GObject *object) {
+  ZathuraFormFieldChoicePrivate *priv =
+      zathura_gtk_form_field_choice_get_instance_private(
+          ZATHURA_FORM_FIELD_CHOICE(object));
+
+  g_clear_pointer(&priv->overlay, gtk_widget_unparent);
+
+  G_OBJECT_CLASS(zathura_gtk_form_field_choice_parent_class)->dispose(object);
 }
 
 static void

@@ -96,8 +96,9 @@ zathura_gtk_form_field_button_dispose(GObject* object)
   ZathuraFormFieldButton* form_field_button = ZATHURA_FORM_FIELD_BUTTON(object);
   ZathuraFormFieldButtonPrivate* priv = zathura_gtk_form_field_button_get_instance_private(form_field_button);
 
-  gtk_widget_unparent(priv->drawing_area);
-  priv->drawing_area = NULL;
+  g_clear_pointer(&priv->drawing_area, gtk_widget_unparent);
+
+  G_OBJECT_CLASS(zathura_gtk_form_field_button_parent_class)->dispose(object);
 }
 
 GtkWidget*
