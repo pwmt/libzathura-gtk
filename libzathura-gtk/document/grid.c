@@ -2,7 +2,6 @@
 
 #include "internal.h"
 #include "grid.h"
-#include "callbacks.h"
 #include "../macros.h"
 
 static double adjustment_get_position(GtkAdjustment* adjustment);

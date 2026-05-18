@@ -4,7 +4,6 @@
 
 #include "document.h"
 #include "internal.h"
-#include "callbacks.h"
 #include "grid.h"
 
 #include "../page/page.h"
@@ -14,6 +13,7 @@ static void zathura_gtk_document_set_property(GObject* object, guint prop_id, co
 static void zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_document_dispose(GObject* object);
 static void zathura_gtk_document_finalize(GObject* object);
+static void bind_page_properties_to_document_properties(ZathuraDocument* document, GtkWidget* page);
 static void set_continuous_pages(ZathuraDocumentPrivate* priv, gboolean enable);
 static void set_pages_per_row(ZathuraDocumentPrivate* priv, guint pages_per_row);
 static void set_first_page_column(ZathuraDocumentPrivate* priv, guint first_page_column);
@@ -281,6 +281,16 @@ zathura_gtk_document_dispose(GObject* object)
   G_OBJECT_CLASS(zathura_gtk_document_parent_class)->dispose(object);
 }
 
+static void
+bind_page_properties_to_document_properties(ZathuraDocument* document, GtkWidget* page)
+{
+  g_object_bind_property(document, "rotation", page, "rotation", G_BINDING_SYNC_CREATE);
+  g_object_bind_property(document, "scale", page, "scale", G_BINDING_SYNC_CREATE);
+  g_object_bind_property(document, "highlight-links", page, "highlight-links", G_BINDING_SYNC_CREATE);
+  g_object_bind_property(document, "edit-form-fields", page, "edit-form-fields", G_BINDING_SYNC_CREATE);
+  g_object_bind_property(document, "highlight-form-fields", page, "highlight-form-fields", G_BINDING_SYNC_CREATE);
+}
+
 GtkWidget*
 zathura_gtk_document_new(zathura_document_t* document)
 {
@@ -359,6 +369,7 @@ zathura_gtk_document_new(zathura_document_t* document)
 
     /* Create page widget */
     GtkWidget* page_widget = zathura_gtk_page_new(page);
+    bind_page_properties_to_document_properties(ZATHURA_DOCUMENT(widget), page_widget);
     gtk_widget_set_halign(page_widget, GTK_ALIGN_CENTER);
     gtk_widget_set_valign(page_widget, GTK_ALIGN_CENTER);
 
@@ -554,7 +565,6 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
           case 270:
             if (priv->settings.rotation != rotation) {
               priv->settings.rotation = rotation;
-              g_list_foreach(priv->document.pages, (GFunc) cb_document_pages_set_rotation, priv);
             }
             break;
           default:
@@ -569,7 +579,6 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
         double scale = g_value_get_double(value);
         if (priv->settings.scale != scale) {
           priv->settings.scale = scale;
-          g_list_foreach(priv->document.pages, (GFunc) cb_document_pages_set_scale, priv);
         }
       }
       break;
@@ -590,10 +599,6 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
         gboolean highlight = g_value_get_boolean(value);
         if (priv->settings.links.highlight != highlight) {
           priv->settings.links.highlight = highlight;
-          g_list_foreach(priv->document.pages,
-              (GFunc) cb_document_pages_set_highlight_links,
-              priv
-            );
         }
       }
       break;
@@ -602,10 +607,6 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
         gboolean edit = g_value_get_boolean(value);
         if (priv->settings.forms.edit != edit) {
           priv->settings.forms.edit = edit;
-          g_list_foreach(priv->document.pages,
-              (GFunc) cb_document_pages_set_edit_form,
-              priv
-            );
         }
       }
       break;
@@ -614,10 +615,6 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
         gboolean highlight = g_value_get_boolean(value);
         if (priv->settings.forms.highlight != highlight) {
           priv->settings.forms.highlight = highlight;
-          g_list_foreach(priv->document.pages,
-              (GFunc) cb_document_pages_set_highlight_form,
-              priv
-            );
         }
       }
       break;

@@ -1,7 +1,6 @@
 /* See LICENSE file for license and copyright information */
 
 #include <math.h>
-#include <stdio.h>
 #include <libzathura/libzathura.h>
 
 #include "overlay.h"
@@ -314,7 +313,7 @@ create_widgets(GtkWidget* overlay)
       gtk_widget_set_size_request(annotation_widget, width, height);
       gtk_widget_set_visible(annotation_widget, TRUE);
     } else {
-      printf("[annotations] no widget created for type=%d\n", annotation_type);
+      g_warning("Failed to create annotation widget for type=%d", annotation_type);
     }
   }
 }

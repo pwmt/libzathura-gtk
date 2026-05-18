@@ -102,7 +102,6 @@ include_directories = [
 # source files
 sources = files(
   'libzathura-gtk/utils.c',
-  'libzathura-gtk/document/callbacks.c',
   'libzathura-gtk/document/document.c',
   'libzathura-gtk/document/grid.c',
   'libzathura-gtk/page/annotations/annotation-3d.c',
@@ -149,7 +148,6 @@ headers = {
   'libzathura/document': files(
     'libzathura-gtk/document/internal.h',
     'libzathura-gtk/document/types.h',
-    'libzathura-gtk/document/callbacks.h',
     'libzathura-gtk/document/document.h',
     'libzathura-gtk/document/grid.h'
   ),
