@@ -124,6 +124,7 @@ static void zathura_gtk_page_init(ZathuraPage* widget) {
   priv->links.draw      = false;
 
   priv->form_fields.list      = NULL;
+  priv->form_fields.highlight = false;
   priv->form_fields.retrieved = false;
   priv->form_fields.edit      = true;
 
@@ -164,6 +165,8 @@ GtkWidget* zathura_gtk_page_new(zathura_page_t* page) {
 
   /* Setup form fields layer */
   priv->layer.form_fields = zathura_gtk_form_field_editor_new(ZATHURA_PAGE(widget));
+  g_object_bind_property(widget, "highlight-form-fields", priv->layer.form_fields,
+      "highlight-form-fields", G_BINDING_SYNC_CREATE);
 
   /* Setup annotation layer */
   priv->layer.annotations = zathura_gtk_annotation_overlay_new(ZATHURA_PAGE(widget));
@@ -183,7 +186,6 @@ GtkWidget* zathura_gtk_page_new(zathura_page_t* page) {
 
   return GTK_WIDGET(widget);
 }
-
 static void zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec) {
   ZathuraPage* page        = ZATHURA_PAGE(object);
   ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(page);
@@ -228,7 +230,7 @@ static void zathura_gtk_page_set_property(GObject* object, guint prop_id, const 
     render_page(page);
   } break;
   case PROP_FORM_FIELDS_HIGHLIGHT:
-    g_object_set(priv->layer.form_fields, "highlight-form-fields", g_value_get_boolean(value), NULL);
+    priv->form_fields.highlight = g_value_get_boolean(value);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);
@@ -256,9 +258,7 @@ static void zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue
     g_value_set_boolean(value, priv->form_fields.edit);
     break;
   case PROP_FORM_FIELDS_HIGHLIGHT: {
-    bool highlight_form_fields;
-    g_object_get(priv->layer.form_fields, "highlight-form-fields", &highlight_form_fields, NULL);
-    g_value_set_boolean(value, highlight_form_fields);
+    g_value_set_boolean(value, priv->form_fields.highlight);
   } break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, param_spec);

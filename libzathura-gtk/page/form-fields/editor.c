@@ -139,6 +139,14 @@ static void zathura_gtk_form_field_editor_dispose(GObject *object) {
   ZathuraFormFieldEditorPrivate *priv =
       zathura_gtk_form_field_editor_get_instance_private(form_field_editor);
 
+  if (priv->page != NULL) {
+    g_signal_handlers_disconnect_by_data(priv->page, object);
+    priv->page = NULL;
+  }
+
+  zathura_list_free_full(priv->form_fields, g_free);
+  priv->form_fields = NULL;
+
   g_clear_pointer(&priv->overlay, gtk_widget_unparent);
 
   G_OBJECT_CLASS(zathura_gtk_form_field_editor_parent_class)->dispose(object);
