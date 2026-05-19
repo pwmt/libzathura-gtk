@@ -50,7 +50,7 @@ struct _ZathuraDocumentPrivate {
     gboolean continuous_pages;
     guint pages_per_row;
     guint first_page_column;
-    guint rotation;
+    double rotation;
     gdouble scale;
 
     struct {

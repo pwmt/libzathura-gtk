@@ -119,12 +119,12 @@ zathura_gtk_document_class_init(ZathuraDocumentClass* class)
   g_object_class_install_property(
     object_class,
     PROP_ROTATION,
-    g_param_spec_uint(
+    g_param_spec_double(
       "rotation",
       "Rotation",
-      "Defines the degree of rotation (0, 90, 180, 270)",
-      0,
-      270,
+      "Defines the rotation in degrees",
+      -G_MAXDOUBLE,
+      G_MAXDOUBLE,
       0,
       G_PARAM_WRITABLE | G_PARAM_READABLE
     )
@@ -370,6 +370,7 @@ zathura_gtk_document_new(zathura_document_t* document)
     /* Create page widget */
     GtkWidget* page_widget = zathura_gtk_page_new(page);
     bind_page_properties_to_document_properties(ZATHURA_DOCUMENT(widget), page_widget);
+    g_object_ref_sink(page_widget);
     gtk_widget_set_halign(page_widget, GTK_ALIGN_CENTER);
     gtk_widget_set_valign(page_widget, GTK_ALIGN_CENTER);
 
@@ -557,19 +558,9 @@ zathura_gtk_document_set_property(GObject* object, guint prop_id, const GValue* 
       break;
     case PROP_ROTATION:
       {
-        unsigned int rotation = g_value_get_uint(value);
-        switch (rotation) {
-          case 0:
-          case 90:
-          case 180:
-          case 270:
-            if (priv->settings.rotation != rotation) {
-              priv->settings.rotation = rotation;
-            }
-            break;
-          default:
-            // TODO: Pring warning message
-            break;
+        double rotation = g_value_get_double(value);
+        if (priv->settings.rotation != rotation) {
+          priv->settings.rotation = rotation;
         }
         restore_current_page(priv);
       }
@@ -646,7 +637,7 @@ zathura_gtk_document_get_property(GObject* object, guint prop_id, GValue* value,
       g_value_set_uint(value, priv->settings.first_page_column);
       break;
     case PROP_ROTATION:
-      g_value_set_uint(value, priv->settings.rotation);
+      g_value_set_double(value, priv->settings.rotation);
       break;
     case PROP_SCALE:
       g_value_set_double(value, priv->settings.scale);
@@ -682,7 +673,8 @@ zathura_gtk_document_finalize(GObject* object)
 {
   ZathuraDocumentPrivate* priv = zathura_gtk_document_get_instance_private(ZATHURA_DOCUMENT(object));
 
-  g_clear_pointer(&priv->document.pages, g_list_free);
+  g_list_free_full(priv->document.pages, g_object_unref);
+  priv->document.pages = NULL;
 
   g_list_free_full(priv->document.pages_status, g_free);
   priv->document.pages_status = NULL;

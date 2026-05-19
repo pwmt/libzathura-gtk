@@ -63,7 +63,6 @@ zathura_gtk_clear_grid(ZathuraDocumentPrivate* priv)
 {
   for (size_t i = 0; i < priv->document.number_of_pages; i++) {
     GtkWidget* page_widget = g_list_nth_data(priv->document.pages, i);
-    g_object_ref(page_widget);
     gtk_grid_remove(GTK_GRID(priv->gtk.grid), page_widget);
   }
 }

@@ -2,6 +2,7 @@
 
 #include <math.h>
 
+#include "../macros.h"
 #include "../utils.h"
 #include "annotations/overlay.h"
 #include "form-fields/editor.h"
@@ -12,7 +13,12 @@
 
 static void zathura_gtk_page_set_property(GObject* object, guint prop_id, const GValue* value, GParamSpec* param_spec);
 static void zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* param_spec);
+static void calculate_widget_size(ZathuraPage* page, unsigned int* widget_width, unsigned int* widget_height);
+static void zathura_gtk_page_measure(GtkWidget* widget, GtkOrientation orientation,
+    int for_size, int* minimum, int* natural, int* minimum_baseline, int* natural_baseline);
+static void zathura_gtk_page_size_allocate(GtkWidget* widget, int width, int height, int baseline);
 static void render_page(ZathuraPage* widget);
+static void calculate_content_size(ZathuraPage* page, unsigned int* content_width, unsigned int* content_height);
 
 static void cb_page_draw(GtkDrawingArea* area, cairo_t* cairo, int width, int height, gpointer data);
 static void cb_page_draw_links(GtkDrawingArea* area, cairo_t* cairo, int width, int height, gpointer data);
@@ -42,11 +48,6 @@ void zathura_gtk_snapshot(GtkWidget* widget, GtkSnapshot* snapshot) {
   gtk_snapshot_rotate(snapshot, priv->settings.rotation);
   gtk_snapshot_translate(snapshot, &GRAPHENE_POINT_INIT(-x, -y));
 
-  /* Draw background */
-  GdkRGBA white;
-  gdk_rgba_parse(&white, "white");
-  gtk_snapshot_append_color(snapshot, &white, &GRAPHENE_RECT_INIT(0, 0, width, height));
-
   gtk_snapshot_save(snapshot);
   gtk_widget_snapshot_child(widget, priv->overlay, snapshot);
   gtk_snapshot_restore(snapshot);
@@ -59,6 +60,52 @@ static void zathura_gtk_dispose(GObject* object) {
   g_clear_pointer(&priv->overlay, gtk_widget_unparent);
 
   G_OBJECT_CLASS(zathura_gtk_page_parent_class)->dispose(object);
+}
+
+static void
+zathura_gtk_page_measure(GtkWidget* widget, GtkOrientation orientation,
+    int UNUSED(for_size), int* minimum, int* natural, int* minimum_baseline,
+    int* natural_baseline)
+{
+  unsigned int widget_width;
+  unsigned int widget_height;
+
+  calculate_widget_size(ZATHURA_PAGE(widget), &widget_width, &widget_height);
+
+  if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+    *minimum = widget_width;
+    *natural = widget_width;
+  } else {
+    *minimum = widget_height;
+    *natural = widget_height;
+  }
+
+  if (minimum_baseline != NULL) {
+    *minimum_baseline = -1;
+  }
+
+  if (natural_baseline != NULL) {
+    *natural_baseline = -1;
+  }
+}
+
+static void
+zathura_gtk_page_size_allocate(GtkWidget* widget, int width, int height, int baseline)
+{
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(ZATHURA_PAGE(widget));
+  unsigned int content_width;
+  unsigned int content_height;
+
+  calculate_content_size(ZATHURA_PAGE(widget), &content_width, &content_height);
+
+  if (priv->overlay != NULL) {
+    const float x = ((float) width - content_width) / 2.0f;
+    const float y = ((float) height - content_height) / 2.0f;
+    graphene_point_t origin = GRAPHENE_POINT_INIT(x, y);
+    GskTransform* transform = gsk_transform_translate(NULL, &origin);
+
+    gtk_widget_allocate(priv->overlay, content_width, content_height, baseline, transform);
+  }
 }
 
 static void zathura_gtk_page_class_init(ZathuraPageClass* class) {
@@ -75,9 +122,9 @@ static void zathura_gtk_page_class_init(ZathuraPageClass* class) {
                            G_PARAM_WRITABLE | G_PARAM_READABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property(object_class, PROP_ROTATION,
-                                  g_param_spec_uint("rotation", "Rotation",
-                                                    "Defines the degree of rotation (0, 90, 180, 270)", 0, 270, 0,
-                                                    G_PARAM_WRITABLE | G_PARAM_READABLE));
+                                  g_param_spec_double("rotation", "Rotation",
+                                                      "Defines the rotation in degrees", -G_MAXDOUBLE, G_MAXDOUBLE, 0,
+                                                      G_PARAM_WRITABLE | G_PARAM_READABLE));
 
   g_object_class_install_property(
       object_class, PROP_SCALE,
@@ -99,8 +146,9 @@ static void zathura_gtk_page_class_init(ZathuraPageClass* class) {
                                                        G_PARAM_WRITABLE | G_PARAM_READABLE));
 
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(class);
+  widget_class->size_allocate  = zathura_gtk_page_size_allocate;
+  widget_class->measure        = zathura_gtk_page_measure;
   widget_class->snapshot       = zathura_gtk_snapshot;
-  gtk_widget_class_set_layout_manager_type(widget_class, GTK_TYPE_BIN_LAYOUT);
 }
 
 static void zathura_gtk_page_init(ZathuraPage* widget) {
@@ -195,21 +243,10 @@ static void zathura_gtk_page_set_property(GObject* object, guint prop_id, const 
     priv->page = g_value_get_pointer(value);
     break;
   case PROP_ROTATION: {
-    unsigned int rotation = g_value_get_uint(value);
-
-    switch (rotation) {
-    case 0:
-    case 90:
-    case 180:
-    case 270:
-      if (priv->settings.rotation != rotation) {
-        priv->settings.rotation = rotation;
-        render_page(page);
-      }
-      break;
-    default:
-      // TODO: Print warning message
-      break;
+    double rotation = g_value_get_double(value);
+    if (priv->settings.rotation != rotation) {
+      priv->settings.rotation = rotation;
+      render_page(page);
     }
   } break;
   case PROP_SCALE: {
@@ -246,7 +283,7 @@ static void zathura_gtk_page_get_property(GObject* object, guint prop_id, GValue
     g_value_set_pointer(value, priv->page);
     break;
   case PROP_ROTATION:
-    g_value_set_uint(value, priv->settings.rotation);
+    g_value_set_double(value, priv->settings.rotation);
     break;
   case PROP_SCALE:
     g_value_set_double(value, priv->settings.scale);
@@ -269,9 +306,23 @@ static void calculate_widget_size(ZathuraPage* page, unsigned int* widget_width,
   ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(page);
 
   double scale_factor = priv->settings.scale;
+  const double width = round(priv->dimensions.width * scale_factor);
+  const double height = round(priv->dimensions.height * scale_factor);
+  const double radians = priv->settings.rotation * G_PI / 180.0;
+  const double sin_rotation = fabs(sin(radians));
+  const double cos_rotation = fabs(cos(radians));
 
-  *widget_width  = round(priv->dimensions.width * scale_factor);
-  *widget_height = round(priv->dimensions.height * scale_factor);
+  *widget_width = ceil(width * cos_rotation + height * sin_rotation);
+  *widget_height = ceil(width * sin_rotation + height * cos_rotation);
+}
+
+static void calculate_content_size(ZathuraPage* page, unsigned int* content_width, unsigned int* content_height) {
+  ZathuraPagePrivate* priv = zathura_gtk_page_get_instance_private(page);
+
+  double scale_factor = priv->settings.scale;
+
+  *content_width = round(priv->dimensions.width * scale_factor);
+  *content_height = round(priv->dimensions.height * scale_factor);
 }
 
 static void render_page(ZathuraPage* widget) {
@@ -279,8 +330,11 @@ static void render_page(ZathuraPage* widget) {
 
   unsigned int page_widget_width;
   unsigned int page_widget_height;
+  unsigned int page_content_width;
+  unsigned int page_content_height;
 
   calculate_widget_size(widget, &page_widget_width, &page_widget_height);
+  calculate_content_size(widget, &page_content_width, &page_content_height);
 
   if (priv->form_fields.edit == true) {
     gtk_widget_set_visible(priv->layer.form_fields, TRUE);
@@ -288,17 +342,19 @@ static void render_page(ZathuraPage* widget) {
     gtk_widget_set_visible(priv->layer.form_fields, FALSE);
   }
 
-  gtk_widget_set_size_request(priv->layer.drawing_area, page_widget_width, page_widget_height);
+  gtk_widget_set_size_request(priv->layer.drawing_area, page_content_width, page_content_height);
+  gtk_widget_set_size_request(priv->layer.links, page_content_width, page_content_height);
   if (priv->layer.annotations != NULL) {
-    gtk_widget_set_size_request(priv->layer.annotations, page_widget_width, page_widget_height);
+    gtk_widget_set_size_request(priv->layer.annotations, page_content_width, page_content_height);
     gtk_widget_queue_resize(priv->layer.annotations);
     gtk_widget_queue_allocate(priv->layer.annotations);
     gtk_widget_queue_draw(priv->layer.annotations);
   }
-  gtk_widget_set_size_request(priv->layer.form_fields, page_widget_width, page_widget_height);
+  gtk_widget_set_size_request(priv->layer.form_fields, page_content_width, page_content_height);
   gtk_widget_queue_resize(priv->layer.form_fields);
   gtk_widget_queue_draw(priv->layer.form_fields);
 
+  gtk_widget_queue_resize(GTK_WIDGET(widget));
   gtk_widget_queue_allocate(GTK_WIDGET(widget));
 }
 

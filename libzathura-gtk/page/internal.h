@@ -28,7 +28,7 @@ struct _ZathuraPagePrivate {
   } dimensions;
 
   struct {
-    guint rotation;
+    double rotation;
     double scale;
   } settings;
 

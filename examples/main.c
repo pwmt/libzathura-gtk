@@ -67,9 +67,9 @@ cb_key_press_event(GtkEventControllerKey *controller,
         break;
       case GDK_KEY_r:
         {
-          guint rotation;
+          double rotation;
           g_object_get(G_OBJECT(document), "rotation", &rotation, NULL);
-          rotation = (rotation + 90) % 360;
+          rotation = fmod(rotation + 90.0, 360.0);
           g_object_set(G_OBJECT(document), "rotation", rotation, NULL);
         }
         break;
@@ -199,6 +199,14 @@ cb_key_press_event(GtkEventControllerKey *controller,
         break;
       case GDK_KEY_L:
         zathura_gtk_document_scroll(document, PAGE_BOTTOM);
+        break;
+      case GDK_KEY_R:
+        {
+          double rotation;
+          g_object_get(G_OBJECT(document), "rotation", &rotation, NULL);
+          rotation = fmod(rotation + 10.0, 360.0);
+          g_object_set(G_OBJECT(document), "rotation", rotation, NULL);
+        }
         break;
       default:
         return FALSE;
